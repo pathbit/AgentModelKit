@@ -33,12 +33,11 @@ function toVSCodeModel(model, group) {
   return entry;
 }
 
-export function buildVSCodeBlocks(resolvedProviders, { inlineApiKeys = new Map() } = {}) {
+export function buildVSCodeBlocks(resolvedProviders) {
   return resolvedProviders.flatMap((resolved) => resolved.groups.map((group) => ({
     name: group.label,
     vendor: "customendpoint",
-    ...(inlineApiKeys.get(resolved.providerId) ? { apiKey: inlineApiKeys.get(resolved.providerId) } :
-      group.vscodeSecretId ? { apiKey: `\${input:${group.vscodeSecretId}}` } : {}),
+    ...(group.vscodeSecretId ? { apiKey: `\${input:${group.vscodeSecretId}}` } : {}),
     models: group.models.map((model) => toVSCodeModel(model, group)),
   })));
 }
@@ -80,7 +79,7 @@ export const vscodeTarget = {
       typeof item.providerId === "string" && typeof item.groupId === "string" &&
       Array.isArray(item.models) && item.models.every((model) => typeof model?.id === "string" && typeof model.url === "string")), stateFile);
 
-    const incoming = buildVSCodeBlocks(resolvedProviders, opts);
+    const incoming = buildVSCodeBlocks(resolvedProviders);
     const pending = new Map(incoming.map((block) => [block.name, block]));
     const newOwners = new Map(resolvedProviders.flatMap((resolved) => resolved.groups.map((group) =>
       [group.label, { providerId: resolved.providerId, groupId: group.id }])));
@@ -132,8 +131,9 @@ export const vscodeTarget = {
       }
       if (legacy && !oldOwners.has(block.name) && (next || removed.some((item) => item.startsWith(`${block.name}/`)))) migrated = true;
       // Preserve credentials a user already configured in the editor by default.
-      const apiKey = opts.inlineApiKeys?.has(owner.providerId) ? next?.apiKey : block.apiKey ?? next?.apiKey;
-      if (models.length || !block.models?.length) merged.push({ ...block, ...(apiKey ? { apiKey } : {}), models });
+      const { apiKey: existingKey, ...fields } = block;
+      const apiKey = next && !/^\$\{input:[^}]+\}$/.test(existingKey ?? "") ? next.apiKey : existingKey;
+      if (models.length || !block.models?.length) merged.push({ ...fields, ...(apiKey ? { apiKey } : {}), models });
       if (owned.length) state.push({ name: block.name, providerId: owner.providerId, groupId: owner.groupId, models: owned });
       pending.delete(block.name);
     }

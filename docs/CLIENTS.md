@@ -18,7 +18,7 @@ O arquivo `chatLanguageModels.json` pertence ao perfil do VS Code. Ajuste `VSCOD
 | macOS | `~/Library/Application Support/Code/User` |
 | Linux | `$XDG_CONFIG_HOME/Code/User` ou `~/.config/Code/User` |
 
-Os grupos usam o provider **Custom Endpoint**. Abra **Chat: Manage Language Models** para selecionar o modelo e configurar a chave quando solicitada. Caso o seletor não seja atualizado, recarregue a janela. O AgentModelKit mantém a chave existente ao adicionar modelos, a menos que você passe `--inline-key`. [Referência oficial do Custom Endpoint](https://code.visualstudio.com/docs/agent-customization/language-models#_add-a-custom-endpoint-model).
+Os grupos usam o provider **Custom Endpoint**. Abra **Chat: Manage Language Models** para selecionar o modelo e configurar a chave quando solicitada. Caso o seletor não seja atualizado, recarregue a janela. Use a ação **Update API Key** do grupo para guardar a chave no armazenamento do VS Code. O AgentModelKit preserva a referência existente ao adicionar modelos. Um valor literal em `apiKey` no arquivo não é usado pelo VS Code 1.148 para autenticar o endpoint. [Referência oficial do Custom Endpoint](https://code.visualstudio.com/docs/agent-customization/language-models#_add-a-custom-endpoint-model).
 
 O arquivo adjacente `chatLanguageModels.json.agentmodelkit.json` registra quais modelos e endpoints foram gerados pelo AgentModelKit. Guarde-o junto com o arquivo de configuração. Ao restaurar manualmente um backup do VS Code, restaure também a versão correspondente do registro quando existir.
 

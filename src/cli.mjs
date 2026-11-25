@@ -42,7 +42,6 @@ Selecao:
 Credenciais e aplicacao:
   -k, --key <valor>           Chave para um unico provider
   --key-file <arquivo>       Le a chave de um arquivo
-  --inline-key              Tambem grava a chave literal no VS Code
   --no-save-key             Omite copia separada da chave em .key
   -m, --default-model <id>   Define o modelo padrao no Copilot CLI
   --dry-run                 Exibe as mudancas previstas
@@ -303,12 +302,13 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
   if (opts.command === "doctor") return cmdDoctor(env);
 
   const prune = opts.command === "prune";
+  if (opts.inlineKey) throw new Error("Use o gerenciador de modelos do VS Code para salvar a chave no armazenamento do editor. O Copilot CLI recebe apiKey automaticamente.");
   if (opts.apply && !prune) throw new Error("--apply e exclusivo de prune.");
   if (opts.url && opts.port) throw new Error("Escolha --url ou --port.");
   if (opts.key && opts.keyFile) throw new Error("Escolha --key ou --key-file.");
   if (opts.powerful && opts.models) throw new Error("Escolha --powerful ou --models.");
   if (opts.defaultModel && opts.noDefaultModel) throw new Error("Escolha --default-model ou --no-default-model.");
-  if (prune && (opts.replace || opts.models || opts.powerful || opts.defaultModel || opts.inlineKey ||
+  if (prune && (opts.replace || opts.models || opts.powerful || opts.defaultModel ||
       opts.freellmapiMode || opts.live || (opts.apply && opts.dryRun))) {
     throw new Error("Use prune com --providers, --targets e, para gravar, --apply. Consulte --help.");
   }
@@ -325,7 +325,7 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
   }
   if ((opts.url || opts.port || opts.freellmapiMode) && !providerIds.includes("freellmapi")) throw new Error("Selecione freellmapi para usar opcoes de servidor.");
   const dryRun = Boolean(opts.dryRun || (prune && !opts.apply));
-  const config = { dryRun, replace: opts.replace ? new Set(providerIds) : null, apiKeys: new Map(), inlineApiKeys: new Map() };
+  const config = { dryRun, apiKeys: new Map() };
   const keyWrites = [];
   const keys = new Map();
   async function getKey(provider, discovering = false) {
@@ -355,14 +355,14 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
     else if (wizard && !opts.powerful) resolved = await maybePickModels(resolved);
     resolved = resolved.filter((provider) => provider.groups.length);
     if (!resolved.length) throw new Error("Nenhum modelo selecionado.");
-    const required = targetIds.includes("copilot-cli") || opts.inlineKey || opts.key || opts.keyFile;
+    if (opts.replace) config.replace = new Set(resolved.map(({ providerId }) => providerId));
+    const required = targetIds.includes("copilot-cli") || opts.key || opts.keyFile;
     for (const { providerId } of resolved) {
       const provider = providers.find(({ id }) => id === providerId);
       if (!required && !keys.has(providerId)) continue;
       const key = await getKey(provider);
       if (!key.apiKey) continue;
       config.apiKeys.set(providerId, key.apiKey);
-      if (opts.inlineKey) config.inlineApiKeys.set(providerId, key.apiKey);
       if (key.write) keyWrites.push(key.write);
     }
   }
@@ -381,6 +381,10 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
   }
   for (const outcome of outcomes) if (outcome.backupPath) console.log(`Backup: ${outcome.backupPath}`);
   if (clearedDefault) console.log(`Selecoes removidas do Copilot: ${clearedDefault.removed.join(", ")}`);
+  if (!dryRun && targetIds.includes("vscode") && resolved.some((provider) =>
+    provider.groups.some((group) => group.vscodeSecretId))) {
+    console.log("[vscode] Use Chat: Manage Language Models para informar as chaves no editor.");
+  }
   if (defaultModel) console.log(`Modelo padrao ${dryRun ? "previsto" : "definido"}: ${defaultModel.selected}`);
   return results;
 }

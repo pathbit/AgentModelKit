@@ -41,12 +41,16 @@ function setupArgs(...suffix) {
 test("incremental add, replacement, default model, backups and no-op retry", async (t) => {
   const { env, vs, cp, settings } = profiles(t);
   await runCli(setupArgs("--models", "glm-5.3"), env);
+  const group = read(vs);
+  group[0].apiKey = "${input:chat.lm.secret.from-ui}";
+  write(vs, group);
   const firstVs = fs.readFileSync(vs);
   const firstCp = fs.readFileSync(cp);
   await runCli(setupArgs("--models", "gpt-6.2-sol", "--default-model", "gpt-6.2-sol"), env);
   assert.deepEqual(fs.readFileSync(vs + ".bak"), firstVs);
   assert.deepEqual(fs.readFileSync(cp + ".bak"), firstCp);
   assert.deepEqual(read(vs)[0].models.map(({ id }) => id), ["glm-5.3", "gpt-6.2-sol"]);
+  assert.equal(read(vs)[0].apiKey, "${input:chat.lm.secret.from-ui}");
   assert.deepEqual(read(cp).models.map(({ id }) => id), ["glm-5.3", "gpt-6.2-sol"]);
   assert.deepEqual(read(settings), { model: "opencode-payg-responses/gpt-6.2-sol" });
 

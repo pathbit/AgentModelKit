@@ -80,7 +80,7 @@ Os catálogos acompanham o pacote em `data/`. `catalog update` atualiza um cache
 ## Credenciais e clientes
 
 - Para o **Copilot CLI**, o formato de providers nomeados utiliza `apiKey` no próprio `providers.json`. Use `--key-file`, a variável `OPENCODE_API_KEY` ou `FREELLMAPI_API_KEY`, ou o prompt protegido do terminal. `--no-save-key` evita uma segunda cópia em `.key`. Em sistemas POSIX, os arquivos gerenciados e backups usam permissões restritas.
-- No **VS Code**, o padrão é uma referência de segredo. Informe a chave no editor de modelos quando o cliente pedir. Use `--inline-key` somente se quiser a chave literal também no JSON do VS Code. O cliente usa `chatLanguageModels.json` do perfil escolhido.
+- No **VS Code**, o padrão é uma referência de segredo. Informe a chave no editor de modelos quando o cliente pedir. A chave fica no armazenamento de segredos do VS Code. O cliente usa `chatLanguageModels.json` do perfil escolhido.
 - `doctor` lista versões, caminhos e presença de arquivos de chave sem imprimir os valores. Para caminhos personalizados, backups e restauração, veja [Clientes](docs/CLIENTS.md).
 
 ## Desenvolvimento e publicação
