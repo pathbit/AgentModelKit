@@ -135,6 +135,7 @@ Na raiz do projeto, execute para gerar a seleção e os índices locais.
 npx @pathbit/agentdevkit@0.0.39 init
 ```
 
+Na primeira execução, a CLI acrescenta um bloco de referência gerenciado ao `AGENTS.md`.
 No menu, use as setas e **Espaço** para selecionar agentes. Use **Enter** para confirmar.
 O guia também cobre atualização e diagnóstico. [Início rápido do AgentDevKit](https://github.com/pathbit/AgentDevKit#começo-rápido)
 
