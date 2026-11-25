@@ -1,0 +1,15 @@
+{
+  "reviewedAt": "2026-11-25",
+  "criteria": "Seleção editorial para programação e uso de ferramentas. Prioriza modelos de ponta com protocolos suportados e estratégias gratuitas do FreeLLMAPI.",
+  "opencode": [
+    "opencode-go/deepseek-v4-pro",
+    "opencode-go/glm-5.3",
+    "opencode-go/qwen4-max",
+    "opencode-go/kimi-k3",
+    "opencode-payg/gpt-6-astra",
+    "opencode-payg/gpt-6.2-astra",
+    "opencode-payg/claude-opus-5",
+    "opencode-payg/claude-sonnet-5-5"
+  ],
+  "freellmapi": ["auto", "auto:smart", "fusion"]
+}

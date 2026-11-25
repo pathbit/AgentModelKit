@@ -1,0 +1,18 @@
+{
+  "id": "custom-ollama",
+  "name": "Ollama",
+  "baseUrl": "http://127.0.0.1:11434/v1",
+  "modelsUrl": "http://127.0.0.1:11434/v1/models",
+  "requiresKey": false,
+  "apiType": "chat-completions",
+  "powerfulIds": ["qwen3:8b"],
+  "models": [
+    {
+      "id": "qwen3:8b",
+      "name": "Qwen3 8B",
+      "toolCalling": true,
+      "maxInputTokens": 28672,
+      "maxOutputTokens": 4096
+    }
+  ]
+}

@@ -21,13 +21,32 @@ function clearLines(output, count) {
 /**
  * Prompt for a single line of text with an optional default value.
  */
-export function promptText(question, defaultValue = "", { input = process.stdin, output = process.stdout } = {}) {
+export function promptText(question, defaultValue = "", {
+  input = process.stdin, output = process.stdout, secret = false,
+} = {}) {
+  if (secret) {
+    if (!canUseRawMode(input, output)) throw new Error("Use --key-file ou uma variavel de ambiente neste terminal.");
+    output.write(question);
+    let answer = "";
+    return runRawSelector({
+      input,
+      output,
+      render: () => [],
+      onKey(str, key) {
+        if (key.name === "return" || key.name === "enter") return { done: true, value: answer.trim() };
+        if (key.name === "backspace") answer = answer.slice(0, -1);
+        else if (str && !key.ctrl && !key.meta && !/[\x00-\x1f\x7f]/.test(str)) answer += str;
+        return null;
+      },
+    }).finally(() => output.write("\n"));
+  }
   const rl = readline.createInterface({ input, output });
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    rl.once("close", () => reject(new Error("Entrada encerrada.")));
+    rl.once("SIGINT", () => rl.close());
     rl.question(question, (answer) => {
+      resolve(answer.trim() || defaultValue);
       rl.close();
-      const trimmed = answer.trim();
-      resolve(trimmed || defaultValue);
     });
   });
 }
@@ -55,12 +74,13 @@ function runRawSelector({
     function draw(warning = "") {
       clearLines(output, lastLineCount);
       const lines = render(warning);
-      output.write(lines.join("\n") + "\n");
+      if (lines.length) output.write(lines.join("\n") + "\n");
       lastLineCount = lines.length;
     }
 
     function cleanup() {
       input.removeListener("keypress", handleKeypress);
+      input.removeListener("end", handleEnd);
       if (typeof input.setRawMode === "function") {
         try {
           input.setRawMode(Boolean(wasRaw));
@@ -70,6 +90,11 @@ function runRawSelector({
       }
       input.pause();
       output.write(ANSI.showCursor);
+    }
+
+    function handleEnd() {
+      cleanup();
+      reject(new Error("Entrada encerrada."));
     }
 
     function handleKeypress(str, key = {}) {
@@ -90,6 +115,7 @@ function runRawSelector({
     }
 
     input.on("keypress", handleKeypress);
+    input.once("end", handleEnd);
     draw();
   });
 }

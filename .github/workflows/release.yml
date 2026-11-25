@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    if: github.ref_type == 'tag'
+    uses: ./.github/workflows/ci.yml
+
+  package:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+      - name: Validate tag and branch
+        env:
+          RELEASE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const { version } = JSON.parse(fs.readFileSync("package.json"));
+            if (process.env.GITHUB_REF_NAME !== "v" + version) throw new Error("Tag/version mismatch");
+          '
+          git merge-base --is-ancestor HEAD "refs/remotes/origin/$RELEASE_BRANCH"
+      - name: Pack and execute release candidate
+        env:
+          AGENTMODELKIT_ARTIFACT_DIR: ${{ runner.temp }}/release
+        run: npm run test:package
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: agentmodelkit-release
+          path: ${{ runner.temp }}/release
+          if-no-files-found: error
+
+  npmjs:
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npmjs
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          scope: '@pathbit'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: agentmodelkit-release
+          path: ${{ runner.temp }}/release
+          digest-mismatch: error
+      - name: Publish or verify same npmjs package
+        working-directory: ${{ runner.temp }}/release
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_BOOTSTRAP_TOKEN }}
+        run: |
+          expected="$(cat integrity.txt)"
+          if actual="$(npm view "@pathbit/agentmodelkit@${GITHUB_REF_NAME#v}" dist.integrity)"; then
+            test "$actual" = "$expected"
+          else
+            npm publish ./*.tgz --access public
+          fi
+
+  github:
+    needs: [package, npmjs]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          registry-url: https://npm.pkg.github.com
+          scope: '@pathbit'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: agentmodelkit-release
+          path: ${{ runner.temp }}/release
+          digest-mismatch: error
+      - name: Publish or verify same GitHub package
+        working-directory: ${{ runner.temp }}/release
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: |
+          expected="$(cat integrity.txt)"
+          if actual="$(npm view "@pathbit/agentmodelkit@${GITHUB_REF_NAME#v}" dist.integrity)"; then
+            test "$actual" = "$expected"
+          else
+            npm publish ./*.tgz
+          fi
+      - name: Create or verify GitHub Release
+        working-directory: ${{ runner.temp }}/release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null; then
+            verify_dir="$(mktemp -d)"
+            gh release download "$GITHUB_REF_NAME" --pattern '*.tgz' --dir "$verify_dir"
+            cmp ./*.tgz "$verify_dir"/*.tgz
+          else
+            gh release create "$GITHUB_REF_NAME" ./*.tgz --verify-tag --generate-notes
+          fi

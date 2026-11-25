@@ -1,16 +1,3 @@
-# Código-fonte (`src/`)
+# Código
 
-Implementação da CLI, interface de seleção no terminal, gestão de chaves, providers de IA e adaptadores de destino (targets).
-
-## Estrutura
-
-| Caminho | Responsabilidade |
-| --- | --- |
-| [`cli.mjs`](cli.mjs) | Parser de argumentos, assistente interativo com checkboxes, filtros de modelos, `list`, `doctor` e `key` |
-| [`keys.mjs`](keys.mjs) | Resolução e gravação segura (`0600`) de `<COPILOT_HOME>/<provider>.key` |
-| [`ui/prompts.mjs`](ui/prompts.mjs) | Prompts nativos zero-dependência com checkboxes (`[x]`), setas ↑↓ e fallback não-TTY |
-| [`providers/`](providers/index.mjs) | Adaptadores de providers (`opencode.mjs`, `freellmapi.mjs`) |
-| [`targets/`](targets/index.mjs) | Adaptadores de clientes (`vscode.mjs`, `copilot-cli.mjs`) |
-| [`utils/`](utils/paths.mjs) | Caminhos cross-platform, backup `.bak`, gravação JSON e `apiKeyCommand` |
-
-Veja o guia de contribuição em [CONTRIBUTING.md](../CONTRIBUTING.md) e a [arquitetura detalhada](../docs/ARCHITECTURE.md).
+O código usa módulos ES nativos do Node.js. Veja a [arquitetura](../docs/ARCHITECTURE.md) e a [referência de providers](../docs/PROVIDERS.md).

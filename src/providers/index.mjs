@@ -8,7 +8,7 @@ export const PROVIDERS = {
 
 export function getProvider(id) {
   const key = (id || "").trim().toLowerCase();
-  const provider = PROVIDERS[key];
+  const provider = Object.hasOwn(PROVIDERS, key) ? PROVIDERS[key] : null;
   if (!provider) {
     throw new Error(`Provider desconhecido: '${id}'. Disponiveis: ${Object.keys(PROVIDERS).join(", ")}`);
   }

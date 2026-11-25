@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateBundledCatalogs } from "../src/catalogs/index.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -21,6 +22,8 @@ const REQUIRED_PATHS = [
   ".github/ISSUE_TEMPLATE/config.yml",
   ".github/PULL_REQUEST_TEMPLATE.md",
   ".github/workflows/ci.yml",
+  ".github/workflows/release.yml",
+  ".github/workflows/update-catalogs.yml",
   "bin/agentmodelkit.mjs",
   "bin/README.md",
   "src",
@@ -31,10 +34,14 @@ const REQUIRED_PATHS = [
   "tests",
   "tests/README.md",
   "data/opencode-catalog.json",
+  "data/freellmapi-catalog.json",
+  "data/curation.json",
+  "data/awesome-free-providers.json",
   "data/README.md",
   "examples",
   "examples/README.md",
   "examples/opencode.freellmapi.json",
+  "examples/provider.local.example.json",
   "README.md",
   "README.en.md",
   "CONTRIBUTING.md",
@@ -53,9 +60,13 @@ const JSON_FILES = [
   ".vscode/settings.json",
   ".vscode/extensions.json",
   "data/opencode-catalog.json",
+  "data/freellmapi-catalog.json",
+  "data/curation.json",
+  "data/awesome-free-providers.json",
   "examples/vscode.chatLanguageModels.free.json",
   "examples/copilot.providers.free.json",
   "examples/opencode.freellmapi.json",
+  "examples/provider.local.example.json",
 ];
 
 for (const rel of JSON_FILES) {
@@ -63,6 +74,8 @@ for (const rel of JSON_FILES) {
   const raw = fs.readFileSync(full, "utf8");
   JSON.parse(raw);
 }
+
+validateBundledCatalogs();
 
 const vsSample = JSON.parse(
   fs.readFileSync(path.join(root, "examples/vscode.chatLanguageModels.free.json"), "utf8")

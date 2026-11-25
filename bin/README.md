@@ -1,5 +1,3 @@
-# Executável (`bin/`)
+# Entrada da CLI
 
-Ponto de entrada executável publicado no npm sob os comandos `agentmodelkit` e `amk`.
-
-- [agentmodelkit.mjs](agentmodelkit.mjs): carrega `runCli` de [`src/cli.mjs`](../src/cli.mjs) e trata erros com código de saída `1`.
+`agentmodelkit.mjs` é o executável exposto como `agentmodelkit` e `amk`. Use `node bin/agentmodelkit.mjs --help` durante o desenvolvimento. Veja os [comandos de uso](../README.md).

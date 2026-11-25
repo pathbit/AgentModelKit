@@ -8,6 +8,6 @@ Descreva o problema resolvido, o novo provider/target adicionado ou o ajuste rea
 
 Informe os comandos executados e seus resultados:
 
-- [ ] Rodei `npm run check` e `npm test` sem falhas.
+- [ ] Rodei `npm run check`, `npm test` e `npm run test:package` sem falhas.
 - [ ] Atualizei a documentação afetada (`README.md`, `docs/`, `CHANGELOG.md`).
 - [ ] Confirmei que não há arquivos `.key`, `.bak`, `.env` ou segredos no diff.

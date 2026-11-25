@@ -1,76 +1,14 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { loadCatalog, loadCuration } from "../catalogs/index.mjs";
+import { fetchModelRows } from "../catalogs/opencode.mjs";
+import { parseEndpoint } from "./custom.mjs";
 
 const DEFAULT_SERVER_PORT = 3001;
 const DEFAULT_DESKTOP_PORT = 31415;
 const DEFAULT_SERVER_URL = `http://localhost:${DEFAULT_SERVER_PORT}/v1`;
 const DEFAULT_DESKTOP_URL = `http://127.0.0.1:${DEFAULT_DESKTOP_PORT}/v1`;
-
-const AUTO_ROUTER_MODEL = {
-  id: "auto",
-  name: "FreeLLMAPI Auto Router",
-  toolCalling: true,
-  vision: true,
-  reasoningEffort: null,
-  tier: "balance",
-  maxInputTokens: 1048576,
-  maxOutputTokens: 65536,
-};
-
-const STRATEGY_VIRTUAL_MODELS = [
-  AUTO_ROUTER_MODEL,
-  {
-    id: "auto:smart",
-    name: "Auto Smart",
-    toolCalling: true,
-    vision: true,
-    reasoningEffort: "high",
-    tier: "intelligence",
-    maxInputTokens: 1048576,
-    maxOutputTokens: 65536,
-  },
-  {
-    id: "auto:fast",
-    name: "Auto Fast",
-    toolCalling: true,
-    vision: true,
-    reasoningEffort: null,
-    tier: "efficiency",
-    maxInputTokens: 1048576,
-    maxOutputTokens: 65536,
-  },
-  {
-    id: "auto:reliable",
-    name: "Auto Reliable",
-    toolCalling: true,
-    vision: true,
-    reasoningEffort: null,
-    tier: "balance",
-    maxInputTokens: 1048576,
-    maxOutputTokens: 65536,
-  },
-  {
-    id: "auto:balanced",
-    name: "Auto Balanced",
-    toolCalling: true,
-    vision: true,
-    reasoningEffort: null,
-    tier: "balance",
-    maxInputTokens: 1048576,
-    maxOutputTokens: 65536,
-  },
-  {
-    id: "fusion",
-    name: "Fusion (Multi-Model)",
-    toolCalling: true,
-    vision: false,
-    reasoningEffort: "high",
-    tier: "intelligence",
-    maxInputTokens: 1048576,
-    maxOutputTokens: 65536,
-  },
-];
 
 function validatePort(port) {
   const num = Number(port);
@@ -93,7 +31,7 @@ export function normalizeFreeLLMBaseUrl(rawInput, defaultHost = "localhost") {
   }
 
   const withScheme = /^https?:\/\//i.test(raw) ? raw : `http://${raw}`;
-  const trimmed = withScheme.replace(/\/+$/, "");
+  const trimmed = parseEndpoint(withScheme);
 
   for (const suffix of ["/chat/completions", "/responses", "/messages"]) {
     if (trimmed.endsWith(suffix)) {
@@ -146,7 +84,8 @@ export function readFreeLLMDesktopPort({
 
 async function probeCandidate(baseUrl, fetchImpl) {
   try {
-    const res = await fetchImpl(`${baseUrl}/models`, { signal: AbortSignal.timeout(600) });
+    const res = await fetchImpl(`${baseUrl}/models`, { signal: AbortSignal.timeout(600), redirect: "error" });
+    await res.body?.cancel();
     return res.status === 200 || res.status === 401 || res.status === 403;
   } catch {
     return false;
@@ -222,19 +161,8 @@ export function normalizeFreeLLMMode(rawMode) {
  * Fetch ready models from a live FreeLLMAPI `/v1/models?execution_status=ready` endpoint.
  */
 export async function fetchFreeLLMApiModels(baseUrl, apiKey, fetchImpl = globalThis.fetch) {
-  if (!fetchImpl) return [];
-  const headers = apiKey ? { Authorization: `Bearer ${apiKey}` } : {};
-  const res = await fetchImpl(`${baseUrl}/models?execution_status=ready`, {
-    headers,
-    signal: AbortSignal.timeout(4000),
-  });
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
-  }
-  const payload = await res.json();
-  const rows = Array.isArray(payload.data) ? payload.data : [];
-
-  const virtualIds = new Set(STRATEGY_VIRTUAL_MODELS.map((m) => m.id));
+  const rows = await fetchModelRows(`${baseUrl}/models?execution_status=ready`, { apiKey, fetchImpl });
+  const virtualIds = new Set(loadCatalog("freellmapi-catalog.json").strategies.map(({ id }) => id));
   const discovered = [];
   for (const m of rows) {
     if (!m?.id || virtualIds.has(m.id)) continue;
@@ -259,7 +187,7 @@ export async function fetchFreeLLMApiModels(baseUrl, apiKey, fetchImpl = globalT
 export const freellmapiProvider = {
   id: "freellmapi",
   label: "FreeLLMAPI",
-  description: "FreeLLMAPI smart router 100% gratis (porta/URL dinamica; modo auto sem listar centenas de modelos)",
+  description: "Roteador do FreeLLMAPI com URL dinamica e descoberta de modelos prontos",
   availableTiers: ["free"],
   defaultTiers: ["free"],
   availableModes: ["auto", "strategies", "ready"],
@@ -278,6 +206,7 @@ export const freellmapiProvider = {
     apiKey,
     live = false,
     mode,
+    powerful = false,
     fetchImpl = globalThis.fetch,
     env = process.env,
     platform = process.platform,
@@ -290,38 +219,27 @@ export const freellmapiProvider = {
       ? normalizeFreeLLMBaseUrl(baseUrl)
       : await detectFreeLLMApiBaseUrl({ fetchImpl, port, env, platform, homeDir, fsImpl });
 
-    let models = resolvedMode === "auto" ? [AUTO_ROUTER_MODEL] : [...STRATEGY_VIRTUAL_MODELS];
-    let source = resolvedMode === "auto" ? "router-auto" : "router-strategies";
+    const catalog = loadCatalog("freellmapi-catalog.json", env);
+    const curated = new Set(loadCuration().freellmapi);
+    let models = powerful ? catalog.strategies.filter(({ id }) => curated.has(id)) :
+      resolvedMode === "auto" ? catalog.strategies.filter(({ id }) => id === catalog.router) : [...catalog.strategies];
+    let source = powerful ? "curadoria" : `router-${resolvedMode}`;
 
-    if (resolvedMode === "ready") {
-      try {
-        const readyModels = await fetchFreeLLMApiModels(resolvedBaseUrl, apiKey, fetchImpl);
-        if (readyModels.length > 0) {
-          models = [...STRATEGY_VIRTUAL_MODELS, ...readyModels];
-          source = `live:${readyModels.length}-ready`;
-        } else {
-          source = "router-strategies";
-        }
-      } catch {
-        source = "virtual-fallback";
-      }
+    if (resolvedMode === "ready" && !powerful) {
+      const ready = await fetchFreeLLMApiModels(resolvedBaseUrl, apiKey, fetchImpl);
+      models = [...models, ...ready];
+      source = `live:${ready.length}-ready`;
     }
 
     return {
       providerId: "freellmapi",
-      separatorName: "+++++++ CONFIGURACAO FREELLMAPI +++++++",
-      copilotRootComment: "+++++++ CONFIGURACAO FREELLMAPI +++++++",
-      managedGroupIds: ["freellmapi"],
-      managedVSCodeNames: ["+++++++ CONFIGURACAO FREELLMAPI +++++++", "FreeLLMAPI"],
-      keyFile: "freellmapi.key",
-      defaultModel: "freellmapi/auto",
       source,
       groups: [
         {
           id: "freellmapi",
+          apiType: "chat-completions",
           label: "FreeLLMAPI",
           prefix: "[FreeLLMAPI]",
-          comment: "+++++++ FREELLMAPI (100% GRATIS SMART ROUTER) +++++++",
           baseUrl: resolvedBaseUrl,
           copilotHeaders: null,
           vscodeHeaders: null,

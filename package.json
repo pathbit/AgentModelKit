@@ -1,6 +1,6 @@
 {
   "name": "@pathbit/agentmodelkit",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Cross-platform CLI to configure LLM providers, tiers, and API keys across coding editors and CLIs (VS Code, GitHub Copilot CLI, and extensible targets).",
   "type": "module",
   "license": "MIT",
@@ -14,7 +14,8 @@
   "files": [
     "bin/",
     "src/",
-    "data/",
+    "data/*.json",
+    "data/README.md",
     "docs/",
     "examples/",
     "README.md",
@@ -24,9 +25,7 @@
     "LICENSE"
   ],
   "publishConfig": {
-    "registry": "https://registry.npmjs.org",
-    "access": "public",
-    "tag": "latest"
+    "access": "public"
   },
   "scripts": {
     "cli": "node bin/agentmodelkit.mjs",
@@ -35,7 +34,9 @@
     "setup:vscode": "node bin/agentmodelkit.mjs vscode",
     "doctor": "node bin/agentmodelkit.mjs doctor",
     "check": "node scripts/check.mjs",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test",
+    "catalog:update": "node scripts/update-catalogs.mjs",
+    "test:package": "node scripts/check-package.mjs"
   },
   "author": {
     "name": "PathBit",
@@ -50,5 +51,12 @@
     "vscode",
     "github-copilot-cli",
     "byok"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pathbit/AgentModelKit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pathbit/AgentModelKit/issues"
+  }
 }

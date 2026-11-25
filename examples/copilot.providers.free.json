@@ -1,75 +1,15 @@
 {
-  "_comment": "+++++++ CONFIGURADO POR AGENTMODELKIT (WINDOWS / MACOS / LINUX) +++++++",
   "providers": [
     {
-      "_comment": "+++++++ OPENCODE FREE (GRATIS NO GO) +++++++",
-      "name": "opencode-free-go",
-      "type": "openai",
-      "baseUrl": "https://opencode.ai/inference/go/openai/v1",
-      "wireApi": "completions",
-      "headers": {
-        "x-opencode-session": "copilot-cli"
-      },
-      "apiKeyCommand": "node -e \"const f=require('fs'),o=require('os'),p=require('path');process.stdout.write(f.readFileSync(p.join(process.env.COPILOT_HOME||p.join(o.homedir(),'.copilot'),'opencode.key'),'utf8').trim())\""
-    },
-    {
-      "_comment": "+++++++ FREELLMAPI (100% GRATIS SMART ROUTER) +++++++",
+      "_comment": "AgentModelKit:freellmapi/freellmapi",
       "name": "freellmapi",
       "type": "openai",
-      "baseUrl": "http://localhost:3001/v1",
+      "baseUrl": "http://127.0.0.1:31415/v1",
       "wireApi": "completions",
-      "apiKeyCommand": "node -e \"const f=require('fs'),o=require('os'),p=require('path');process.stdout.write(f.readFileSync(p.join(process.env.COPILOT_HOME||p.join(o.homedir(),'.copilot'),'freellmapi.key'),'utf8').trim())\""
+      "apiKey": "REPLACE_WITH_FREELLMAPI_KEY"
     }
   ],
   "models": [
-    {
-      "id": "beam-free",
-      "name": "[OpenCode Free] Beam Free",
-      "provider": "opencode-free-go",
-      "maxPromptTokens": 1048576,
-      "maxOutputTokens": 131072,
-      "capabilities": {
-        "supports": {
-          "vision": false
-        }
-      }
-    },
-    {
-      "id": "iceman-contributor-free",
-      "name": "[OpenCode Free] Iceman Contributor Free",
-      "provider": "opencode-free-go",
-      "maxPromptTokens": 262144,
-      "maxOutputTokens": 131072,
-      "capabilities": {
-        "supports": {
-          "vision": false
-        }
-      }
-    },
-    {
-      "id": "hy4-flash-free",
-      "name": "[OpenCode Free] Hy4 flash Free",
-      "provider": "opencode-free-go",
-      "maxPromptTokens": 983040,
-      "maxOutputTokens": 65536,
-      "capabilities": {
-        "supports": {
-          "vision": true
-        }
-      }
-    },
-    {
-      "id": "hungerg-free",
-      "name": "[OpenCode Free] HungerG Free",
-      "provider": "opencode-free-go",
-      "maxPromptTokens": 1000000,
-      "maxOutputTokens": 65536,
-      "capabilities": {
-        "supports": {
-          "vision": true
-        }
-      }
-    },
     {
       "id": "auto",
       "name": "[FreeLLMAPI] FreeLLMAPI Auto Router",
@@ -78,8 +18,12 @@
       "maxOutputTokens": 65536,
       "capabilities": {
         "supports": {
-          "vision": true
+          "vision": true,
+          "toolCalls": true
         }
+      },
+      "metadata": {
+        "agentModelKit": "freellmapi"
       }
     }
   ]

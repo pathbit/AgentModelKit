@@ -194,7 +194,6 @@ test("freellmapiProvider defaults to clean auto-only router mode and supports st
     env,
   });
   assert.equal(readyResolved.source, "live:2-ready");
-  assert.equal(readyResolved.defaultModel, "freellmapi/auto");
   assert.equal(readyResolved.groups[0].models.length, 8); // 6 virtual + 2 ready
 
   // 4) Run CLI end-to-end with dynamic --port & clean auto-only default
@@ -219,7 +218,9 @@ test("freellmapiProvider defaults to clean auto-only router mode and supports st
       "--providers",
       "opencode",
       "--tiers",
-      "free",
+      "payg",
+      "--models",
+      "gpt-6.2-sol",
       "--key",
       "oc_coexist_key",
       "--no-default-model",
@@ -233,20 +234,15 @@ test("freellmapiProvider defaults to clean auto-only router mode and supports st
   assert.equal(freeProvider.baseUrl, baseUrl);
   assert.deepEqual(
     copJson.providers.map((p) => p.name),
-    ["freellmapi", "opencode-free-go"]
+    ["freellmapi", "opencode-payg-responses"]
   );
-  assert.equal(copJson.models.length, 5); // 1 freellmapi (auto) + 4 opencode-free-go
+  assert.equal(copJson.models.length, 2);
 
   const vscJson = JSON.parse(fs.readFileSync(path.join(vscodeUser, "chatLanguageModels.json"), "utf8"));
   assert.ok(vscJson.every((b) => b.vendor === "customendpoint"));
   assert.deepEqual(
     vscJson.map((b) => b.name),
-    [
-      "+++++++ CONFIGURACAO FREELLMAPI +++++++",
-      "FreeLLMAPI",
-      "+++++++ CONFIGURACAO OPENCODE +++++++",
-      "OpenCode Free",
-    ]
+    ["FreeLLMAPI", "OpenCode PAYG"]
   );
   const vscFreeBlock = vscJson.find((b) => b.name === "FreeLLMAPI");
   assert.equal(vscFreeBlock.models.length, 1);
@@ -254,15 +250,11 @@ test("freellmapiProvider defaults to clean auto-only router mode and supports st
   assert.equal(vscFreeBlock.models[0].url, `${baseUrl}/chat/completions`);
 });
 
-test("freellmapiProvider falls back cleanly when ready mode is offline", async () => {
-  const resolved = await freellmapiProvider.resolve({
+test("explicit ready discovery fails on an offline server", async () => {
+  await assert.rejects(freellmapiProvider.resolve({
     baseUrl: "http://127.0.0.1:1/v1",
-    apiKey: "freellmapi-offline",
+    apiKey: "fixture",
     mode: "ready",
-    fetchImpl: async () => {
-      throw new Error("ECONNREFUSED");
-    },
-  });
-  assert.equal(resolved.source, "virtual-fallback");
-  assert.equal(resolved.groups[0].models.length, 6);
+    fetchImpl: async () => { throw new Error("ECONNREFUSED"); },
+  }), /ECONNREFUSED/);
 });

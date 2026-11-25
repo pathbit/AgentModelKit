@@ -12,7 +12,7 @@ body:
     id: version
     attributes:
       label: Versão do AgentModelKit e Node.js
-      placeholder: "AgentModelKit 0.1.0; Node.js 22.x"
+      placeholder: "AgentModelKit 0.0.1; Node.js 22.x"
     validations:
       required: true
   - type: input

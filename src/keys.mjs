@@ -1,111 +1,60 @@
-import fs from "node:fs";
 import path from "node:path";
-import readline from "node:readline";
 import { getKeyFilePath } from "./utils/paths.mjs";
+import { commitWrites, readSnapshot } from "./utils/json.mjs";
+import { promptText } from "./ui/prompts.mjs";
 
-/**
- * Prompt the user on stdin/stdout for input.
- */
-export function promptLine(question) {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
+function readKeyFile(filePath, required) {
+  const snapshot = readSnapshot(filePath);
+  if (snapshot.content === null && !required) return null;
+  const key = snapshot.content?.toString("utf8").trim();
+  if (!key) throw new Error(`Chave ausente ou vazia em ${filePath}`);
+  return key;
 }
 
-/**
- * Resolve an API key for `providerId` using CLI flags, `<COPILOT_HOME>/<keyFile>`,
- * local `<keyFile>`, environment variable, or interactive prompt (saving `0600` by default).
- */
+export function planKeyFile(filePath, value) {
+  const snapshot = readSnapshot(filePath);
+  const next = Buffer.from(`${value.trim()}\n`);
+  return {
+    ...snapshot,
+    next,
+    mode: 0o600,
+    changed: !snapshot.content?.equals(next) || (process.platform !== "win32" && snapshot.mode !== 0o600),
+  };
+}
+
 export async function resolveProviderApiKey(provider, opts = {}, env = process.env) {
-  const keyFileName = provider.keyFile || `${provider.id}.key`;
-  const targetKeyPath = opts.keyFile ? path.resolve(opts.keyFile) : getKeyFilePath(keyFileName, env);
-
-  if (opts.key?.trim()) {
-    const val = opts.key.trim();
-    const shouldSave = !opts.noSaveKey;
-    if (shouldSave) {
-      saveKeyFile(targetKeyPath, val);
-    }
-    return {
-      apiKey: val,
-      source: "cli-flag",
-      keyFilePath: targetKeyPath,
-      savedTo: shouldSave ? targetKeyPath : null,
-    };
+  const savedPath = path.resolve(getKeyFilePath(provider.keyFile, env));
+  let apiKey = opts.key?.trim();
+  let source = "cli-flag";
+  if (!apiKey && opts.keyFile) {
+    apiKey = readKeyFile(path.resolve(opts.keyFile), true);
+    source = "arquivo informado";
   }
-
-  const candidates = [
-    opts.keyFile ? path.resolve(opts.keyFile) : null,
-    getKeyFilePath(keyFileName, env),
-    path.resolve(process.cwd(), keyFileName),
-  ].filter(Boolean);
-
-  for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) {
-      const val = fs.readFileSync(candidate, "utf8").trim();
-      if (val) {
-        if (!opts.noSaveKey && candidate !== targetKeyPath && !fs.existsSync(targetKeyPath)) {
-          saveKeyFile(targetKeyPath, val);
-        }
-        return { apiKey: val, source: candidate, keyFilePath: targetKeyPath };
-      }
-    }
+  if (!apiKey && env[provider.envVar]?.trim()) {
+    apiKey = env[provider.envVar].trim();
+    source = `env:${provider.envVar}`;
   }
-
-  const envName = provider.envVar || `${provider.id.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_API_KEY`;
-  if (env[envName]?.trim()) {
-    const val = env[envName].trim();
-    if (!opts.noSaveKey && !fs.existsSync(targetKeyPath)) {
-      saveKeyFile(targetKeyPath, val);
-    }
-    return { apiKey: val, source: `env:${envName}`, keyFilePath: targetKeyPath };
+  if (!apiKey) {
+    apiKey = readKeyFile(savedPath, false);
+    source = "chave salva";
   }
-
-  if (opts.nonInteractive) {
-    throw new Error(
-      `API key ausente para '${provider.id}'. Informe --key, --key-file, env ${envName} ou salve em ${targetKeyPath}.`
-    );
+  if (!apiKey && !opts.nonInteractive && !opts.optional) {
+    apiKey = await promptText(`[${provider.id}] API key: `, "", { secret: true });
+    source = "prompt";
   }
-
-  const hint = provider.keyPlaceholder ? ` (${provider.keyPlaceholder})` : "";
-  const entered = await promptLine(`[${provider.id}] Cole sua API key${hint} [sera salva em ${targetKeyPath}]: `);
-  if (!entered) {
-    throw new Error(`API key vazia para '${provider.id}'.`);
+  if (!apiKey) {
+    if (opts.optional) return { apiKey: null, write: null };
+    throw new Error(`API key ausente para '${provider.id}'. Use --key-file, ${provider.envVar} ou --key.`);
   }
-
-  if (!opts.noSaveKey) {
-    saveKeyFile(targetKeyPath, entered);
-  }
-  return { apiKey: entered, source: "prompt", keyFilePath: targetKeyPath, savedTo: opts.noSaveKey ? null : targetKeyPath };
+  if (/[\r\n\0]/.test(apiKey)) throw new Error(`API key invalida para '${provider.id}'.`);
+  const write = opts.noSaveKey ? null : planKeyFile(savedPath, apiKey);
+  if (write && !opts.deferWrite) commitWrites([write]);
+  return { apiKey, source, keyFilePath: savedPath, write, savedTo: write?.changed ? savedPath : null };
 }
 
-/**
- * Save a single-line API key file with restrictive permissions (`0600`).
- */
-export function saveKeyFile(filePath, value) {
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, `${value.trim()}\n`, { encoding: "utf8", mode: 0o600 });
-}
-
-/**
- * Print a provider's saved key to stdout (useful for `apiKeyCommand` integrations).
- */
 export function readSavedKey(providerId, env = process.env) {
-  const cleanId = (providerId || "").trim();
-  if (!cleanId) {
+  if (!/^[a-z][a-z0-9-]*$/.test(providerId ?? "")) {
     throw new Error("Informe o nome do provider. Ex: agentmodelkit key opencode");
   }
-  const keyPath = getKeyFilePath(`${cleanId}.key`, env);
-  if (!fs.existsSync(keyPath)) {
-    throw new Error(`Chave nao encontrada em ${keyPath}`);
-  }
-  const value = fs.readFileSync(keyPath, "utf8").trim();
-  if (!value) {
-    throw new Error(`Arquivo de chave vazio: ${keyPath}`);
-  }
-  return value;
+  return readKeyFile(getKeyFilePath(`${providerId}.key`, env), true);
 }

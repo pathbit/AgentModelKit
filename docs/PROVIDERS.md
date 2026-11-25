@@ -1,117 +1,28 @@
-# Providers e Fontes de Modelos Gratuitos
+# Providers
 
-Este documento detalha os providers suportados pelo **AgentModelKit**, como o roteamento dinâmico funciona e onde consultar catálogos gratuitos verificados.
+## OpenCode Console e Go
 
----
+Use `--providers opencode` e selecione `--tiers payg`, `go` ou `all`. PAYG usa os créditos e a política do seu workspace. Go exige uma assinatura compatível. O catálogo também exibe os modelos Free, que o OpenCode restringe ao cliente OpenCode. Modelos de chat usam Chat Completions, Responses ou Messages conforme o catálogo. Para modelos com API nativa Gemini, os outros protocolos podem ser usados por meio da tradução do Console. [OpenCode Console e clientes externos](https://opencode.ai/docs/console/harnesses/).
 
-## 1. OpenCode (`opencode`)
+O OpenCode Go pede um identificador de sessão por conversa. Os campos de headers estáticos desses dois clientes permitem configurar um identificador estável por perfil. As conversas feitas com o mesmo perfil compartilham esse identificador. A compatibilidade com Go também depende das regras de sessão e das políticas da sua conta. [Requisitos e clientes validados do Go](https://opencode.ai/docs/console/go/#where-can-i-use-it).
 
-O provider `opencode` (`src/providers/opencode.mjs`) utiliza o catálogo curado em [`data/opencode-catalog.json`](../data/opencode-catalog.json) (baseado em [OpenCode Console Models](https://opencode.ai/docs/console/models/) e OpenCode Go), com atualização em tempo real opcional via `--live`.
+A chave pode ser passada em `OPENCODE_API_KEY` ou `--key-file`. A lista de disponibilidade para remoção vem dos endpoints públicos do Go e do Console.
 
-### Licenças / Tiers combináveis
+## FreeLLMAPI
 
-Você pode ativar um único tier, combinar licenças (`--tiers go,free`) ou ativar tudo (`--tiers all`), inclusive selecionando modelos individuais com checkboxes no terminal ou via `--models`:
+O provider se conecta ao FreeLLMAPI já em execução. Configure a chave unificada com `FREELLMAPI_API_KEY` ou `--key-file`. Defina a origem com `--url`, `--port`, `FREELLMAPI_URL` ou `FREELLMAPI_PORT`. Também é possível detectar a porta do aplicativo Desktop e verificar as portas padrão do Desktop e Docker.
 
-| Tier | Grupo no Copilot CLI (`provider`) | Label no VS Code | Prefixo no `/model` | Qtd. no catálogo | Base URL |
-| --- | --- | --- | --- | --- | --- |
-| `free` *(padrão)* | `opencode-free-go` | `OpenCode Free` | `[OpenCode Free]` | 4 modelos | `https://opencode.ai/inference/go/openai/v1` |
-| `go` | `opencode-go` | `OpenCode Go` | `[OpenCode Go]` | 27 modelos | `https://opencode.ai/inference/go/openai/v1` |
-| `payg` | `opencode-payg` | `OpenCode PAYG` | `[OpenCode PAYG]` | 45 modelos | `https://opencode.ai/inference/openai/v1` |
+- `auto` registra o roteador único.
+- `strategies` registra as estratégias virtuais incluídas em `data/`.
+- `ready` consulta `/v1/models?execution_status=ready` e também inclui as estratégias. Uma falha na consulta interrompe a configuração.
+- `prune` consulta `/v1/models` do servidor configurado. Modelos que ainda estiverem no catálogo, sem chave ou temporariamente indisponíveis, permanecem.
 
-Combinando `--tiers all` (`go,free,payg`), são configurados **76 modelos ativos de 2026** (excluindo modelos `deprecatedIds` e legados de 2025).
+O catálogo público mensal serve para pesquisa. A prontidão depende das chaves, dos limites e do estado do servidor que você configurou. [API do FreeLLMAPI](https://github.com/tashfeenahmed/freellmapi/blob/main/docs/en/api/01-rest-api.md#model-listing).
 
-### Exemplos por licença / filtro
+## Providers manuais
 
-- **Somente grátis (`free`, padrão):**
-  ```bash
-  agentmodelkit init --providers opencode --tiers free
-  ```
-  Modelos: `hungerg-free`, `hy4-flash-free`, `beam-free`, `iceman-contributor-free`.
-- **Assinantes Go (`go,free`) + seleção exata de modelos:**
-  ```bash
-  agentmodelkit copilot --providers opencode --tiers go,free --models claude-haiku-5-5,gpt-6-luna,hungerg-free
-  ```
-- **Catálogo completo (`all`):**
-  ```bash
-  agentmodelkit init --providers opencode --tiers all --live
-  ```
+Crie um JSON a partir do [exemplo](../examples/provider.local.example.json). Use um ID único no formato `custom-*`, uma URL HTTP(S), o protocolo e os limites de tokens de cada modelo. Deixe as chaves fora do manifesto. Se `requiresKey` for verdadeiro (o padrão), use uma variável derivada do ID, como `CUSTOM_MEU_PROVIDER_API_KEY`, ou passe `--key-file`.
 
-### Headers obrigatórios e privacidade no OpenCode
+`modelsUrl` é opcional e deve ficar na mesma origem do endpoint. Declare-o para usar `--live` e `prune`. A resposta deve ser uma lista OpenAI compatível, completa e sem paginação. Para `--powerful`, declare os IDs em `powerfulIds`. Para o protocolo Messages, informe a base incluindo `/v1` quando esse prefixo fizer parte da rota `/v1/messages`.
 
-1. **Header `x-opencode-session`:** o endpoint **OpenCode Go** (`/inference/go/openai/v1`) exige `x-opencode-session` (sem ele retorna `400 MissingSessionID`). O `AgentModelKit` configura `"x-opencode-session": "copilot-cli"` no Copilot CLI e `"x-opencode-session": "vscode-copilot"` em `requestHeaders` do VS Code.
-2. **Free-tier Zen vs. Go Free:** conforme a documentação oficial (`https://opencode.ai/docs/console/models/`), modelos `*-free` do Console Zen exigem o próprio OpenCode CLI/TUI. Já os 4 modelos gratuitos do Go funcionam diretamente em outros clientes.
-3. **Privacidade no Console:** `deepseek-v4.1-flash`, `deepseek-v4-pro` e `longcat-2.5` exigem **Regions: Global**; `muse-spark-1.3-contributor`, `muse-spark-1.2-contributor` e `iceman-contributor-free` exigem **Allow paid endpoints that train on request data**.
-
----
-
-## 2. FreeLLMAPI (`freellmapi`)
-
-O provider `freellmapi` (`src/providers/freellmapi.mjs`) integra o roteador gratuito open-source [FreeLLMAPI](https://freellmapi.co/models) (`tashfeenahmed/freellmapi`).
-
-### Por que o FreeLLMAPI usa modo roteador (`auto`) por padrão
-
-Conforme o [catálogo oficial do FreeLLMAPI](https://freellmapi.co/models) e seu guia para VS Code/OpenCode, o próprio roteador gerencia **450+ a 1.300+ modelos gratuitos entre 51–87 providers**, cuidando automaticamente de:
-- Escolha dinâmica do melhor modelo disponível;
-- Failover automático quando um provider atinge `rate-limit` (429);
-- Controle de cota e cooldown por chave gratuita configurada no dashboard.
-
-Por isso, o **padrão do AgentModelKit (`--freellmapi-mode auto`)** registra **apenas o roteador `auto`** (`FreeLLMAPI Auto Router`) no cliente — mantendo seu VS Code / Copilot CLI limpo e deixando o FreeLLMAPI cuidar da orquestração.
-
-Caso prefira expor mais opções:
-- `--freellmapi-mode auto` *(padrão)*: apenas `auto` (limpo, recomendado).
-- `--freellmapi-mode strategies`: 6 roteadores virtuais (`auto`, `auto:smart`, `auto:fast`, `auto:reliable`, `auto:balanced`, `fusion`).
-- `--freellmapi-mode ready` *(ou `--live`)*: consulta `GET <baseUrl>/models?execution_status=ready` na sua instância e inclui os modelos individuais atualmente prontos (que você também pode filtrar com checkboxes no assistente ou via `--models`).
-
-### Porta e endereço dinâmicos (`--url`, `--port` e Desktop `config.json`)
-
-A porta do FreeLLMAPI pode variar (Docker/Node com `PORT`, LAN, servidor remoto ou Desktop App usando `listenWithScan` entre `31415..31465`). O `AgentModelKit` resolve o endereço nesta ordem:
-1. `--url <url-ou-porta>` (aceita URL completa `https://...`, `127.0.0.1:4000` ou apenas a porta `"4000"`)
-2. `--port <numero>` ou variável `FREELLMAPI_PORT`
-3. Variáveis `FREELLMAPI_URL` / `FREELLMAPI_BASE_URL`
-4. Leitura automática do `config.json` do FreeLLMAPI Desktop (`~/Library/Application Support/FreeLLMAPI/config.json` no macOS, `%APPDATA%\FreeLLMAPI\config.json` no Windows, `~/.config/FreeLLMAPI/config.json` no Linux)
-5. Probe ao vivo nas portas candidatas, usando `http://localhost:3001/v1` como fallback padrão.
-
-### Integrando o FreeLLMAPI com o OpenCode e outros agentes
-
-Como o FreeLLMAPI expõe uma API compatível com OpenAI (`/v1`) e Anthropic (`/messages`), ele pode ser ligado em **qualquer ferramenta** — inclusive **dentro do próprio OpenCode**:
-
-1. Exemplo pronto para `~/.config/opencode/opencode.json` (ver [`examples/opencode.freellmapi.json`](../examples/opencode.freellmapi.json)):
-   ```json
-   {
-     "$schema": "https://opencode.ai/config.json",
-     "model": "freellmapi/auto",
-     "provider": {
-       "freellmapi": {
-         "npm": "@ai-sdk/openai-compatible",
-         "name": "FreeLLMAPI (local router)",
-         "options": {
-           "baseURL": "http://localhost:3001/v1"
-         },
-         "models": {
-           "auto": {
-             "name": "FreeLLMAPI Auto Router",
-             "limit": { "context": 1048576, "output": 65536 }
-           }
-         }
-       }
-     }
-   }
-   ```
-2. Em seguida, dentro do OpenCode rode `/connect`, escolha `freellmapi` e cole sua chave unificada (`freellmapi-...`). O header de resposta `X-Routed-Via` indica qual provider/modelo atendeu cada chamada.
-
----
-
-## 3. Catálogo de APIs Gratuitas Diretas (`awesome-free-llm-apis`)
-
-Além do roteador FreeLLMAPI e do OpenCode, você pode consultar o diretório comunitário [mnfst/awesome-free-llm-apis](https://github.com/mnfst/awesome-free-llm-apis) com provedores que oferecem **free tier permanente sem cartão de crédito** — tanto para adicionar chaves dentro do seu **FreeLLMAPI** quanto para configurar endpoints OpenAI-compatíveis diretos:
-
-| Provider | Base URL compatível OpenAI | Observações do free tier |
-| --- | --- | --- |
-| **Google AI Studio (Gemini)** | `https://generativelanguage.googleapis.com/v1beta/openai/` | Sem cartão; Gemini Flash/Gemma; prompts free podem ser usados para melhoria do serviço |
-| **Groq** | `https://api.groq.com/openai/v1` | Sem cartão; inferência LPU de baixa latência (`gpt-oss-120b`, `qwen3.8-27b` etc.) |
-| **Cloudflare Workers AI** | `https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/v1` | 10.000 Neurons/dia gratuitos sem cartão |
-| **Cohere** | `https://api.cohere.ai/compatibility/v1` | Chave Trial gratuita (1.000 chamadas/mês, uso não comercial) |
-| **AxForge** | `https://api.axforge.ai/v1` | 3M tokens a cada 30 dias na UE, sem cartão |
-| **Kilo Code Gateway** | `https://api.kilo.ai/api/gateway` | Modelos `:free` e `kilo-auto/free` sem conta/cartão |
-
-> **Dica:** adicionar 2 ou mais chaves gratuitas (ex.: Google AI Studio + Groq + Cloudflare) dentro do **FreeLLMAPI** multiplica sua cota gratuita diária por trás de um único modelo `auto` com failover automático.
+[Índice da documentação](README.md)

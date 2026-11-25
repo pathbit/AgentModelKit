@@ -1,48 +1,29 @@
 # AgentModelKit
 
-[Português](README.md) · [Documentation](docs/README.md) · [Examples](examples/README.md)
+[Português](README.md) · [Documentation](docs/README.md)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E%3D18-blue.svg)](https://nodejs.org/)
+AgentModelKit configures AI providers and models in VS Code and GitHub Copilot CLI. It runs on Windows, macOS and Linux.
 
-Zero-dependency, cross-platform (**Windows, macOS, Linux**) Node.js CLI to configure **AI model providers, service/license tiers, interactive checkbox model selection, and API keys** across coding editors and CLIs — starting with **VS Code** (`chatLanguageModels.json`) and **GitHub Copilot CLI** (`~/.copilot/providers.json`).
+## Required prerequisite
 
-Sister repository to [AgentDevKit](https://github.com/pathbit/AgentDevKit): `AgentDevKit` distributes reusable agent skills and rules, while **`AgentModelKit`** manages model endpoints, licenses, routing, and credentials across tools.
+Install **[Node.js](https://nodejs.org/en/download)** version 18 or later. A current LTS release is recommended. Node.js includes npm and npx. To run the configured models, use one of the supported clients and follow the provider's requirements for access.
 
-## Highlights
+## Run without a permanent installation
 
-- **Terminal checkbox wizard (`npx`):** toggle targets (`VS Code`, `Copilot CLI`), combined services/licenses (`OpenCode Free`, `OpenCode Go`, `OpenCode PAYG`, `FreeLLMAPI`), and individual models interactively.
-- **Dynamic FreeLLMAPI port & clean `auto` mode:** detects FreeLLMAPI Desktop's runtime `config.json` port or server port dynamically, accepts custom `--url` / `--port`, and configures only the `auto` smart router by default (letting FreeLLMAPI handle model routing & failover).
-- **VS Code `customendpoint` compliant:** emits valid `"vendor": "customendpoint"` blocks and `${input:...}` secret vault references.
-- **Cross-platform Copilot CLI `apiKeyCommand`:** reads `<COPILOT_HOME>/<provider>.key` (`0600`) cleanly in `cmd.exe`, macOS, and Linux without editing shell profiles.
+After the first npm release, run the assistant with `npx --yes @pathbit/agentmodelkit`. npm caches the package. AgentModelKit writes client configuration and has zero runtime dependencies. While developing from the repository, use `node bin/agentmodelkit.mjs`.
 
-## Quick start
-
-```bash
-# Guided interactive checkbox wizard
-node bin/agentmodelkit.mjs
-
-# Configure OpenCode Free + FreeLLMAPI (clean auto router) on VS Code & Copilot CLI
-node bin/agentmodelkit.mjs init --providers opencode,freellmapi --tiers free --targets all
-
-# Configure FreeLLMAPI on a custom dynamic port
-node bin/agentmodelkit.mjs init --providers freellmapi --port 31416 --targets all
-
-# Filter specific model IDs non-interactively
-node bin/agentmodelkit.mjs copilot --providers opencode --tiers go,free --models claude-haiku-5-5,hungerg-free
-
-# Check binaries, detected FreeLLMAPI URL, config paths, and saved .key files
-node bin/agentmodelkit.mjs doctor
+```sh
+npx --yes @pathbit/agentmodelkit add --providers freellmapi --targets all --dry-run
+npx --yes @pathbit/agentmodelkit add --providers opencode --tiers payg --powerful --dry-run
+npx --yes @pathbit/agentmodelkit add --provider-file ./my-provider.json --dry-run
+npx --yes @pathbit/agentmodelkit catalog update
+npx --yes @pathbit/agentmodelkit prune --providers opencode
 ```
 
-## Development
+`add` preserves existing entries and applies the selected additions. `--replace` replaces selections managed for the specified providers. `prune` previews removal after checking the live source without a readiness filter. Use `--apply` to write those changes. Every changed existing file receives a new backup.
 
-```bash
-npm run check
-npm test
-npm pack --dry-run
-```
+Use `--key-file`, the provider's environment variable, or the interactive prompt to supply a key. Copilot CLI's named-provider JSON stores the key directly. VS Code defaults to a secret input reference. Keep keys and configuration backups outside the repository.
 
-## License
+The package includes curated catalog snapshots in `data/`. The catalog update command caches fresh data separately. OpenCode Free models are reserved for OpenCode, so use FreeLLMAPI, an eligible OpenCode plan, or your own endpoint for these clients. See the [Portuguese README](README.md) for flag and provider details and the [release process](docs/RELEASE.md) for maintenance.
 
 [MIT](LICENSE) © PathBit

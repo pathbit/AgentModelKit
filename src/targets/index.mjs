@@ -19,18 +19,18 @@ export function normalizeTargets(rawTargets) {
     return ["vscode", "copilot-cli"];
   }
   const items = Array.isArray(rawTargets) ? rawTargets : String(rawTargets).split(",");
-  const cleaned = items.map((s) => s.trim().toLowerCase()).filter(Boolean);
-  if (cleaned.includes("all")) return ["vscode", "copilot-cli"];
+  const cleaned = items.map((s) => s.trim().toLowerCase());
 
   const out = [];
   for (const item of cleaned) {
-    const resolved = TARGET_ALIASES[item];
+    if (item === "all") continue;
+    const resolved = Object.hasOwn(TARGET_ALIASES, item) ? TARGET_ALIASES[item] : null;
     if (!resolved) {
       throw new Error(`Target desconhecido: '${item}'. Disponiveis: vscode, copilot-cli, all.`);
     }
     if (!out.includes(resolved)) out.push(resolved);
   }
-  return out.length ? out : ["vscode", "copilot-cli"];
+  return cleaned.includes("all") ? ["vscode", "copilot-cli"] : out;
 }
 
 export function listTargets() {

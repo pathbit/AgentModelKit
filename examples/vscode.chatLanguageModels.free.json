@@ -1,80 +1,5 @@
 [
   {
-    "name": "+++++++ CONFIGURACAO OPENCODE +++++++",
-    "vendor": "customendpoint"
-  },
-  {
-    "name": "OpenCode Free",
-    "vendor": "customendpoint",
-    "apiKey": "${input:chat.lm.secret.66290ed1}",
-    "models": [
-      {
-        "id": "beam-free",
-        "name": "Beam Free",
-        "url": "https://opencode.ai/inference/go/openai/v1/chat/completions",
-        "toolCalling": true,
-        "vision": false,
-        "thinking": true,
-        "supportsReasoningEffort": [
-          "low",
-          "medium",
-          "high"
-        ],
-        "maxInputTokens": 1048576,
-        "maxOutputTokens": 131072,
-        "requestHeaders": {
-          "x-opencode-session": "vscode-copilot"
-        }
-      },
-      {
-        "id": "iceman-contributor-free",
-        "name": "Iceman Contributor Free",
-        "url": "https://opencode.ai/inference/go/openai/v1/chat/completions",
-        "toolCalling": true,
-        "vision": false,
-        "maxInputTokens": 262144,
-        "maxOutputTokens": 131072,
-        "requestHeaders": {
-          "x-opencode-session": "vscode-copilot"
-        }
-      },
-      {
-        "id": "hy4-flash-free",
-        "name": "Hy4 flash Free",
-        "url": "https://opencode.ai/inference/go/openai/v1/chat/completions",
-        "toolCalling": true,
-        "vision": true,
-        "thinking": true,
-        "supportsReasoningEffort": [
-          "low",
-          "medium",
-          "high"
-        ],
-        "maxInputTokens": 983040,
-        "maxOutputTokens": 65536,
-        "requestHeaders": {
-          "x-opencode-session": "vscode-copilot"
-        }
-      },
-      {
-        "id": "hungerg-free",
-        "name": "HungerG Free",
-        "url": "https://opencode.ai/inference/go/openai/v1/chat/completions",
-        "toolCalling": true,
-        "vision": true,
-        "maxInputTokens": 1000000,
-        "maxOutputTokens": 65536,
-        "requestHeaders": {
-          "x-opencode-session": "vscode-copilot"
-        }
-      }
-    ]
-  },
-  {
-    "name": "+++++++ CONFIGURACAO FREELLMAPI +++++++",
-    "vendor": "customendpoint"
-  },
-  {
     "name": "FreeLLMAPI",
     "vendor": "customendpoint",
     "apiKey": "${input:chat.lm.secret.freellmapi}",
@@ -82,7 +7,8 @@
       {
         "id": "auto",
         "name": "FreeLLMAPI Auto Router",
-        "url": "http://localhost:3001/v1/chat/completions",
+        "url": "http://127.0.0.1:31415/v1/chat/completions",
+        "apiType": "chat-completions",
         "toolCalling": true,
         "vision": true,
         "maxInputTokens": 1048576,

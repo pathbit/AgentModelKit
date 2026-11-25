@@ -1,65 +1,19 @@
-# Contribuindo para o AgentModelKit
+# Contribuição
 
-Contribuições são muito bem-vindas! O projeto foi desenhado para facilitar a adição de **novos providers de IA** e **novos editores / CLIs / apps desktop**.
+O AgentModelKit é um projeto da PathBit. Mudanças entram na `main` depois de verificadas.
 
-## Como adicionar um novo Provider
+## Ambiente
 
-1. Crie `src/providers/<seu-provider>.mjs` exportando um objeto com:
-   - `id`, `label`, `description`
-   - `availableTiers`, `defaultTiers`
-   - `keyFile`, `envVar`, `keyPlaceholder`, `requiresKey`
-   - `async resolve({ tiers, baseUrl, port, mode, apiKey, live })` retornando:
-     ```js
-     {
-       providerId: "seu-provider",
-       separatorName: "+++++++ CONFIGURACAO SEU PROVIDER +++++++",
-       copilotRootComment: "+++++++ CONFIGURACAO SEU PROVIDER +++++++",
-       managedGroupIds: ["seu-provider"],
-       managedVSCodeNames: ["+++++++ CONFIGURACAO SEU PROVIDER +++++++", "Seu Provider"],
-       keyFile: "seu-provider.key",
-       defaultModel: "seu-provider/modelo-padrao",
-       source: "catalog",
-       groups: [
-         {
-           id: "seu-provider",
-           label: "Seu Provider",
-           prefix: "[Seu Provider]",
-           comment: "+++++++ SEU PROVIDER +++++++",
-           baseUrl: "https://api.exemplo.com/v1",
-           copilotHeaders: null,
-           vscodeHeaders: null,
-           vscodeSecretId: "chat.lm.secret.seuprovider",
-           models: [
-             {
-               id: "modelo-padrao",
-               name: "Modelo Padrao",
-               toolCalling: true,
-               vision: false,
-               reasoningEffort: "high",
-               tier: "intelligence",
-               maxInputTokens: 128000,
-               maxOutputTokens: 16384,
-             },
-           ],
-         },
-       ],
-     }
-     ```
-2. Registre o provider em `src/providers/index.mjs`.
-3. Adicione testes em `tests/` e rode `npm run check && npm test`.
-
-## Como adicionar um novo Target (Editor / CLI / Desktop)
-
-1. Crie `src/targets/<seu-target>.mjs` implementando:
-   - `id`, `label`, `description`
-   - `apply(resolvedProviders, opts, env)` (respeitando `opts.dryRun`, preservando configurações não gerenciadas e criando backup `.bak` antes de gravar).
-2. Registre em `src/targets/index.mjs`.
-3. Documente em `docs/CLIENTS.md` e adicione testes em `tests/`.
-
-## Verificação antes de abrir PR
+Use [Node.js](https://nodejs.org/en/download) 18 ou posterior. O CLI usa módulos nativos do Node.js.
 
 ```bash
+npm run check
 npm test
-node bin/agentmodelkit.mjs list
-node bin/agentmodelkit.mjs doctor
+npm run test:package
 ```
+
+O teste de pacote executa os binários publicados de um tarball local, com cache e perfis temporários. Use `COPILOT_HOME`, `VSCODE_USER_DIR` e `AGENTMODELKIT_CATALOG_DIR` para isolar experiências dos seus perfis habituais.
+
+Ao alterar um provider ou cliente, teste a configuração gerada, sua coexistência com entradas existentes e a falha de gravação ou de consulta à origem. Ao atualizar dados, regenere-os conforme [data/README.md](data/README.md) e confira os IDs em [data/curation.json](data/curation.json).
+
+O mantenedor autoriza a criação da tag e a publicação seguindo o [processo de release](docs/RELEASE.md).

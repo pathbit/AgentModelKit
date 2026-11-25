@@ -2,133 +2,96 @@
 
 [English](README.en.md) · [Documentação](docs/README.md) · [Exemplos](examples/README.md)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E%3D18-blue.svg)](https://nodejs.org/)
+O AgentModelKit configura providers e modelos de IA no **VS Code** e no **GitHub Copilot CLI**. O CLI roda no Windows, macOS e Linux, aceita parâmetros para automação e oferece um seletor no terminal. O projeto é mantido pela PathBit junto com o [AgentDevKit](https://github.com/pathbit/AgentDevKit).
 
-CLI multiplataforma (**Windows, macOS e Linux**, **zero dependências externas**) para configurar **providers de IA, licenças/tiers, seleção de modelos com checkboxes no terminal e API keys** em editores e ferramentas de código — começando por **VS Code** (`chatLanguageModels.json`) e **GitHub Copilot CLI** (`~/.copilot/providers.json`).
+## Pré-requisito obrigatório
 
-Projeto irmão do [AgentDevKit](https://github.com/pathbit/AgentDevKit): enquanto o `AgentDevKit` distribui skills, regras e instruções de agentes, o **`AgentModelKit`** gerencia os **motores de IA (endpoints, licenças, roteamento e credenciais)**.
+**Instale somente o [Node.js](https://nodejs.org/pt/download)** para executar o AgentModelKit. A versão mínima é a 18. Use uma versão LTS atual sempre que possível. A distribuição do Node.js já inclui `npm` e `npx`. Confira com `node -v` e `npx --version`.
 
----
+Para **usar** os modelos, você também precisa ter o cliente escolhido disponível. O FreeLLMAPI precisa estar rodando se for seu provider. Uma conta ou chave pode ser exigida pelo provider. A CLI gera a configuração mesmo que o cliente ainda esteja ausente.
 
-## Por que usar
+## Executar sem instalação permanente
 
-- **Checkboxes interativos no terminal (`npx`):** marque com `Espaço` e setas ↑↓ os clientes (`VS Code`, `Copilot CLI`), as licenças/serviços combinados (`OpenCode Free`, `OpenCode Go`, `OpenCode PAYG`, `FreeLLMAPI`) e até **modelos individuais** que deseja habilitar.
-- **FreeLLMAPI com porta dinâmica & modo `auto` enxuto:** detecta automaticamente a porta dinâmica do FreeLLMAPI Desktop (`config.json`) ou Docker (`:3001`), aceita `--url` ou `--port` customizados e registra apenas o roteador `auto` por padrão — deixando o próprio FreeLLMAPI escolher modelos e fazer failover entre provedores gratuitos.
-- **Zero segredos expostos e zero `~/.zshrc`:**
-  - **GitHub Copilot CLI:** grava `apiKeyCommand` multiplataforma (`node -e "..."`, sem `sh -c`, `$` ou `%`) lendo `<COPILOT_HOME>/<provider>.key` (`0600`) igual no Windows `cmd.exe`, macOS e Linux.
-  - **VS Code (`customendpoint`):** usa `${input:chat.lm.secret...}` com separadores visuais compatíveis com o schema oficial `"vendor": "customendpoint"`.
-- **Merge idempotente e backup `.bak`:** alternar de `--tiers all` para `--tiers free` limpa apenas os grupos antigos do provider mantendo todos os demais intactos.
+O `npx` baixa o pacote no cache do npm e executa a CLI. O comando configura os arquivos dos clientes e não instala editores, extensões, providers, runtimes ou modelos. Uma operação `--dry-run` não grava configuração, credenciais nem backups.
 
----
-
-## Pré-requisitos
-
-- **Node.js ≥ 18** (`node -v`)
-- Clientes suportados: **VS Code** (GitHub Copilot Chat) e/ou **GitHub Copilot CLI** (`copilot`)
-
----
-
-## Uso rápido
-
-### 1) Assistente interativo com checkboxes (`init`)
+**Enquanto o pacote estiver em desenvolvimento local**, rode os exemplos daqui do repositório com `node bin/agentmodelkit.mjs` no lugar de `npx --yes @pathbit/agentmodelkit`. O nome no npm estará disponível a partir da primeira publicação.
 
 ```bash
-npx @pathbit/agentmodelkit
-# ou localmente dentro do repositorio:
-node bin/agentmodelkit.mjs
+# Assistente para selecionar clientes, providers e modelos.
+npx --yes @pathbit/agentmodelkit
+
+# Simula a configuração do FreeLLMAPI com o roteador auto.
+npx --yes @pathbit/agentmodelkit init --providers freellmapi --targets all --dry-run
+
+# Configura um FreeLLMAPI já em execução.
+npx --yes @pathbit/agentmodelkit add --providers freellmapi --port 31415 --key-file ./freellmapi.key --yes
+
+# Acrescenta um modelo do OpenCode Console ao Copilot CLI.
+npx --yes @pathbit/agentmodelkit add --providers opencode --tiers payg --models gpt-6.2-sol --targets copilot-cli --key-file ./opencode.key --yes
+
+# Acrescenta os modelos da curadoria do Go e Console e simula a configuração.
+npx --yes @pathbit/agentmodelkit add --providers opencode --tiers all --powerful --dry-run
 ```
 
-No assistente interativo você escolhe com `[x]`:
-1. Quais ferramentas configurar (`VS Code`, `GitHub Copilot CLI` ou ambas)
-2. Quais serviços / licenças combinar ao mesmo tempo (`OpenCode Free`, `OpenCode Go`, `OpenCode PAYG`, `FreeLLMAPI`)
-3. Para `FreeLLMAPI`: URL ou porta dinâmica (`Enter` = auto-detectar) e modo (`auto` roteador único recomendado, `strategies` ou modelos `ready` ao vivo)
-4. Se deseja instalar todos os modelos das licenças marcadas ou **selecionar modelos um a um com checkboxes `[x]`**
-5. Sua API key (salva em `<COPILOT_HOME>/<provider>.key` na primeira vez)
+O `--yes` **após o nome do pacote** desativa as perguntas do AgentModelKit. O `--yes` antes do nome responde à confirmação do npm para uso do cache.
 
-### 2) Exemplos diretos por linha de comando
+## Acrescentar, substituir e remover modelos
+
+- `add` e `init` acrescentam modelos e atualizam as entradas selecionadas. Outros modelos e providers continuam disponíveis.
+- `--replace` substitui a seleção gerenciada dos providers indicados, depois de criar backups. Veja o efeito primeiro com `--dry-run`.
+- `--models` aceita IDs separados por vírgula. Use `<grupo>/<modelo>` para distinguir o mesmo ID em Go e PAYG.
+- `--default-model` define o modelo padrão do Copilot CLI explicitamente. Passe o ID do modelo ou a seleção qualificada exibida pelo comando.
+- `prune` consulta a lista completa da origem e mostra quais modelos gerenciados deixaram de constar ali. Adicione `--apply` para remover. Um modelo ainda anunciado pelo FreeLLMAPI, mesmo sem chave ou com quota temporariamente esgotada, permanece configurado.
 
 ```bash
-# OpenCode SOMENTE Free (4 modelos) + FreeLLMAPI (somente roteador auto) no VS Code e Copilot CLI:
-node bin/agentmodelkit.mjs init --providers opencode,freellmapi --tiers free --targets all
-
-# FreeLLMAPI apontando para uma porta dinâmica ou servidor LAN customizado:
-node bin/agentmodelkit.mjs init --providers freellmapi --port 31416 --targets all
-node bin/agentmodelkit.mjs init --providers freellmapi --url http://192.168.1.50:4000/v1 --targets all
-
-# OpenCode Go + Free filtrando exatamente os modelos desejados:
-node bin/agentmodelkit.mjs copilot --providers opencode --tiers go,free --models claude-haiku-5-5,gpt-6-luna,hungerg-free
-
-# FreeLLMAPI listando modelos prontos ao vivo (/v1/models?execution_status=ready):
-node bin/agentmodelkit.mjs init --providers freellmapi --freellmapi-mode ready --targets all
-
-# Atualizar catálogo do OpenCode direto da API ao vivo e simular sem gravar:
-node bin/agentmodelkit.mjs init --providers opencode --tiers all --live --dry-run
-
-# Diagnóstico de caminhos, URL do FreeLLMAPI detectada e chaves salvas:
-node bin/agentmodelkit.mjs doctor
+npx --yes @pathbit/agentmodelkit prune --providers opencode
+npx --yes @pathbit/agentmodelkit prune --providers opencode --apply
+npx --yes @pathbit/agentmodelkit prune --providers freellmapi --port 31415 --key-file ./freellmapi.key
 ```
 
----
+Cada gravação que substitui um arquivo existente preserva os bytes anteriores em um backup `.bak` exclusivo. O comando informa os caminhos dos backups. Se um JSON de configuração estiver inválido, a operação é interrompida antes de escrever qualquer cliente.
 
-## Comandos e opções
+## Providers e catálogos
 
-| Comando | Descrição |
+| Provider | Opções |
 | --- | --- |
-| `init` *(padrão)* | Assistente interativo com checkboxes para clientes, serviços, licenças e modelos |
-| `copilot` | Configura apenas o GitHub Copilot CLI (`~/.copilot/providers.json`) |
-| `vscode` | Configura apenas o VS Code (`chatLanguageModels.json`) |
-| `list` | Lista providers, tiers e targets disponíveis |
-| `doctor` | Verifica Node.js, `copilot`, `code`, configs, URL do FreeLLMAPI e chaves `.key` |
-| `key <provider>` | Imprime a chave salva em `<COPILOT_HOME>/<provider>.key` |
+| OpenCode | `--tiers go` para assinatura e `--tiers payg` para Console. `all` inclui ambos. O OpenCode Free é restrito ao próprio OpenCode. As entradas Free aparecem em `catalog list` para consulta. |
+| FreeLLMAPI | `auto` por padrão ou `--freellmapi-mode strategies\|ready`. Use `--url` ou `--port` para um servidor específico. `ready` consulta os modelos que podem atender no servidor informado. |
+| Provider manual | Passe um [manifesto JSON](examples/provider.local.example.json) com `--provider-file`. Pode repetir a opção para incluir mais de um provider. |
 
-| Flag | Descrição |
-| --- | --- |
-| `-p, --providers <lista>` | `opencode`, `freellmapi` ou `opencode,freellmapi` |
-| `-t, --targets <lista>` | `vscode`, `copilot-cli` ou `all` |
-| `--tiers <lista>` | OpenCode (`--licenses`): `free`, `go`, `payg`, `go,free` ou `all` |
-| `--url <url-ou-porta>` | Endereço base ou porta do FreeLLMAPI (ex.: `http://localhost:4000/v1` ou `4000`) |
-| `--port <numero>` | Porta dinâmica do FreeLLMAPI (ex.: `31416`) |
-| `--freellmapi-mode <modo>` | `auto` *(padrão: somente roteador)* \| `strategies` \| `ready` |
-| `--models <lista>` | Filtra IDs de modelos específicos (ex.: `hungerg-free,claude-haiku-5-5,auto`) |
-| `-k, --key <valor>` | Passa a API key diretamente pela linha de comando |
-| `--key-file <caminho>` | Lê a chave de um arquivo específico |
-| `-m, --default-model <id>` | Define o modelo padrão via `copilot config model` |
-| `--live` | Consulta APIs ao vivo antes de gravar |
-| `--inline-key` | Grava a chave literal no JSON em vez de `apiKeyCommand` / `${input:...}` |
-| `--no-save-key` | Não cria `<COPILOT_HOME>/<provider>.key` |
-| `--dry-run` | Simula sem alterar arquivos ou gravar chaves no disco |
+`--powerful` carrega a seleção editorial em [data/curation.json](data/curation.json). No FreeLLMAPI ela inclui estratégias do roteador. Em um provider manual, declare os modelos recomendados em `powerfulIds`. A curadoria usa dados versionados e pode ser revisada mensalmente. O AgentModelKit não chama um modelo de IA para fazer essa seleção.
 
----
+```bash
+# Lista os catálogos em uso.
+npx --yes @pathbit/agentmodelkit catalog list
 
-## Providers e catálogos de referência
+# Busca o catálogo oficial do OpenCode e a distribuição assinada do FreeLLMAPI.
+npx --yes @pathbit/agentmodelkit catalog update
 
-- **OpenCode (`opencode`)** — [ver detalhes em docs/PROVIDERS.md](docs/PROVIDERS.md) e [OpenCode Console Models](https://opencode.ai/docs/console/models/):
-  - `free`: 4 modelos gratuitos do Go compatíveis com VS Code e Copilot CLI
-  - `go`: 27 modelos pagos do plano Go (`/inference/go/openai/v1` + `x-opencode-session`)
-  - `payg`: 45 modelos ativos de 2026 do Console (`/inference/openai/v1`)
-- **FreeLLMAPI (`freellmapi`)** — [catálogo freellmapi.co/models](https://freellmapi.co/models) e [docs/PROVIDERS.md](docs/PROVIDERS.md):
-  - Por padrão configura apenas o roteador `auto` (sem lista gigante de modelos) com porta/URL dinâmica e pode inclusive ser ligado **dentro do OpenCode CLI** (veja [`examples/opencode.freellmapi.json`](examples/opencode.freellmapi.json)).
-- **Awesome Free LLM APIs** — veja em [docs/PROVIDERS.md](docs/PROVIDERS.md#3-cat%C3%A1logo-de-apis-gratuitas-diretas-awesome-free-llm-apis) as principais APIs gratuitas sem cartão de [mnfst/awesome-free-llm-apis](https://github.com/mnfst/awesome-free-llm-apis) (Google Gemini, Groq, Cloudflare, Cohere, AxForge, Kilo Gateway).
+# Atualiza somente uma fonte sem gravar.
+npx --yes @pathbit/agentmodelkit catalog update --source opencode --dry-run
 
----
+# Carrega modelos de um endpoint que você já tem, usando um manifesto local.
+npx --yes @pathbit/agentmodelkit add --provider-file ./meu-provider.json --dry-run
+```
 
-## Documentação e desenvolvimento
+Os catálogos acompanham o pacote em `data/`. `catalog update` atualiza um cache separado dos arquivos do pacote. Para consultar o OpenCode ao vivo durante a configuração, use `--live`. A consulta ao vivo do FreeLLMAPI para configuração usa o servidor indicado, enquanto o catálogo público é uma referência das opções do produto. [Detalhes das origens, do cache e da rotina mensal](data/README.md).
 
-- [Índice geral da documentação](docs/README.md)
-- [Arquitetura e como estender](docs/ARCHITECTURE.md)
-- [Providers suportados (OpenCode, FreeLLMAPI & Awesome Free LLM APIs)](docs/PROVIDERS.md)
-- [Clientes suportados (VS Code & Copilot CLI)](docs/CLIENTS.md)
-- [Exemplos de saída](examples/README.md)
-- [Roadmap público](docs/ROADMAP.md)
-- [Guia de contribuição](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
+## Credenciais e clientes
+
+- Para o **Copilot CLI**, o formato de providers nomeados utiliza `apiKey` no próprio `providers.json`. Use `--key-file`, a variável `OPENCODE_API_KEY` ou `FREELLMAPI_API_KEY`, ou o prompt protegido do terminal. `--no-save-key` evita uma segunda cópia em `.key`. Em sistemas POSIX, os arquivos gerenciados e backups usam permissões restritas.
+- No **VS Code**, o padrão é uma referência de segredo. Informe a chave no editor de modelos quando o cliente pedir. Use `--inline-key` somente se quiser a chave literal também no JSON do VS Code. O cliente usa `chatLanguageModels.json` do perfil escolhido.
+- `doctor` lista versões, caminhos e presença de arquivos de chave sem imprimir os valores. Para caminhos personalizados, backups e restauração, veja [Clientes](docs/CLIENTS.md).
+
+## Desenvolvimento e publicação
 
 ```bash
 npm run check
 npm test
-npm pack --dry-run
+npm run test:package
+npm run catalog:update -- --dry-run
 ```
 
-## Licença
+A `main` recebe as mudanças revisadas. A tag de release exige a aprovação do mantenedor após os testes. O [processo de publicação](docs/RELEASE.md) valida a tag, testa o pacote e usa o mesmo tarball no npmjs, no GitHub Packages e no GitHub Release.
 
 [MIT](LICENSE) © PathBit

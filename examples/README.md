@@ -1,13 +1,8 @@
-# Exemplos de saída (`examples/`)
+# Exemplos
 
-Snapshots anonimizados (sem API keys reais) mostrando o que o **AgentModelKit** gera e exemplos extras de integração:
+- [Manifesto para um servidor Ollama](provider.local.example.json). Use com `add --provider-file` e ajuste os IDs para os modelos do seu servidor.
+- [Configuração do FreeLLMAPI no Copilot CLI](copilot.providers.free.json). Use uma chave do seu servidor antes de usar o exemplo.
+- [Configuração do FreeLLMAPI no VS Code](vscode.chatLanguageModels.free.json). Configure a chave no editor de modelos.
+- [FreeLLMAPI dentro do OpenCode](opencode.freellmapi.json). Exemplo de integração manual no cliente OpenCode.
 
-- [`vscode.chatLanguageModels.free.json`](vscode.chatLanguageModels.free.json): blocos para o `chatLanguageModels.json` do VS Code com `"vendor": "customendpoint"`, separadores visuais, referências `${input:...}`, `OpenCode (free)` e `FreeLLMAPI (auto)`.
-- [`copilot.providers.free.json`](copilot.providers.free.json): payload para o `~/.copilot/providers.json` com `apiKeyCommand` multiplataforma lendo `.key`.
-- [`opencode.freellmapi.json`](opencode.freellmapi.json): exemplo pronto para conectar o **OpenCode CLI** diretamente no roteador local **FreeLLMAPI** (`auto`).
-
-Para simular na sua máquina sem gravar arquivos:
-
-```bash
-node bin/agentmodelkit.mjs init --providers opencode,freellmapi --tiers free --targets all --dry-run
-```
+[Índice da documentação](../docs/README.md)
