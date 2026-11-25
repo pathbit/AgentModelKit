@@ -55,6 +55,19 @@ try {
   assert.deepEqual(fs.readdirSync(cwd), [".opencode"]);
   const project = JSON.parse(fs.readFileSync(path.join(cwd, ".opencode", "opencode.json"), "utf8"));
   assert.ok(project.providers["agentmodelkit-custom-ollama"].models["qwen3:8b"]);
+  const agentUrl = "https://llm.example.com/v1/t/EXAMPLE_TOKEN";
+  const urlOutput = npmCommand("agentmodelkit", "--url", agentUrl);
+  assert.match(urlOutput, /\[opencode\] updated/);
+  assert.doesNotMatch(urlOutput, /EXAMPLE_TOKEN/);
+  const openCodeFile = path.join(cwd, ".opencode", "opencode.json");
+  const openCodeText = fs.readFileSync(openCodeFile, "utf8");
+  const router = JSON.parse(openCodeText).providers["agentmodelkit-freellmapi"];
+  assert.deepEqual(Object.keys(router.models), ["auto"]);
+  assert.equal(router.settings.apiKey, undefined);
+  assert.match(router.settings.baseURL, /^\{file:.*\}$/);
+  assert.equal(fs.readFileSync(router.settings.baseURL.slice(6, -1), "utf8").trim(), agentUrl);
+  assert.doesNotMatch(openCodeText, /EXAMPLE_TOKEN/);
+  assert.deepEqual(fs.readdirSync(cwd), [".opencode"]);
   if (process.env.AGENTMODELKIT_ARTIFACT_DIR) {
     const dir = path.resolve(process.env.AGENTMODELKIT_ARTIFACT_DIR);
     fs.mkdirSync(dir, { recursive: true });

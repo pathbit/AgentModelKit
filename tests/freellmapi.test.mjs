@@ -262,3 +262,82 @@ test("explicit ready discovery fails on an offline server", async () => {
     fetchImpl: async () => { throw new Error("ECONNREFUSED"); },
   }), /ECONNREFUSED/);
 });
+
+test("an agent URL configures the three clients without a separate key and supports discovery and pruning", async (t) => {
+  const { root, copilotHome, vscodeUser, env } = makeTempEnv();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const token = "example-fixture-token";
+  const seen = [];
+  let available = true;
+  let broken = false;
+  const server = http.createServer((request, response) => {
+    seen.push({ url: request.url, authorization: request.headers.authorization });
+    response.setHeader("Content-Type", "application/json");
+    const data = available ? [{ id: "fixture-chat", execution_status: "ready" }] : [];
+    response.end(JSON.stringify({ data: broken ? [] : [{ id: "auto" }, ...data] }));
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => {
+    server.closeAllConnections();
+    server.close();
+  });
+  const baseUrl = `http://127.0.0.1:${server.address().port}/v1/t/${token}`;
+  assert.equal(normalizeFreeLLMBaseUrl(baseUrl + "/"), baseUrl);
+  assert.equal(normalizeFreeLLMBaseUrl(baseUrl + "/responses"), baseUrl);
+  assert.equal(normalizeFreeLLMBaseUrl(baseUrl + "/models"), baseUrl);
+  assert.throws(() => normalizeFreeLLMBaseUrl(baseUrl + "/not-an-endpoint"), (error) =>
+    /Invalid FreeLLMAPI agent URL/.test(error.message) && !error.message.includes(token));
+
+  const openCodeArgs = ["--project-dir", root, "--yes"];
+  const urlArgs = ["--url", baseUrl + "/chat/completions", "--targets", "all", ...openCodeArgs];
+  await runCli([...urlArgs, "--dry-run"], env);
+  assert.deepEqual(fs.readdirSync(root), []);
+  await runCli(urlArgs, env);
+  assert.deepEqual(seen, []);
+
+  const project = path.join(root, ".opencode");
+  const projectConfig = path.join(project, "opencode.json");
+  const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
+  const openCode = () => readJson(projectConfig).providers["agentmodelkit-freellmapi"];
+  const copilot = () => readJson(path.join(copilotHome, "providers.json"));
+  const vscode = () => readJson(path.join(vscodeUser, "chatLanguageModels.json"));
+  const reference = openCode().settings.baseURL;
+  assert.match(reference, /^\{file:.*\}$/);
+  assert.equal(openCode().settings.apiKey, undefined);
+  assert.deepEqual(Object.keys(openCode().models), ["auto"]);
+  const secretFile = reference.slice(6, -1);
+  assert.equal(fs.readFileSync(secretFile, "utf8").trim(), baseUrl);
+  if (process.platform !== "win32") assert.equal(fs.statSync(secretFile).mode & 0o777, 0o600);
+  for (const file of fs.readdirSync(project)) {
+    assert.equal(fs.readFileSync(path.join(project, file), "utf8").includes(token), false);
+  }
+  assert.equal(fs.existsSync(path.join(copilotHome, "freellmapi.key")), false);
+  assert.equal(copilot().providers[0].baseUrl, baseUrl);
+  assert.equal(copilot().providers[0].apiKey, undefined);
+  assert.equal(vscode()[0].models[0].url, baseUrl + "/chat/completions");
+  assert.equal(vscode()[0].apiKey, undefined);
+
+  const envWithUrl = { ...env, FREELLMAPI_URL: baseUrl, FREELLMAPI_API_KEY: "unused-fixture-key" };
+  await runCli(["add", "--live", "--targets", "all", ...openCodeArgs], envWithUrl);
+  assert.deepEqual(seen, [{ url: `/v1/t/${token}/models?execution_status=ready`, authorization: undefined }]);
+  assert.ok(openCode().models["fixture-chat"]);
+  const virtualModels = Object.keys(openCode().models).filter((id) => id !== "fixture-chat").sort();
+
+  available = false;
+  broken = true;
+  await assert.rejects(runCli(["prune", ...urlArgs, "--apply"], envWithUrl), (error) =>
+    /Could not list FreeLLMAPI models/.test(error.message) && !error.message.includes(token));
+  assert.ok(openCode().models["fixture-chat"]);
+  broken = false;
+  await runCli(["prune", ...urlArgs, "--apply"], envWithUrl);
+  assert.deepEqual(Object.keys(openCode().models).sort(), virtualModels);
+  assert.deepEqual(copilot().models.map(({ id }) => id).sort(), virtualModels);
+  assert.deepEqual(vscode()[0].models.map(({ id }) => id).sort(), virtualModels);
+
+  const normalUrl = "http://localhost:3001/v1";
+  await runCli(["--url", normalUrl, ...openCodeArgs], env);
+  assert.equal(openCode().settings.apiKey, "{env:FREELLMAPI_API_KEY}");
+  await runCli(["--url", baseUrl, ...openCodeArgs], env);
+  assert.equal(openCode().settings.apiKey, undefined);
+  assert.equal(openCode().settings.baseURL, reference);
+});

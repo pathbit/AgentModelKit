@@ -12,7 +12,7 @@ const PACKAGES = {
 
 const isRecord = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
-function buildProjectProviders(resolved, keyReferences, configPath) {
+function buildProjectProviders(resolved, { projectKeyRefs, projectUrlRefs }, configPath) {
   const entries = new Map();
   const session = createHash("sha256").update(configPath).digest("hex").slice(0, 32);
   for (const { providerId, groups } of resolved) {
@@ -25,8 +25,8 @@ function buildProjectProviders(resolved, keyReferences, configPath) {
         if (previous && (previous.providerId !== providerId || previous.groupId !== groupId)) {
           throw new Error(`Ambiguous OpenCode provider name: ${name}`);
         }
-        const baseURL = model.baseUrl ?? group.baseUrl;
-        const apiKey = keyReferences?.get(providerId);
+        const baseURL = projectUrlRefs?.get(providerId) ?? model.baseUrl ?? group.baseUrl;
+        const apiKey = projectKeyRefs?.get(providerId);
         const entry = previous ?? {
           providerId, groupId, baseURL,
           provider: {
@@ -85,7 +85,7 @@ export const opencodeTarget = {
     assertConfig(isRecord(previous) && Object.values(previous).every((entry) =>
       isRecord(entry) && typeof entry.providerId === "string" && typeof entry.groupId === "string" &&
       typeof entry.baseURL === "string" && Array.isArray(entry.ids) && entry.ids.every((id) => typeof id === "string")), ownership);
-    const incoming = buildProjectProviders(resolved, opts.projectKeyRefs, snapshot.path);
+    const incoming = buildProjectProviders(resolved, opts, snapshot.path);
     const managed = new Map(Object.entries(previous));
     const providers = new Map(Object.entries(existing.providers ?? {}));
     const removed = [];
@@ -122,10 +122,12 @@ export const opencodeTarget = {
         incoming.delete(name);
       }
       if (models.size) {
+        const settings = { ...current.settings, ...next?.provider.settings };
+        if (next && opts.projectKeyRefs?.get(next.providerId) === null) delete settings.apiKey;
         providers.set(name, {
           ...current,
           ...next?.provider,
-          settings: { ...current.settings, ...next?.provider.settings },
+          settings,
           models: Object.fromEntries(models),
         });
         managed.set(name, { ...old, baseURL: next?.baseURL ?? old.baseURL, ids: [...owned].filter((id) => models.has(id)) });

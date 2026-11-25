@@ -7,6 +7,7 @@
 Use `--targets opencode` o marque **OpenCode (current project)** con **Espacio** en el asistente. Ejecute el comando en la carpeta del proyecto o indique `--project-dir`. AgentModelKit escribe `.opencode/opencode.json` para **OpenCode 2** y registra los modelos administrados en `.opencode/agentmodelkit-models.json`. El archivo directo `opencode.json(c)` sigue disponible para sus ajustes.
 
 Defina una variable del proveedor, como `FREELLMAPI_API_KEY`, o use `--key-file <archivo> --no-save-key` para referenciar un archivo existente. Abra el proyecto en el cliente y seleccione los modelos en `/models`. [Configuración por proyecto de OpenCode](https://opencode.ai/docs/config/#locations).
+Con una [URL de agente de FreeLLMAPI](PROVIDERS.es.md#freellmapi), OpenCode lee la URL de un archivo privado fuera del proyecto. VS Code y Copilot CLI usan la URL en sus archivos de perfil sin una clave aparte.
 
 ## GitHub Copilot CLI
 

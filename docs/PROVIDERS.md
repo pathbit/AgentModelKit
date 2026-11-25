@@ -12,7 +12,11 @@ A chave pode ser passada em `OPENCODE_API_KEY` ou `--key-file`. A lista de dispo
 
 ## FreeLLMAPI
 
-O provider se conecta ao FreeLLMAPI já em execução. Configure a chave unificada com `FREELLMAPI_API_KEY` ou `--key-file`. Defina a origem com `--url`, `--port`, `FREELLMAPI_URL` ou `FREELLMAPI_PORT`. Também é possível detectar a porta do aplicativo Desktop e verificar as portas padrão do Desktop e Docker.
+No painel do servidor FreeLLMAPI, abra **Keys → Agents** e copie a URL de agente. Cole no assistente ou passe com `--url`. Uma URL com token revogável tem o formato `https://llm.example.com/v1/t/EXAMPLE_TOKEN`. O AgentModelKit também aceita a URL copiada com `/chat/completions`. O token na URL autentica o acesso. O modo padrão configura `auto`.
+
+A URL de agente é uma credencial. Prefira colar no assistente, que oculta a digitação. Para automação, use `FREELLMAPI_URL` em um ambiente privado. O OpenCode referencia um arquivo privado fora do projeto. O VS Code e o Copilot CLI armazenam a URL nos arquivos de perfil. Mantenha esses arquivos e seus backups privados.
+
+Para usar o endereço comum do servidor, como `http://localhost:3001/v1`, configure a chave unificada com `FREELLMAPI_API_KEY` ou `--key-file`. O assistente também pode detectar a porta local. Os modos avançados continuam disponíveis.
 
 - `auto` registra o roteador único.
 - `strategies` registra as estratégias virtuais incluídas em `data/`.

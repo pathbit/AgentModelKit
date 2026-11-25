@@ -22,7 +22,9 @@ Para **usar** un modelo configurado, también necesita el cliente que elija. Si 
 npx --yes @pathbit/agentmodelkit
 ```
 
-Hasta la primera publicación, ejecute `node bin/agentmodelkit.mjs` desde el repositorio local. Para simular una configuración con parámetros en este proyecto, use `npx --yes @pathbit/agentmodelkit init --providers freellmapi --dry-run`.
+Para configurar FreeLLMAPI, copie la **URL de agente** en **Keys → Agents** en el panel del servidor. Pegue la URL en el asistente. El cliente seleccionado recibe el modelo `auto` y la URL autentica la conexión.
+
+Hasta la primera publicación, ejecute `node bin/agentmodelkit.mjs` desde el repositorio local.
 
 | Para… | Opción rápida |
 | --- | --- |
@@ -43,11 +45,11 @@ Hasta la primera publicación, ejecute `node bin/agentmodelkit.mjs` desde el rep
 # Seleccione clientes, proveedores y modelos de forma interactiva.
 npx --yes @pathbit/agentmodelkit
 
-# Simule la configuración de FreeLLMAPI con el enrutador auto.
-npx --yes @pathbit/agentmodelkit init --providers freellmapi --targets all --dry-run
+# Configure OpenCode con una URL de agente de FreeLLMAPI (token de ejemplo).
+npx --yes @pathbit/agentmodelkit --url 'https://llm.example.com/v1/t/EXAMPLE_TOKEN'
 
-# Configure un servidor FreeLLMAPI que ya esté en ejecución.
-npx --yes @pathbit/agentmodelkit add --providers freellmapi --port 31415 --key-file ./freellmapi.key --yes
+# Simule la misma configuración en los tres clientes.
+npx --yes @pathbit/agentmodelkit --url 'https://llm.example.com/v1/t/EXAMPLE_TOKEN' --targets all --dry-run
 
 # Añada un modelo de OpenCode Console a Copilot CLI.
 npx --yes @pathbit/agentmodelkit add --providers opencode --tiers payg --models gpt-6.2-sol --targets copilot-cli --key-file ./opencode.key --yes
@@ -71,7 +73,7 @@ Para configurar OpenCode en otra carpeta, use `--project-dir <carpeta>`. Sin `--
 ```bash
 npx --yes @pathbit/agentmodelkit prune --providers opencode
 npx --yes @pathbit/agentmodelkit prune --providers opencode --apply
-npx --yes @pathbit/agentmodelkit prune --providers freellmapi --port 31415 --key-file ./freellmapi.key
+npx --yes @pathbit/agentmodelkit prune --url 'https://llm.example.com/v1/t/EXAMPLE_TOKEN'
 ```
 
 Cada cambio de un archivo existente guarda sus bytes anteriores en un archivo `.bak` exclusivo. La CLI muestra las rutas de las copias. Si la configuración contiene JSON no válido, la operación se interrumpe antes de escribir en cualquiera de los clientes.
@@ -81,7 +83,7 @@ Cada cambio de un archivo existente guarda sus bytes anteriores en un archivo `.
 | Proveedor | Opciones |
 | --- | --- |
 | OpenCode | `--tiers go` para la suscripción y `--tiers payg` para Console. `all` incluye ambos. OpenCode Free está reservado para el cliente OpenCode. Las entradas gratuitas aparecen en `catalog list` como referencia. |
-| FreeLLMAPI | `auto` por defecto o `--freellmapi-mode strategies\|ready`. Use `--url` o `--port` para un servidor concreto. `ready` consulta qué modelos pueden responder en ese servidor. |
+| FreeLLMAPI | Indique la URL de agente con `--url`. El valor predeterminado es `auto`. Para la selección avanzada, use `--freellmapi-mode strategies\\|ready`. |
 | Proveedor manual | Indique un [manifiesto JSON](examples/provider.local.example.json) con `--provider-file`. Repita la opción para incluir varios proveedores. |
 
 `--powerful` carga la selección editorial de [data/curation.json](data/curation.json). Para FreeLLMAPI incluye estrategias del enrutador. Para un proveedor manual, declare los modelos recomendados en `powerfulIds`. La selección está versionada y puede revisarse cada mes. AgentModelKit usa directamente los datos publicados al seleccionar los modelos.
