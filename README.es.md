@@ -123,14 +123,32 @@ Los cambios revisados se incorporan a `main`. El mantenedor aprueba la etiqueta 
 
 ---
 
-## Contribuciones y protección de ramas
+## AgentDevKit
+
+El repositorio incluye el [kit compartido](.pbai4devs/README.md), las
+[referencias de Codex](.codex/) y [AGENTS.md](AGENTS.md).
+
+Para ejecutar la CLI del kit, instala [Node.js 24+ con npm y npx](https://nodejs.org/es/download).
+Ejecuta este comando desde la raíz para generar la selección y los índices locales.
+
+```console
+npx @pathbit/agentdevkit@0.0.39 init
+```
+
+En la primera ejecución, la CLI añade un bloque de referencia gestionado a `AGENTS.md`.
+Usa las flechas y **Espacio** para seleccionar agentes. Pulsa **Enter** para confirmar.
+La guía también cubre actualizaciones y diagnóstico. [Inicio rápido de AgentDevKit](https://github.com/pathbit/AgentDevKit/blob/main/README.es.md#inicio-rápido)
+
+---
+
+## Contributing and Branch Protection
 
 - Envía los cambios a la rama `main` mediante pull requests y verifica que la CI pase antes de solicitar una revisión.
 - Consulta la [guía de contribución](CONTRIBUTING.es.md). Para errores o solicitudes de nuevos proveedores, abre una [incidencia](https://github.com/pathbit/AgentModelKit/issues).
 
 ---
 
-## 📄 Licencia
+## 📄 License
 
 El proyecto utiliza la licencia MIT. Lee el texto completo en [LICENSE](LICENSE).
 
@@ -138,4 +156,4 @@ Puedes usar, modificar y distribuir el software, incluso con fines comerciales, 
 
 ---
 
-Developed with ❤️ by [Pathbit](https://pathbit.co/)
+Developed with ❤️ by [Pathbit](https://www.pathbit.com.br/)

@@ -123,14 +123,31 @@ A `main` recebe as mudanças revisadas. A tag de release exige a aprovação do 
 
 ---
 
-## Contribuições e proteção de branches
+## AgentDevKit
+
+A [pasta compartilhada](.pbai4devs/README.md) reúne os recursos do kit. Os
+[apontamentos do Codex](.codex/) e o arquivo [AGENTS.md](AGENTS.md) acompanham o clone.
+
+Para executar a CLI do kit, instale [Node.js 24+ com npm e npx](https://nodejs.org/pt/download).
+Na raiz do projeto, execute para gerar a seleção e os índices locais.
+
+```console
+npx @pathbit/agentdevkit@0.0.39 init
+```
+
+No menu, use as setas e **Espaço** para selecionar agentes. Use **Enter** para confirmar.
+O guia também cobre atualização e diagnóstico. [Início rápido do AgentDevKit](https://github.com/pathbit/AgentDevKit#começo-rápido)
+
+---
+
+## Contributing and Branch Protection
 
 - Envie mudanças para a branch `main` por pull request e confira os testes da CI antes de pedir revisão.
 - Consulte o [guia de contribuição](CONTRIBUTING.md). Para bugs ou pedidos de suporte a novos providers, abra uma [issue](https://github.com/pathbit/AgentModelKit/issues).
 
 ---
 
-## 📄 Licença
+## 📄 License
 
 O projeto usa a Licença MIT. Leia o texto completo em [LICENSE](LICENSE).
 
@@ -138,4 +155,4 @@ A licença permite usar, modificar e distribuir o software, inclusive para fins 
 
 ---
 
-Developed with ❤️ by [Pathbit](https://pathbit.co/)
+Developed with ❤️ by [Pathbit](https://www.pathbit.com.br/)
