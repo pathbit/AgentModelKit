@@ -26,11 +26,11 @@ export function promptText(question, defaultValue = "", {
 } = {}) {
   if (secret) {
     if (!canUseRawMode(input, output)) throw new Error("Use --key-file ou uma variavel de ambiente neste terminal.");
-    output.write(question);
     let answer = "";
     return runRawSelector({
       input,
       output,
+      onReady: () => output.write(question),
       render: () => [],
       onKey(str, key) {
         if (key.name === "return" || key.name === "enter") return { done: true, value: answer.trim() };
@@ -61,6 +61,7 @@ function runRawSelector({
   output = process.stdout,
   render,
   onKey,
+  onReady,
 }) {
   return new Promise((resolve, reject) => {
     readline.emitKeypressEvents(input);
@@ -116,6 +117,7 @@ function runRawSelector({
 
     input.on("keypress", handleKeypress);
     input.once("end", handleEnd);
+    onReady?.();
     draw();
   });
 }

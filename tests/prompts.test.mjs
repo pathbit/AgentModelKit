@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { PassThrough } from "node:stream";
 
-import { promptMultiSelect, promptSelect } from "../src/ui/prompts.mjs";
+import { promptMultiSelect, promptSelect, promptText } from "../src/ui/prompts.mjs";
 
 function createMockStreams() {
   const input = new PassThrough();
@@ -113,4 +113,16 @@ test("promptSelect navigates with Down arrow and confirms with Enter, plus non-T
     nonTtyIn.write("2\n");
   });
   assert.deepEqual(await fallbackPromise, ["two"]);
+});
+
+test("secret prompt disables terminal echo before showing the prompt", async () => {
+  const { input, output, getOutput } = createMockStreams();
+  output.on("data", (chunk) => {
+    if (chunk.toString() !== "API key: ") return;
+    assert.equal(input.isRaw, true);
+    input.write("hidden-fixture\r");
+  });
+  assert.equal(await promptText("API key: ", "", { input, output, secret: true }), "hidden-fixture");
+  assert.doesNotMatch(getOutput(), /hidden-fixture/);
+  assert.equal(input.isRaw, false);
 });
