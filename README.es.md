@@ -14,22 +14,22 @@ Para **usar** un modelo configurado, también necesita el cliente que elija. Si 
 
 ## Inicio rápido
 
-Abra una terminal en la carpeta del proyecto con Node.js y npm. Use la versión preliminar pública de GitHub mientras se publica la primera versión:
+Abra una terminal en la carpeta del proyecto con Node.js y npm. Para configurar VS Code y Copilot CLI a la vez, ejecute el tarball público del lanzamiento de GitHub.
 
 ```bash
-# Abra el menú de clientes de OpenCode.
-npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/main" opencode
+npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz opencode vscode copilot
+```
 
-# Configure los endpoints de OpenCode en VS Code y Copilot CLI a la vez.
-npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/main" opencode vscode copilot
+Cuando el paquete esté accesible en el registro npm configurado, use `@latest` para ejecutar la versión estable más reciente o indique el número para fijar una versión.
 
-# Configure FreeLLMAPI local en VS Code y OpenCode para el proyecto.
-npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/main" freellmapi vscode opencode --url http://127.0.0.1:3001/v1
+```bash
+npx --yes @pathbit/agentmodelkit@latest opencode
+npx --yes @pathbit/agentmodelkit@0.0.1 opencode vscode copilot
 ```
 
 Use **↑↓** para desplazarse, **Espacio** para marcar cada cliente y **Enter** para confirmar la selección. Pulse **A** para seleccionar todos o borrar la selección. El asistente solicita el plan o la conexión y el token cuando corresponde.
 
-Tras la primera publicación, use `npx --yes @pathbit/agentmodelkit` como prefijo. Añada `--project-dir <ruta>` para configurar OpenCode en otro proyecto.
+Añada `--project-dir <ruta>` para configurar OpenCode en otro proyecto.
 
 | Para… | Opción rápida |
 | --- | --- |
@@ -44,7 +44,7 @@ Tras la primera publicación, use `npx --yes @pathbit/agentmodelkit` como prefij
 
 `npx` descarga el paquete en la caché de npm y ejecuta la CLI. El comando configura los archivos de los clientes y deja a su cargo la instalación de editores, extensiones, proveedores, entornos de ejecución y modelos. Una operación `--dry-run` conserva intactas la configuración, las credenciales y las copias de seguridad.
 
-Los ejemplos siguientes usan el nombre del paquete en npmjs tras la primera publicación. Para ejecutarlos ahora, sustituya `@pathbit/agentmodelkit` por la URL de GitHub del inicio rápido.
+Los ejemplos siguientes usan el nombre del paquete en npmjs. Para ejecutar los mismos comandos desde el lanzamiento de GitHub, sustituya `@pathbit/agentmodelkit` por la URL del tarball del inicio rápido.
 
 ```bash
 # Configure OpenCode en VS Code y Copilot CLI.

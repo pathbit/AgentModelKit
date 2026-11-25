@@ -14,22 +14,22 @@ To **use** a configured model, you also need the chosen client. If you choose Fr
 
 ## Quick start
 
-Open a terminal in your project directory with Node.js and npm. Use the public GitHub preview while the first version awaits publication:
+Open a terminal in your project directory with Node.js and npm. To configure VS Code and Copilot CLI together, run the public GitHub Release tarball.
 
 ```bash
-# Open the OpenCode client menu.
-npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/main" opencode
+npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz opencode vscode copilot
+```
 
-# Configure OpenCode endpoints in VS Code and Copilot CLI together.
-npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/main" opencode vscode copilot
+When the package is accessible in your configured npm registry, use `@latest` to follow the latest stable release or specify a version number to pin it.
 
-# Configure local FreeLLMAPI in VS Code and the project's OpenCode client.
-npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/main" freellmapi vscode opencode --url http://127.0.0.1:3001/v1
+```bash
+npx --yes @pathbit/agentmodelkit@latest opencode
+npx --yes @pathbit/agentmodelkit@0.0.1 opencode vscode copilot
 ```
 
 Use **↑↓** to navigate, **Space** to mark each client and **Enter** to confirm the selection. Press **A** to select all or clear the selection. The wizard asks for a plan or connection and for the token when needed.
 
-After the first publication, use `npx --yes @pathbit/agentmodelkit` as the command prefix. Add `--project-dir <path>` to configure OpenCode in another project.
+Add `--project-dir <path>` to configure OpenCode in another project.
 
 | To… | Quick option |
 | --- | --- |
@@ -44,7 +44,7 @@ After the first publication, use `npx --yes @pathbit/agentmodelkit` as the comma
 
 `npx` downloads the package to the npm cache and runs the CLI. The command configures client files and leaves installation of editors, extensions, providers, runtimes and models to you. A `--dry-run` leaves configuration, credentials and backups untouched.
 
-The examples below use the npmjs package name after the first publication. To run them now, replace `@pathbit/agentmodelkit` with the GitHub URL from the quick start.
+The examples below use the npmjs package name. To run the same commands from the GitHub Release, replace `@pathbit/agentmodelkit` with the tarball URL from the quick start.
 
 ```bash
 # Configure OpenCode in VS Code and Copilot CLI.

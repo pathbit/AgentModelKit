@@ -6,14 +6,15 @@ El paquete de este proyecto es `@pathbit/agentmodelkit`. Tiene su propio ciclo d
 
 ## Ejecutar el paquete publicado
 
-Cuando la versión esté disponible, ejecútela directamente con npm/npx:
+Use `@latest` para ejecutar la versión estable más reciente. Indique un número como `@0.0.1` para repetir un comando con la misma versión.
 
 ```bash
+npx --yes @pathbit/agentmodelkit@latest opencode
 npx --yes @pathbit/agentmodelkit@0.0.1 opencode vscode copilot
 npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz freellmapi
 ```
 
-El segundo comando usa el tarball público adjunto a la versión de GitHub. Para usar el registro GitHub Packages, configure la autenticación de npm para el ámbito `@pathbit`. [Autenticación en GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-to-github-packages).
+El comando con la URL de GitHub usa el tarball público adjunto al lanzamiento. Para usar `@latest` o una versión exacta desde GitHub Packages, defina `@pathbit:registry=https://npm.pkg.github.com` en el entorno npm donde ejecutará el comando y configure la autenticación. [Autenticación en GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-to-github-packages).
 
 ## Antes de la primera publicación
 
@@ -23,6 +24,8 @@ El segundo comando usa el tarball público adjunto a la versión de GitHub. Para
 4. Configure el entorno `npmjs` de GitHub Actions para que requiera aprobación del mantenedor. Para crear el paquete en npm por primera vez, use un token granular y temporal con acceso de publicación para el ámbito `@pathbit`. Guárdelo como `NPMJS_BOOTSTRAP_TOKEN` en ese entorno. En `v0.0.1`, el flujo también acepta `NPMJS_TOKEN` del repositorio si tiene permiso para crear el paquete. Después de la primera versión, configure Trusted Publishing en npm con el repositorio `pathbit/AgentModelKit`, el flujo `release.yml` y el entorno `npmjs`. Elimine el secreto inicial después de verificar OIDC. [Configuración oficial de Trusted Publishing](https://docs.npmjs.com/trusted-publishers/).
 
 ## Validación de la etiqueta y destinos
+
+Publique las versiones estables en orden ascendente. npm actualiza `latest` de forma predeterminada en cada publicación estable. Después de publicar una versión estable nueva, compruebe que `npm view @pathbit/agentmodelkit@latest version` devuelve el número publicado. Use `npm view @pathbit/agentmodelkit@0.0.1 dist.integrity`, con el número del lanzamiento, para comparar esa versión con la integridad del tarball validado. [npm dist-tag](https://docs.npmjs.com/cli/v11/commands/npm-dist-tag/).
 
 El [flujo Release](https://github.com/pathbit/AgentModelKit/blob/main/.github/workflows/release.yml) vuelve a ejecutar la matriz de pruebas para la etiqueta, comprueba que pertenece al historial de la rama predeterminada y carga un único archivo de paquete validado. La publicación en npmjs usa el entorno protegido. La publicación en GitHub usa `GITHUB_TOKEN` con `packages: write` y `contents: write`. El lanzamiento adjunta el archivo publicado.
 
