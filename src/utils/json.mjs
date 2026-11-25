@@ -7,7 +7,7 @@ export function readSnapshot(filePath) {
   const resolved = path.resolve(filePath);
   try {
     const stat = fs.lstatSync(resolved);
-    if (!stat.isFile()) throw new Error(`Esperado um arquivo regular: ${resolved}`);
+    if (!stat.isFile()) throw new Error(`Expected a regular file: ${resolved}`);
     return { path: resolved, content: fs.readFileSync(resolved), mode: stat.mode & 0o777 };
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
@@ -20,7 +20,7 @@ export function parseSnapshot(snapshot, fallback) {
   try {
     return JSON.parse(snapshot.content.toString("utf8").replace(/^\uFEFF/, ""));
   } catch {
-    throw new Error(`JSON invalido em ${snapshot.path}. Corrija o arquivo antes de continuar.`);
+    throw new Error(`Invalid JSON in ${snapshot.path}. Fix the file before continuing.`);
   }
 }
 
@@ -57,7 +57,7 @@ function storeBackup(plan) {
       if (error.code !== "EEXIST") throw error;
     }
   }
-  throw new Error(`Nao foi possivel criar backup de ${plan.path}`);
+  throw new Error(`Could not back up ${plan.path}`);
 }
 
 // Synchronous commit avoids yielding between validation, backup and replacement.
@@ -74,7 +74,7 @@ export function commitWrites(plans) {
       fs.mkdirSync(parent, { recursive: true, mode: 0o700 });
       const target = path.join(fs.realpathSync(parent), path.basename(plan.path));
       const key = process.platform === "linux" ? target : target.toLowerCase();
-      if (canonical.has(key)) throw new Error(`Dois arquivos apontam para ${plan.path}`);
+      if (canonical.has(key)) throw new Error(`Two files point to ${plan.path}`);
       canonical.add(key);
       const lock = `${target}.agentmodelkit.lock`;
       try {
@@ -83,11 +83,11 @@ export function commitWrites(plans) {
         fs.closeSync(fd);
       } catch (error) {
         if (error.code !== "EEXIST") throw error;
-        throw new Error(`Arquivo ocupado: ${plan.path}. Tente novamente quando a outra operacao terminar.`);
+        throw new Error(`File busy: ${plan.path}. Try again when the other operation finishes.`);
       }
       const current = readSnapshot(plan.path);
       if (!sameContent(current.content, plan.content)) {
-        throw new Error(`Arquivo alterado durante a preparacao: ${plan.path}. Execute novamente.`);
+        throw new Error(`File changed during preparation: ${plan.path}. Run again.`);
       }
       if (!plan.changed) continue;
       const temp = `${plan.path}.${transactionId}.tmp`;
@@ -99,7 +99,7 @@ export function commitWrites(plans) {
     for (const entry of staged) {
       const { plan, temp } = entry;
       if (!sameContent(readSnapshot(plan.path).content, plan.content)) {
-        throw new Error(`Arquivo alterado durante a gravacao: ${plan.path}. Execute novamente.`);
+        throw new Error(`File changed during writing: ${plan.path}. Run again.`);
       }
       fs.renameSync(temp, plan.path);
       applied.push(entry);
@@ -111,7 +111,7 @@ export function commitWrites(plans) {
     for (const { plan, temp, originalMode, backupPath } of applied.reverse()) {
       try {
         if (!sameContent(readSnapshot(plan.path).content, plan.next)) {
-          throw new Error(`Arquivo editado externamente: ${plan.path}`);
+          throw new Error(`File edited externally: ${plan.path}`);
         }
         if (plan.content === null) fs.unlinkSync(plan.path);
         else {
@@ -119,7 +119,7 @@ export function commitWrites(plans) {
           fs.renameSync(temp, plan.path);
         }
       } catch (recoveryError) {
-        recoveryErrors.push(`${recoveryError.message} (backup: ${backupPath ?? "arquivo originalmente ausente"})`);
+        recoveryErrors.push(`${recoveryError.message} (backup: ${backupPath ?? "file was originally absent"})`);
       }
     }
     if (recoveryErrors.length) throw new Error(`${error.message}\n${recoveryErrors.join("\n")}`, { cause: error });

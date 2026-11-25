@@ -13,7 +13,7 @@ const DEFAULT_DESKTOP_URL = `http://127.0.0.1:${DEFAULT_DESKTOP_PORT}/v1`;
 function validatePort(port) {
   const num = Number(port);
   if (!Number.isInteger(num) || num < 1 || num > 65535) {
-    throw new Error(`Porta invalida para FreeLLMAPI: '${port}'. Use um numero entre 1 e 65535.`);
+    throw new Error(`Invalid FreeLLMAPI port: '${port}'. Use a number from 1 to 65535.`);
   }
   return num;
 }
@@ -152,7 +152,7 @@ export async function detectFreeLLMApiBaseUrl(options = {}) {
 export function normalizeFreeLLMMode(rawMode) {
   const mode = String(rawMode || "auto").trim().toLowerCase();
   if (!["auto", "strategies", "ready"].includes(mode)) {
-    throw new Error(`Modo invalido para FreeLLMAPI: '${rawMode}'. Use: auto, strategies ou ready.`);
+    throw new Error(`Invalid FreeLLMAPI mode: '${rawMode}'. Use auto, strategies or ready.`);
   }
   return mode;
 }
@@ -187,7 +187,7 @@ export async function fetchFreeLLMApiModels(baseUrl, apiKey, fetchImpl = globalT
 export const freellmapiProvider = {
   id: "freellmapi",
   label: "FreeLLMAPI",
-  description: "Roteador do FreeLLMAPI com URL dinamica e descoberta de modelos prontos",
+  description: "FreeLLMAPI router with a dynamic URL and ready model discovery",
   availableTiers: ["free"],
   defaultTiers: ["free"],
   availableModes: ["auto", "strategies", "ready"],
@@ -223,7 +223,7 @@ export const freellmapiProvider = {
     const curated = new Set(loadCuration().freellmapi);
     let models = powerful ? catalog.strategies.filter(({ id }) => curated.has(id)) :
       resolvedMode === "auto" ? catalog.strategies.filter(({ id }) => id === catalog.router) : [...catalog.strategies];
-    let source = powerful ? "curadoria" : `router-${resolvedMode}`;
+    let source = powerful ? "curated" : `router-${resolvedMode}`;
 
     if (resolvedMode === "ready" && !powerful) {
       const ready = await fetchFreeLLMApiModels(resolvedBaseUrl, apiKey, fetchImpl);

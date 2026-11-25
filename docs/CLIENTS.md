@@ -1,5 +1,7 @@
 # Clientes
 
+[English](CLIENTS.en.md) · [Español](CLIENTS.es.md)
+
 ## GitHub Copilot CLI
 
 O registro BYOK utiliza `providers.json` do `COPILOT_HOME` ou do caminho indicado por `COPILOT_PROVIDERS_CONFIG`. O padrão é `~/.copilot/providers.json`. Reinicie o cliente após a configuração e escolha um modelo com `/model`.

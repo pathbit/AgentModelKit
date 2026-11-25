@@ -25,7 +25,7 @@ export function modelRows(payload, source) {
       payload.has_more || payload.next || payload.next_cursor ||
       payload.data.some((row) => typeof row?.id !== "string" || !row.id.trim()) ||
       new Set(payload.data.map((row) => row.id)).size !== payload.data.length) {
-    throw new Error(`Lista de modelos ausente, incompleta ou invalida: ${source}`);
+    throw new Error(`Missing, incomplete or invalid model list: ${source}`);
   }
   return payload.data;
 }
@@ -36,7 +36,7 @@ export async function fetchModelRows(url, { apiKey, fetchImpl = globalThis.fetch
     redirect: "error",
     headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
   });
-  if (!response.ok) throw new Error(`HTTP ${response.status} ao consultar ${new URL(url).host}`);
+  if (!response.ok) throw new Error(`HTTP ${response.status} while querying ${new URL(url).host}`);
   return modelRows(await response.json(), url);
 }
 
@@ -72,7 +72,7 @@ export async function fetchOpenCodeDirectory(fetchImpl = globalThis.fetch) {
   ));
   if (![go, console].every((rows) => rows.some((row) => row.type === "chat" &&
       Number.isFinite(row.cost?.text?.input?.price) && Number.isFinite(row.cost?.text?.output?.price)))) {
-    throw new Error("OpenCode nao retornou um catalogo de chat com precos validos.");
+    throw new Error("OpenCode returned no chat catalog with valid pricing.");
   }
   return { go, console };
 }
@@ -88,7 +88,7 @@ export function buildOpenCodeCatalog(directory) {
     }).map((row) => normalizeModel(row, channel)).filter(Boolean).sort((a, b) => a.id.localeCompare(b.id)),
   ]));
   if (!Object.values(groups).some((models) => models.length)) {
-    throw new Error("OpenCode nao retornou modelos de chat com protocolos suportados.");
+    throw new Error("OpenCode returned no chat models with supported protocols.");
   }
   return {
     sourceUrls: Object.values(OPEN_CODE_SOURCES),

@@ -1,0 +1,49 @@
+name: Informar de un problema (Español)
+description: Describa el problema y los pasos para reproducirlo.
+title: "[Error]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Lea la [documentación](https://github.com/pathbit/AgentModelKit/blob/main/docs/README.es.md).
+        Quite las claves API, los tokens y las rutas personales antes de enviar el informe.
+  - type: input
+    id: version
+    attributes:
+      label: Versiones de AgentModelKit y Node.js
+      placeholder: "AgentModelKit 0.0.1, Node.js 22.x"
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Sistema operativo
+      placeholder: "Windows 11 x64, macOS arm64 o Ubuntu 24.04 x64"
+    validations:
+      required: true
+  - type: input
+    id: client_provider
+    attributes:
+      label: Proveedor y cliente afectados
+      placeholder: "opencode (payg) / freellmapi -> copilot-cli, vscode"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Comando ejecutado
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: Comportamiento esperado y observado
+    validations:
+      required: true
+  - type: textarea
+    id: doctor_output
+    attributes:
+      label: Salida de agentmodelkit doctor sin secretos (opcional)
+      render: text

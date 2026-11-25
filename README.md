@@ -1,8 +1,10 @@
 # AgentModelKit
 
-[English](README.en.md) · [Documentação](docs/README.md) · [Exemplos](examples/README.md)
+[English](README.en.md) · [Español](README.es.md) · [Documentação](docs/README.md) · [Exemplos](examples/README.md)
 
 O AgentModelKit configura providers e modelos de IA no **VS Code** e no **GitHub Copilot CLI**. O CLI roda no Windows, macOS e Linux, aceita parâmetros para automação e oferece um seletor no terminal. O projeto é mantido pela PathBit junto com o [AgentDevKit](https://github.com/pathbit/AgentDevKit).
+
+A ajuda e as mensagens da CLI são exibidas em inglês.
 
 ## Pré-requisito obrigatório
 

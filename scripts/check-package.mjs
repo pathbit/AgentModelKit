@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "amk-pack-"));
 const npm = process.env.npm_execpath;
-assert.ok(npm, "Execute este teste com npm run test:package.");
+assert.ok(npm, "Run this test with npm run test:package.");
 function run(args, options = {}) {
   return execFileSync(process.execPath, [npm, ...args], { encoding: "utf8", timeout: 60000, ...options });
 }
@@ -16,7 +16,14 @@ try {
   for (const required of [
     "data/opencode-catalog.json", "data/freellmapi-catalog.json", "data/awesome-free-providers.json",
     "data/curation.json", "bin/agentmodelkit.mjs", "examples/provider.local.example.json", "README.md",
-  ]) assert.ok(files.has(required), `Faltou ${required} no tarball`);
+  ]) assert.ok(files.has(required), `Missing ${required} in the tarball`);
+  for (const file of files) {
+    if (!file.endsWith(".md") || /\.(en|es)\.md$/.test(file)) continue;
+    for (const language of ["en", "es"]) {
+      const translation = file.replace(/\.md$/, `.${language}.md`);
+      assert.ok(files.has(translation), `Missing ${translation} in the tarball`);
+    }
+  }
   assert.ok(![...files].some((name) => /(?:\.bak|\.key|\.tmp|\.tgz)$|(?:^|\/)\.env/.test(name)));
   const artifact = path.join(root, pack.filename);
   const cwd = path.join(root, "consumer");
@@ -33,11 +40,11 @@ try {
   };
   const npmCommand = (command, ...args) => run(["exec", "--yes", "--offline", "--package", artifact, "--", command, ...args], { cwd, env });
   assert.match(npmCommand("agentmodelkit", "catalog", "list"), /FreeLLMAPI/);
-  assert.match(npmCommand("amk", "--help"), /AgentModelKit/);
-  assert.match(npmCommand("agentmodelkit", "add", "--provider-file", manifest, "--dry-run"), /simulacao/);
+  assert.match(npmCommand("amk", "--help"), /^AgentModelKit.*\n\nUsage: agentmodelkit/m);
+  assert.match(npmCommand("agentmodelkit", "add", "--provider-file", manifest, "--dry-run"), /dry run/);
   assert.equal(fs.existsSync(env.COPILOT_HOME), false);
   assert.equal(fs.existsSync(env.VSCODE_USER_DIR), false);
-  assert.match(npmCommand("agentmodelkit", "add", "--provider-file", manifest, "--yes"), /atualizado/);
+  assert.match(npmCommand("agentmodelkit", "add", "--provider-file", manifest, "--yes"), /updated/);
   const config = JSON.parse(fs.readFileSync(env.COPILOT_PROVIDERS_CONFIG, "utf8"));
   assert.equal(config.models[0].id, "qwen3:8b");
   assert.equal(config.providers[0].apiKey, undefined);
@@ -48,7 +55,7 @@ try {
     fs.copyFileSync(artifact, path.join(dir, pack.filename));
     fs.writeFileSync(path.join(dir, "integrity.txt"), pack.integrity + "\n");
   }
-  console.log(`OK: npm exec offline de ${pack.filename}, com cache isolado, dados incluidos e sem instalacao no projeto.`);
+  console.log(`OK: offline npm exec of ${pack.filename} with an isolated cache, bundled data and no project installation.`);
 } finally {
   fs.rmSync(root, { recursive: true, force: true });
 }

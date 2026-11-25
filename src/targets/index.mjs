@@ -26,7 +26,7 @@ export function normalizeTargets(rawTargets) {
     if (item === "all") continue;
     const resolved = Object.hasOwn(TARGET_ALIASES, item) ? TARGET_ALIASES[item] : null;
     if (!resolved) {
-      throw new Error(`Target desconhecido: '${item}'. Disponiveis: vscode, copilot-cli, all.`);
+      throw new Error(`Unknown target: '${item}'. Available: vscode, copilot-cli, all.`);
     }
     if (!out.includes(resolved)) out.push(resolved);
   }

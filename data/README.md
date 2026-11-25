@@ -1,5 +1,7 @@
 # Catálogos
 
+[English](README.en.md) · [Español](README.es.md)
+
 Os arquivos nesta pasta são incluídos no tarball npm.
 
 | Arquivo | Origem e uso |

@@ -47,7 +47,7 @@ test("normalizeFreeLLMBaseUrl handles full URLs, paths, host:port, and bare port
   assert.equal(normalizeFreeLLMBaseUrl("4000"), "http://localhost:4000/v1");
   assert.equal(normalizeFreeLLMBaseUrl(":31420"), "http://localhost:31420/v1");
   assert.equal(normalizeFreeLLMBaseUrl("192.168.1.50:8080"), "http://192.168.1.50:8080/v1");
-  assert.throws(() => normalizeFreeLLMBaseUrl("99999"), /Porta invalida/);
+  assert.throws(() => normalizeFreeLLMBaseUrl("99999"), /Invalid FreeLLMAPI port/);
 });
 
 test("detectFreeLLMApiBaseUrl resolves Desktop config.json port, --port, env vars, and probing dynamically", async (t) => {
@@ -114,7 +114,7 @@ test("freellmapiProvider defaults to clean auto-only router mode and supports st
   assert.equal(normalizeFreeLLMMode(), "auto");
   assert.equal(normalizeFreeLLMMode("strategies"), "strategies");
   assert.equal(normalizeFreeLLMMode("ready"), "ready");
-  assert.throws(() => normalizeFreeLLMMode("bad"), /Modo invalido/);
+  assert.throws(() => normalizeFreeLLMMode("bad"), /Invalid FreeLLMAPI mode/);
 
   let capturedAuth = null;
   let requestedQuery = null;

@@ -1,0 +1,49 @@
+name: Report a bug (English)
+description: Report a problem with steps to reproduce it.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read the [documentation](https://github.com/pathbit/AgentModelKit/blob/main/docs/README.en.md).
+        Remove API keys, tokens and personal paths before submitting.
+  - type: input
+    id: version
+    attributes:
+      label: AgentModelKit and Node.js versions
+      placeholder: "AgentModelKit 0.0.1, Node.js 22.x"
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Operating system
+      placeholder: "Windows 11 x64, macOS arm64 or Ubuntu 24.04 x64"
+    validations:
+      required: true
+  - type: input
+    id: client_provider
+    attributes:
+      label: Affected provider and client
+      placeholder: "opencode (payg) / freellmapi -> copilot-cli, vscode"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command run
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: Expected and observed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: doctor_output
+    attributes:
+      label: agentmodelkit doctor output with secrets removed (optional)
+      render: text

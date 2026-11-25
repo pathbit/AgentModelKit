@@ -16,40 +16,40 @@ import { promptMultiSelect, promptSelect, promptText } from "./ui/prompts.mjs";
 
 const USAGE = `AgentModelKit (@pathbit/agentmodelkit)
 
-Uso: agentmodelkit [comando] [opcoes]
+Usage: agentmodelkit [command] [options]
 
-  init, add          Adiciona ou atualiza providers e modelos (init e o padrao)
-  copilot, vscode    Configura apenas o cliente indicado
-  prune              Simula remocao de modelos ausentes na origem. Use --apply para gravar
-  catalog list       Mostra os catalogos utilizados
-  catalog update     Atualiza o cache a partir das fontes oficiais
-  list, doctor       Lista integracoes ou diagnostica a configuracao local
-  key <provider>     Imprime a chave salva
+  init, add          Adds or updates providers and models (init is the default)
+  copilot, vscode    Configures only the named client
+  prune              Previews removal of models missing upstream. Use --apply to write changes
+  catalog list       Shows the catalogs in use
+  catalog update     Refreshes the cache from official sources
+  list, doctor       Lists integrations or diagnoses the local configuration
+  key <provider>     Prints the saved key
 
-Selecao:
-  -p, --providers <lista>    opencode, freellmapi ou um provider manual custom-*
-  -t, --targets <lista>      vscode, copilot-cli ou all
-  --tiers <lista>            OpenCode: go, payg ou all (free apenas para prune)
-  --models <lista>           IDs exatos ou <grupo>/<modelo>
-  --powerful                Adiciona todos os destaques da curadoria para os tiers escolhidos
-  --provider-file <json>     Manifesto local de provider (repetivel)
-  --replace                 Substitui a selecao dos providers indicados
-  --live                    Consulta disponibilidade antes de adicionar
-  --url <url-ou-porta>       Endereco base do FreeLLMAPI
-  --port <numero>            Porta do FreeLLMAPI
-  --freellmapi-mode <modo>   auto | strategies | ready
+Selection:
+  -p, --providers <list>     opencode, freellmapi or a manual custom-* provider
+  -t, --targets <list>       vscode, copilot-cli or all
+  --tiers <list>             OpenCode: go, payg or all (free only for prune)
+  --models <list>            Exact IDs or <group>/<model>
+  --powerful                Adds curated highlights for the selected plans
+  --provider-file <json>     Local provider manifest (repeatable)
+  --replace                 Replaces the managed selection for the specified providers
+  --live                    Checks availability before adding
+  --url <url-or-port>        FreeLLMAPI base address
+  --port <number>            FreeLLMAPI port
+  --freellmapi-mode <mode>   auto | strategies | ready
 
-Credenciais e aplicacao:
-  -k, --key <valor>           Chave para um unico provider
-  --key-file <arquivo>       Le a chave de um arquivo
-  --no-save-key             Omite copia separada da chave em .key
-  -m, --default-model <id>   Define o modelo padrao no Copilot CLI
-  --dry-run                 Exibe as mudancas previstas
-  --apply                   Aplica prune
-  -y, --yes                  Usa modo nao interativo
-  -h, --help                 Mostra esta ajuda
+Credentials and application:
+  -k, --key <value>          Key for one provider
+  --key-file <file>          Reads the key from a file
+  --no-save-key             Skips the separate copy of the key in .key
+  -m, --default-model <id>   Sets the default model in Copilot CLI
+  --dry-run                 Shows the proposed changes
+  --apply                   Applies prune
+  -y, --yes                  Uses non-interactive mode
+  -h, --help                 Shows this help
 
-Catalogos:
+Catalogs:
   catalog list [--source opencode|freellmapi|all]
   catalog update [--source opencode|freellmapi|all] [--dry-run]`;
 
@@ -72,23 +72,23 @@ const params = {
 export function parseCliArgs(argv) {
   const args = [...argv];
   const command = args[0] && !args[0].startsWith("-") ? args.shift().toLowerCase() : null;
-  if (command && !commands.has(command)) throw new Error(`Comando desconhecido: ${command}`);
+  if (command && !commands.has(command)) throw new Error(`Unknown command: ${command}`);
   const opts = { command, providerFiles: [], positional: [] };
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (Object.hasOwn(flags, arg)) opts[flags[arg]] = true;
     else if (Object.hasOwn(params, arg)) {
       const value = args[++i];
-      if (!value?.trim() || value.startsWith("-")) throw new Error(`Informe o valor de ${arg}`);
+      if (!value?.trim() || value.startsWith("-")) throw new Error(`Provide a value for ${arg}`);
       const name = params[arg];
       if (name === "providerFiles") opts.providerFiles.push(value);
-      else if (Object.hasOwn(opts, name)) throw new Error(`Opcao repetida: ${arg}`);
+      else if (Object.hasOwn(opts, name)) throw new Error(`Duplicate option: ${arg}`);
       else opts[name] = value;
-    } else if (arg.startsWith("-")) throw new Error(`Opcao desconhecida: ${arg}`);
+    } else if (arg.startsWith("-")) throw new Error(`Unknown option: ${arg}`);
     else opts.positional.push(arg);
   }
   if (command === "copilot" || command === "vscode") {
-    if (opts.targets) throw new Error("Use init, add ou prune para escolher --targets.");
+    if (opts.targets) throw new Error("Use init, add or prune to select --targets.");
     opts.targets = command === "copilot" ? "copilot-cli" : "vscode";
   }
   return opts;
@@ -96,7 +96,7 @@ export function parseCliArgs(argv) {
 
 function list(raw) {
   const values = String(raw).split(",").map((item) => item.trim());
-  if (values.some((item) => !item)) throw new Error("Separe valores por virgulas e omita itens vazios.");
+  if (values.some((item) => !item)) throw new Error("Separate values with commas and omit empty entries.");
   return [...new Set(values)];
 }
 
@@ -115,7 +115,7 @@ export function filterResolvedProvidersByModelIds(resolvedProviders, raw) {
     })).filter((group) => group.models.length > 0),
   })).filter((resolved) => resolved.groups.length > 0);
   const unknown = [...requested].filter((key) => !matched.has(key));
-  if (unknown.length) throw new Error(`Modelos indisponiveis na selecao: ${unknown.join(", ")}`);
+  if (unknown.length) throw new Error(`Models unavailable in the selection: ${unknown.join(", ")}`);
   return filtered;
 }
 
@@ -128,7 +128,7 @@ function checkBinaryVersion(bin, env) {
   try {
     return execFileSync(bin, ["--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 4000, env, shell: process.platform === "win32" }).trim().split(/\r?\n/)[0];
   } catch {
-    return "nao encontrado no PATH";
+    return "not found on PATH";
   }
 }
 
@@ -140,26 +140,26 @@ async function cmdDoctor(env) {
     try {
       const data = readJsonOrNull(location);
       const count = Array.isArray(data) ? data.reduce((sum, block) => sum + (block.models?.length ?? 0), 0) : data?.models?.length;
-      console.log(`${location}: ${data ? `${count ?? 0} modelo(s)` : "ausente"}`);
+      console.log(`${location}: ${data ? `${count ?? 0} model(s)` : "missing"}`);
     } catch (error) {
       console.log(`${location}: ${error.message}`);
     }
   }
-  console.log(`FreeLLMAPI URL detectada: ${await detectFreeLLMApiBaseUrl({ env })}`);
-  for (const p of listProviders()) console.log(`${p.id}: chave local ${fs.existsSync(getKeyFilePath(p.keyFile, env)) ? "OK" : "ausente"}`);
+  console.log(`Detected FreeLLMAPI URL: ${await detectFreeLLMApiBaseUrl({ env })}`);
+  for (const p of listProviders()) console.log(`${p.id}: local key ${fs.existsSync(getKeyFilePath(p.keyFile, env)) ? "OK" : "missing"}`);
 }
 
 async function cmdCatalog(opts, env) {
   const [action = "list"] = opts.positional;
   const source = opts.source ?? "all";
-  if (!["all", "opencode", "freellmapi"].includes(source) || opts.positional.length > 1) throw new Error("Consulte catalog --help.");
+  if (!["all", "opencode", "freellmapi"].includes(source) || opts.positional.length > 1) throw new Error("See catalog --help.");
   const dir = getCatalogDir(env);
   if (action === "update") {
     const results = await refreshCatalogs({ dir, source, dryRun: opts.dryRun });
-    for (const { path: file, changed } of results) console.log(`${changed ? (opts.dryRun ? "Atualizaria" : "Atualizado") : "Atual"} ${file}`);
+    for (const { path: file, changed } of results) console.log(`${changed ? (opts.dryRun ? "Would update" : "Updated") : "Current"} ${file}`);
     return;
   }
-  if (action !== "list") throw new Error("Use catalog list ou catalog update.");
+  if (action !== "list") throw new Error("Use catalog list or catalog update.");
   if (source !== "freellmapi") {
     const { groups, updatedAt } = loadCatalog("opencode-catalog.json", env);
     console.log(`OpenCode (${updatedAt}):`);
@@ -167,41 +167,41 @@ async function cmdCatalog(opts, env) {
   }
   if (source !== "opencode") {
     const data = loadCatalog("freellmapi-catalog.json", env);
-    console.log(`FreeLLMAPI (${data.upstreamVersion}): ${data.models.length} entradas de referencia. Estrategias: ${data.strategies.map(({ id }) => id).join(", ")}`);
+    console.log(`FreeLLMAPI (${data.upstreamVersion}): ${data.models.length} reference entries. Strategies: ${data.strategies.map(({ id }) => id).join(", ")}`);
   }
 }
 
 async function gatherInteractiveConfig(opts) {
   if (!opts.targets) {
     opts.targets = (await promptMultiSelect({
-      title: "Quais ferramentas voce quer configurar?",
+      title: "Which tools would you like to configure?",
       options: listTargets().map((target) => ({ label: target.label, value: target.id, checked: true })),
     })).join(",");
   }
   if (!opts.providers && !opts.providerFiles.length) {
     const services = await promptMultiSelect({
-      title: "Quais providers deseja ativar?",
+      title: "Which providers would you like to enable?",
       options: listProviders().map((provider) => ({ label: provider.label, value: provider.id, checked: provider.id === "freellmapi" })),
     });
     opts.providers = services.join(",");
   }
   if (opts.providers?.split(",").some((id) => id.trim().toLowerCase() === "opencode") && !opts.tiers && !opts.powerful) {
     opts.tiers = (await promptMultiSelect({
-      title: "Quais planos do OpenCode deseja usar?",
+      title: "Which OpenCode plans would you like to use?",
       options: [
-        { label: "Go (assinatura)", value: "go" },
+        { label: "Go (subscription)", value: "go" },
         { label: "Console (PAYG)", value: "payg", checked: true },
       ],
     })).join(",");
   }
   if (opts.providers?.split(",").some((id) => id.trim().toLowerCase() === "freellmapi") && !opts.freellmapiMode && !opts.powerful && !opts.live) {
-    if (!opts.url && !opts.port) opts.url = await promptText("URL ou porta do FreeLLMAPI [Enter = detectar]: ");
+    if (!opts.url && !opts.port) opts.url = await promptText("FreeLLMAPI URL or port [Enter = detect]: ");
     opts.freellmapiMode = await promptSelect({
-      title: "Selecione os modelos do FreeLLMAPI",
+      title: "Select the FreeLLMAPI models",
       options: [
-        { label: "Somente roteador auto", value: "auto" },
-        { label: "Estrategias virtuais", value: "strategies" },
-        { label: "Modelos prontos no servidor local", value: "ready" },
+        { label: "Auto router only", value: "auto" },
+        { label: "Virtual strategies", value: "strategies" },
+        { label: "Ready models on the local server", value: "ready" },
       ],
     });
   }
@@ -213,11 +213,11 @@ async function maybePickModels(resolved) {
   }))));
   if (items.length <= 1) return resolved;
   const mode = await promptSelect({
-    title: `Ativar os ${items.length} modelos?`,
-    options: [{ label: "Ativar todos", value: "all" }, { label: "Selecionar modelos individualmente", value: "pick" }],
+    title: `Enable all ${items.length} models?`,
+    options: [{ label: "Enable all", value: "all" }, { label: "Select models individually", value: "pick" }],
   });
   if (mode === "all") return resolved;
-  const ids = await promptMultiSelect({ title: "Selecione modelos", options: items });
+  const ids = await promptMultiSelect({ title: "Select models", options: items });
   return filterResolvedProvidersByModelIds(resolved, ids);
 }
 
@@ -259,11 +259,11 @@ async function buildPruneRules(providers, opts, env) {
 function planDefaultModel(selection, plans, env) {
   const options = plans.find(({ targetId }) => targetId === "copilot-cli")?.selection ?? [];
   const matches = options.filter((entry) => entry.selection === selection || entry.id === selection);
-  if (matches.length !== 1) throw new Error("Modelo padrao indisponivel ou ambiguo. Informe <grupo>/<modelo> e inclua Copilot nos targets.");
+  if (matches.length !== 1) throw new Error("Default model unavailable or ambiguous. Specify <group>/<model> and include Copilot in the targets.");
   const [{ selection: selected }] = matches;
   const snapshot = readSnapshot(path.join(getCopilotDir(env), "settings.json"));
   const existing = parseSnapshot(snapshot, {});
-  if (!existing || typeof existing !== "object" || Array.isArray(existing)) throw new Error(`Formato invalido em ${snapshot.path}`);
+  if (!existing || typeof existing !== "object" || Array.isArray(existing)) throw new Error(`Invalid format in ${snapshot.path}`);
   const { modelProviderId, ...settings } = existing;
   return { write: jsonWrite(snapshot, { ...settings, model: selected }), selected };
 }
@@ -274,7 +274,7 @@ function planRetiredCopilotDefaults(plans, env) {
   const snapshot = readSnapshot(path.join(getCopilotDir(env), "settings.json"));
   if (!snapshot.content) return null;
   const settings = parseSnapshot(snapshot);
-  if (!settings || typeof settings !== "object" || Array.isArray(settings)) throw new Error(`Formato invalido em ${snapshot.path}`);
+  if (!settings || typeof settings !== "object" || Array.isArray(settings)) throw new Error(`Invalid format in ${snapshot.path}`);
   const removed = [];
   const retained = new Set(plan.modelSelections);
   for (const [modelKey, providerKey] of [["model", "modelProviderId"], ["planModel", "planModelProviderId"]]) {
@@ -293,37 +293,37 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
   if (opts.help || opts.command === "help") return console.log(USAGE);
   if (opts.command === "catalog") return cmdCatalog(opts, env);
   if (opts.command === "key") {
-    if (opts.positional.length !== 1) throw new Error("Informe o nome do provider.");
+    if (opts.positional.length !== 1) throw new Error("Specify the provider name.");
     process.stdout.write(readSavedKey(opts.positional[0], env));
     return;
   }
-  if (opts.positional.length) throw new Error(`Argumento inesperado: ${opts.positional[0]}`);
+  if (opts.positional.length) throw new Error(`Unexpected argument: ${opts.positional[0]}`);
   if (opts.command === "list") return cmdList();
   if (opts.command === "doctor") return cmdDoctor(env);
 
   const prune = opts.command === "prune";
-  if (opts.inlineKey) throw new Error("Use o gerenciador de modelos do VS Code para salvar a chave no armazenamento do editor. O Copilot CLI recebe apiKey automaticamente.");
-  if (opts.apply && !prune) throw new Error("--apply e exclusivo de prune.");
-  if (opts.url && opts.port) throw new Error("Escolha --url ou --port.");
-  if (opts.key && opts.keyFile) throw new Error("Escolha --key ou --key-file.");
-  if (opts.powerful && opts.models) throw new Error("Escolha --powerful ou --models.");
-  if (opts.defaultModel && opts.noDefaultModel) throw new Error("Escolha --default-model ou --no-default-model.");
+  if (opts.inlineKey) throw new Error("Use the VS Code model manager to store the key in the editor. Copilot CLI receives apiKey automatically.");
+  if (opts.apply && !prune) throw new Error("--apply is available only with prune.");
+  if (opts.url && opts.port) throw new Error("Choose --url or --port.");
+  if (opts.key && opts.keyFile) throw new Error("Choose --key or --key-file.");
+  if (opts.powerful && opts.models) throw new Error("Choose --powerful or --models.");
+  if (opts.defaultModel && opts.noDefaultModel) throw new Error("Choose --default-model or --no-default-model.");
   if (prune && (opts.replace || opts.models || opts.powerful || opts.defaultModel ||
       opts.freellmapiMode || opts.live || (opts.apply && opts.dryRun))) {
-    throw new Error("Use prune com --providers, --targets e, para gravar, --apply. Consulte --help.");
+    throw new Error("Use prune with --providers and --targets. Add --apply to save changes. See --help.");
   }
   const interactive = !opts.yes && !prune && process.stdin.isTTY && process.stdout.isTTY;
   const wizard = interactive && !opts.providers && !opts.providerFiles.length;
   if (wizard) await gatherInteractiveConfig(opts);
   const targetIds = normalizeTargets(opts.targets);
   const providers = selectProviders(opts);
-  if ((opts.key || opts.keyFile) && providers.length > 1) throw new Error("Use variaveis de ambiente por provider quando selecionar mais de um.");
+  if ((opts.key || opts.keyFile) && providers.length > 1) throw new Error("Use provider-specific environment variables when selecting multiple providers.");
   const providerIds = providers.map(({ id }) => id);
-  if (opts.tiers && !providerIds.includes("opencode")) throw new Error("--tiers se aplica ao OpenCode.");
+  if (opts.tiers && !providerIds.includes("opencode")) throw new Error("--tiers applies to OpenCode.");
   if (!prune && opts.tiers && normalizeOpenCodeTiers(opts.tiers).every((tier) => tier === "free")) {
-    throw new Error("OpenCode Free e restrito ao proprio OpenCode. Use freellmapi, go ou payg.");
+    throw new Error("OpenCode Free is restricted to OpenCode itself. Use freellmapi, go or payg.");
   }
-  if ((opts.url || opts.port || opts.freellmapiMode) && !providerIds.includes("freellmapi")) throw new Error("Selecione freellmapi para usar opcoes de servidor.");
+  if ((opts.url || opts.port || opts.freellmapiMode) && !providerIds.includes("freellmapi")) throw new Error("Select freellmapi to use server options.");
   const dryRun = Boolean(opts.dryRun || (prune && !opts.apply));
   const config = { dryRun, apiKeys: new Map() };
   const keyWrites = [];
@@ -354,7 +354,7 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
     if (opts.models) resolved = filterResolvedProvidersByModelIds(resolved, opts.models);
     else if (wizard && !opts.powerful) resolved = await maybePickModels(resolved);
     resolved = resolved.filter((provider) => provider.groups.length);
-    if (!resolved.length) throw new Error("Nenhum modelo selecionado.");
+    if (!resolved.length) throw new Error("No models selected.");
     if (opts.replace) config.replace = new Set(resolved.map(({ providerId }) => providerId));
     const required = targetIds.includes("copilot-cli") || opts.key || opts.keyFile;
     for (const { providerId } of resolved) {
@@ -374,17 +374,17 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
   const outcomes = dryRun ? [] : commitWrites(writes);
   const results = plans.map((plan) => describeApply(plan, dryRun, outcomes));
   for (const result of results) {
-    const action = dryRun ? "simulacao" : result.changed ? "atualizado" : "sem mudancas";
-    const summary = prune ? `${result.removed.length} remocao(oes)` : `${result.modelCount} modelo(s) selecionado(s)`;
+    const action = dryRun ? "dry run" : result.changed ? "updated" : "no changes";
+    const summary = prune ? `${result.removed.length} removal(s)` : `${result.modelCount} selected model(s)`;
     console.log(`[${result.targetId}] ${action} · ${summary} · ${result.path}`);
     for (const model of result.removed) console.log(`  - ${model}`);
   }
   for (const outcome of outcomes) if (outcome.backupPath) console.log(`Backup: ${outcome.backupPath}`);
-  if (clearedDefault) console.log(`Selecoes removidas do Copilot: ${clearedDefault.removed.join(", ")}`);
+  if (clearedDefault) console.log(`Cleared Copilot selections: ${clearedDefault.removed.join(", ")}`);
   if (!dryRun && targetIds.includes("vscode") && resolved.some((provider) =>
     provider.groups.some((group) => group.vscodeSecretId))) {
-    console.log("[vscode] Use Chat: Manage Language Models para informar as chaves no editor.");
+    console.log("[vscode] Use Chat: Manage Language Models to enter keys in the editor.");
   }
-  if (defaultModel) console.log(`Modelo padrao ${dryRun ? "previsto" : "definido"}: ${defaultModel.selected}`);
+  if (defaultModel) console.log(`${dryRun ? "Planned default model" : "Default model set"}: ${defaultModel.selected}`);
   return results;
 }

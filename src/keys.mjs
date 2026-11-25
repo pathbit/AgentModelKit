@@ -7,7 +7,7 @@ function readKeyFile(filePath, required) {
   const snapshot = readSnapshot(filePath);
   if (snapshot.content === null && !required) return null;
   const key = snapshot.content?.toString("utf8").trim();
-  if (!key) throw new Error(`Chave ausente ou vazia em ${filePath}`);
+  if (!key) throw new Error(`Missing or empty key in ${filePath}`);
   return key;
 }
 
@@ -28,7 +28,7 @@ export async function resolveProviderApiKey(provider, opts = {}, env = process.e
   let source = "cli-flag";
   if (!apiKey && opts.keyFile) {
     apiKey = readKeyFile(path.resolve(opts.keyFile), true);
-    source = "arquivo informado";
+    source = "key-file";
   }
   if (!apiKey && env[provider.envVar]?.trim()) {
     apiKey = env[provider.envVar].trim();
@@ -36,7 +36,7 @@ export async function resolveProviderApiKey(provider, opts = {}, env = process.e
   }
   if (!apiKey) {
     apiKey = readKeyFile(savedPath, false);
-    source = "chave salva";
+    source = "saved-key";
   }
   if (!apiKey && !opts.nonInteractive && !opts.optional) {
     apiKey = await promptText(`[${provider.id}] API key: `, "", { secret: true });
@@ -44,9 +44,9 @@ export async function resolveProviderApiKey(provider, opts = {}, env = process.e
   }
   if (!apiKey) {
     if (opts.optional) return { apiKey: null, write: null };
-    throw new Error(`API key ausente para '${provider.id}'. Use --key-file, ${provider.envVar} ou --key.`);
+    throw new Error(`Missing API key for '${provider.id}'. Use --key-file, ${provider.envVar} or --key.`);
   }
-  if (/[\r\n\0]/.test(apiKey)) throw new Error(`API key invalida para '${provider.id}'.`);
+  if (/[\r\n\0]/.test(apiKey)) throw new Error(`Invalid API key for '${provider.id}'.`);
   const write = opts.noSaveKey ? null : planKeyFile(savedPath, apiKey);
   if (write && !opts.deferWrite) commitWrites([write]);
   return { apiKey, source, keyFilePath: savedPath, write, savedTo: write?.changed ? savedPath : null };
@@ -54,7 +54,7 @@ export async function resolveProviderApiKey(provider, opts = {}, env = process.e
 
 export function readSavedKey(providerId, env = process.env) {
   if (!/^[a-z][a-z0-9-]*$/.test(providerId ?? "")) {
-    throw new Error("Informe o nome do provider. Ex: agentmodelkit key opencode");
+    throw new Error("Specify the provider name, for example agentmodelkit key opencode.");
   }
   return readKeyFile(getKeyFilePath(`${providerId}.key`, env), true);
 }

@@ -23,5 +23,5 @@ export function shouldRemove(opts, ownership, id, url) {
 }
 
 export function assertConfig(condition, snapshot) {
-  if (!condition) throw new Error(`Formato de configuracao invalido em ${snapshot.path}.`);
+  if (!condition) throw new Error(`Invalid configuration format in ${snapshot.path}.`);
 }

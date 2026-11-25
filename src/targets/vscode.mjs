@@ -3,6 +3,7 @@ import { jsonWrite, parseSnapshot, readSnapshot } from "../utils/json.mjs";
 import { OPEN_CODE_GROUPS } from "../catalogs/opencode.mjs";
 import { applyTarget, assertConfig, shouldRemove } from "./config.mjs";
 
+// Match the persisted markers from earlier development builds.
 const LEGACY_OPENCODE = "+++++++ CONFIGURACAO OPENCODE +++++++";
 const LEGACY_FREE = "+++++++ CONFIGURACAO FREELLMAPI +++++++";
 const RESERVED_HEADERS = new Set(["authorization", "api-key", "content-type"]);
@@ -66,7 +67,7 @@ function legacyOwner(block, separators) {
 export const vscodeTarget = {
   id: "vscode",
   label: "VS Code (chatLanguageModels.json)",
-  description: "Configura endpoints no VS Code.",
+  description: "Configures endpoints in VS Code.",
 
   plan(resolvedProviders, opts = {}, env = process.env) {
     const snapshot = readSnapshot(opts.vscodePath || getVSCodeChatModelsPath(process.platform, env));
@@ -103,7 +104,7 @@ export const vscodeTarget = {
         continue;
       }
       if (next && (!owner || owner.providerId !== newOwners.get(block.name).providerId)) {
-        throw new Error(`Grupo do VS Code ja existe e e gerenciado fora do AgentModelKit: ${block.name}`);
+        throw new Error(`VS Code group already exists and is managed outside AgentModelKit: ${block.name}`);
       }
       const oldModelUrls = new Map(owner.models.map(({ id, url }) => [id, url]));
       const incomingModels = new Map((next?.models ?? []).map((model) => [model.id, model]));
@@ -113,7 +114,7 @@ export const vscodeTarget = {
         const managed = oldModelUrls.get(model.id) === model.url && oldModelUrls.has(model.id);
         const replacement = incomingModels.get(model.id);
         if (replacement) {
-          if (!managed) throw new Error(`Modelo manual com o mesmo ID no VS Code: ${block.name}/${model.id}`);
+          if (!managed) throw new Error(`Manual model with the same ID in VS Code: ${block.name}/${model.id}`);
           const { supportsReasoningEffort, thinking, requestHeaders, statefulResponses, ...otherFields } = model;
           models.push({ ...otherFields, ...replacement });
           owned.push({ id: replacement.id, url: replacement.url });

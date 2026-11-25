@@ -67,7 +67,7 @@ test("OpenCode generates paid catalog entries with model-specific protocol", asy
   assert.deepEqual(normalizeOpenCodeTiers(), ["payg"]);
   assert.deepEqual(normalizeOpenCodeTiers("go,free"), ["go", "free"]);
   assert.deepEqual(normalizeOpenCodeTiers("all"), ["go", "free", "payg"]);
-  assert.throws(() => normalizeOpenCodeTiers("all,invalid"), /Tier invalido/);
+  assert.throws(() => normalizeOpenCodeTiers("all,invalid"), /Invalid OpenCode tier/);
   const all = await opencodeProvider.resolve({ tiers: "all" });
   assert.deepEqual(all.groups.map(({ id }) => id), ["opencode-go", "opencode-payg"]);
   assert.match(all.groups[0].copilotHeaders["x-opencode-session"], /^ses_[a-f0-9]{32}$/);
@@ -95,7 +95,7 @@ test("resolveProviderApiKey persists 0600 .key file and readSavedKey reads it ba
     assert.equal(fs.statSync(keyPath).mode & 0o777, 0o600);
   }
   assert.equal(readSavedKey("opencode", env), "oc_sk_example_123");
-  assert.throws(() => readSavedKey("", env), /Informe o nome do provider/);
+  assert.throws(() => readSavedKey("", env), /Specify the provider name/);
 });
 
 test("generated clients use correct protocols and preserve user settings", async (t) => {
@@ -166,7 +166,7 @@ test("parseCliArgs and runCli configure targets non-interactively and support --
   assert.equal(parsed.freellmapiMode, "auto");
   assert.equal(parsed.models, "hungerg-free,auto");
   assert.equal(parsed.dryRun, true);
-  assert.throws(() => parseCliArgs(["--unknown-flag"]), /Opcao desconhecida/);
+  assert.throws(() => parseCliArgs(["--unknown-flag"]), /Unknown option/);
 
   const dryResults = await runCli(
     ["init", "-p", "opencode", "--tiers", "payg", "-t", "all", "-k", "oc_dry", "--dry-run", "--yes"],
@@ -197,6 +197,6 @@ test("parseCliArgs and runCli configure targets non-interactively and support --
     env,
   });
   assert.match(doctorOutput, /AgentModelKit Doctor/);
-  assert.match(doctorOutput, /FreeLLMAPI URL detectada/);
+  assert.match(doctorOutput, /Detected FreeLLMAPI URL/);
   assert.match(doctorOutput, /opencode.*OK/);
 });

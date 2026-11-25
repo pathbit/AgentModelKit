@@ -9,7 +9,7 @@ export function normalizeOpenCodeTiers(rawTiers) {
   const items = Array.isArray(rawTiers) ? rawTiers : String(rawTiers ?? "payg").split(",");
   const cleaned = [...new Set(items.map((value) => value.trim().toLowerCase()))];
   if (!cleaned.length || cleaned.some((value) => !["free", "go", "payg", "all"].includes(value))) {
-    throw new Error("Tier invalido para OpenCode. Use free, go, payg ou all.");
+    throw new Error("Invalid OpenCode tier. Use free, go, payg or all.");
   }
   return cleaned.includes("all") ? ["go", "free", "payg"] : cleaned;
 }
@@ -17,7 +17,7 @@ export function normalizeOpenCodeTiers(rawTiers) {
 export const opencodeProvider = {
   id: "opencode",
   label: "OpenCode",
-  description: "OpenCode Go e Console com modelos gratuitos, assinatura Go e PAYG",
+  description: "OpenCode Go subscription and pay-as-you-go Console",
   availableTiers: ["free", "go", "payg"],
   defaultTiers: ["payg"],
   keyFile: "opencode.key",

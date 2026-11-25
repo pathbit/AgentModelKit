@@ -24,7 +24,7 @@ test("promptMultiSelect toggles checkboxes with Space, Down, 'a', and confirms o
   const { input, output, getOutput } = createMockStreams();
 
   const promise = promptMultiSelect({
-    title: "Escolha servicos",
+    title: "Choose services",
     options: [
       { label: "OpenCode Free", value: "free", checked: true },
       { label: "OpenCode Go", value: "go", checked: false },
@@ -54,10 +54,10 @@ test("promptMultiSelect toggles all items with 'a' and enforces minSelected", as
   const { input, output } = createMockStreams();
 
   const promise = promptMultiSelect({
-    title: "Escolha modelos",
+    title: "Choose models",
     options: [
-      { label: "Modelo A", value: "a", checked: false },
-      { label: "Modelo B", value: "b", checked: false },
+      { label: "Model A", value: "a", checked: false },
+      { label: "Model B", value: "b", checked: false },
     ],
     minSelected: 1,
     input,
@@ -79,7 +79,7 @@ test("promptSelect navigates with Down arrow and confirms with Enter, plus non-T
   const { input, output } = createMockStreams();
 
   const rawPromise = promptSelect({
-    title: "Modo",
+    title: "Mode",
     options: [
       { label: "Auto", value: "auto" },
       { label: "Strategies", value: "strategies" },
@@ -100,7 +100,7 @@ test("promptSelect navigates with Down arrow and confirms with Enter, plus non-T
   const nonTtyIn = new PassThrough();
   const nonTtyOut = new PassThrough();
   const fallbackPromise = promptMultiSelect({
-    title: "Servicos",
+    title: "Services",
     options: [
       { label: "Item 1", value: "one", checked: true },
       { label: "Item 2", value: "two", checked: false },

@@ -3,6 +3,7 @@ import { jsonWrite, parseSnapshot, readSnapshot } from "../utils/json.mjs";
 import { applyTarget, assertConfig, shouldRemove } from "./config.mjs";
 
 const MARKER = "AgentModelKit:";
+// Match the persisted markers from earlier development builds.
 const legacyGroups = {
   "opencode-go": ["opencode", "+++++++ OPENCODE GO (PLANO GO) +++++++"],
   "opencode-free-go": ["opencode", "+++++++ OPENCODE FREE (GRATIS NO GO) +++++++"],
@@ -48,7 +49,7 @@ export function buildCopilotPayload(resolvedProviders, { apiKeys = new Map() } =
         };
         const registered = providers.get(name);
         if (registered && registered._comment !== connection._comment) {
-          throw new Error(`Nome de conexao do Copilot ambiguo: ${name}`);
+          throw new Error(`Ambiguous Copilot connection name: ${name}`);
         }
         providers.set(name, connection);
         models.push({
@@ -73,7 +74,7 @@ export function buildCopilotPayload(resolvedProviders, { apiKeys = new Map() } =
 export const copilotCliTarget = {
   id: "copilot-cli",
   label: "GitHub Copilot CLI (~/.copilot/providers.json)",
-  description: "Configura providers.json no GitHub Copilot CLI.",
+  description: "Configures providers.json in GitHub Copilot CLI.",
 
   plan(resolvedProviders, opts = {}, env = process.env) {
     const snapshot = readSnapshot(opts.copilotProvidersPath || getCopilotProvidersPath(env));
@@ -89,7 +90,7 @@ export const copilotCliTarget = {
     for (const [name, provider] of connections) {
       const old = previous.get(name);
       if (old && owner(old)?.providerId !== owner(provider).providerId) {
-        throw new Error(`Provider do Copilot ja existe e e gerenciado fora do AgentModelKit: ${name}`);
+        throw new Error(`Copilot provider already exists and is managed outside AgentModelKit: ${name}`);
       }
     }
     const modelKey = (group, id) => JSON.stringify([group, id]);
@@ -108,7 +109,7 @@ export const copilotCliTarget = {
         removed.push(`${model.provider}/${model.id}`);
       } else {
         if (connections.has(model.provider) && incoming.models.some((item) => item.provider === model.provider && item.id === model.id)) {
-          throw new Error(`Modelo manual com o mesmo ID no Copilot: ${model.provider}/${model.id}`);
+          throw new Error(`Manual model with the same ID in Copilot: ${model.provider}/${model.id}`);
         }
         retained.push(owned && known.legacy && connections.has(model.provider)
           ? { ...model, metadata: { ...model.metadata, agentModelKit: known.providerId } } : model);

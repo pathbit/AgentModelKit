@@ -25,7 +25,7 @@ export function promptText(question, defaultValue = "", {
   input = process.stdin, output = process.stdout, secret = false,
 } = {}) {
   if (secret) {
-    if (!canUseRawMode(input, output)) throw new Error("Use --key-file ou uma variavel de ambiente neste terminal.");
+    if (!canUseRawMode(input, output)) throw new Error("Use --key-file or an environment variable in this terminal.");
     let answer = "";
     return runRawSelector({
       input,
@@ -42,7 +42,7 @@ export function promptText(question, defaultValue = "", {
   }
   const rl = readline.createInterface({ input, output });
   return new Promise((resolve, reject) => {
-    rl.once("close", () => reject(new Error("Entrada encerrada.")));
+    rl.once("close", () => reject(new Error("Input closed.")));
     rl.once("SIGINT", () => rl.close());
     rl.question(question, (answer) => {
       resolve(answer.trim() || defaultValue);
@@ -95,13 +95,13 @@ function runRawSelector({
 
     function handleEnd() {
       cleanup();
-      reject(new Error("Entrada encerrada."));
+      reject(new Error("Input closed."));
     }
 
     function handleKeypress(str, key = {}) {
       if ((key.ctrl && key.name === "c") || key.name === "escape") {
         cleanup();
-        reject(new Error("Operacao cancelada pelo usuario."));
+        reject(new Error("Operation cancelled by the user."));
         return;
       }
 
@@ -142,7 +142,7 @@ export async function promptSelect({
     for (let i = 0; i < options.length; i++) {
       output.write(`  ${i + 1}) ${options[i].label}\n`);
     }
-    const raw = await promptText(`Escolha [padrao ${defaultIndex + 1}]: `, String(defaultIndex + 1), { input, output });
+    const raw = await promptText(`Choose [default ${defaultIndex + 1}]: `, String(defaultIndex + 1), { input, output });
     const idx = Number.parseInt(raw, 10) - 1;
     const chosen = Number.isInteger(idx) && idx >= 0 && idx < options.length ? options[idx] : options[defaultIndex];
     return chosen.value;
@@ -154,7 +154,7 @@ export async function promptSelect({
     output,
     render() {
       const lines = [
-        `${ANSI.bold}${title}${ANSI.reset} ${ANSI.dim}(↑↓ mover, Enter confirmar)${ANSI.reset}`,
+        `${ANSI.bold}${title}${ANSI.reset} ${ANSI.dim}(↑↓ move, Enter confirm)${ANSI.reset}`,
       ];
       for (let i = 0; i < options.length; i++) {
         const active = i === cursor;
@@ -205,7 +205,7 @@ export async function promptMultiSelect({
       output.write(`  ${i + 1}) ${mark} ${options[i].label}\n`);
     }
     const answer = await promptText(
-      `Marque os numeros separados por virgula [Enter = ${defaultNums.join(",") || "todos"}]: `,
+      `Enter comma-separated numbers [Enter = ${defaultNums.join(",") || "all"}]: `,
       defaultNums.join(","),
       { input, output }
     );
@@ -235,12 +235,12 @@ export async function promptMultiSelect({
     render(warning) {
       ensureCursorVisible();
       const lines = [
-        `${ANSI.bold}${title}${ANSI.reset} ${ANSI.dim}(${selected.size}/${options.length} marcados | ↑↓ mover, Espaço marcar, a todos, Enter confirmar)${ANSI.reset}`,
+        `${ANSI.bold}${title}${ANSI.reset} ${ANSI.dim}(${selected.size}/${options.length} checked | ↑↓ move, Space toggle, a all, Enter confirm)${ANSI.reset}`,
       ];
       if (subtitle) lines.push(`${ANSI.dim}${subtitle}${ANSI.reset}`);
 
       const end = Math.min(options.length, scrollOffset + pageSize);
-      if (scrollOffset > 0) lines.push(`${ANSI.dim}  ↑ ... +${scrollOffset} acima${ANSI.reset}`);
+      if (scrollOffset > 0) lines.push(`${ANSI.dim}  ↑ ... +${scrollOffset} above${ANSI.reset}`);
 
       for (let i = scrollOffset; i < end; i++) {
         const opt = options[i];
@@ -253,7 +253,7 @@ export async function promptMultiSelect({
         lines.push(`${pointer} ${box} ${label}${hint}`);
       }
 
-      if (end < options.length) lines.push(`${ANSI.dim}  ↓ ... +${options.length - end} abaixo${ANSI.reset}`);
+      if (end < options.length) lines.push(`${ANSI.dim}  ↓ ... +${options.length - end} below${ANSI.reset}`);
       if (warning) lines.push(`${ANSI.yellow}! ${warning}${ANSI.reset}`);
       return lines;
     },
@@ -274,7 +274,7 @@ export async function promptMultiSelect({
         else options.forEach((_, idx) => selected.add(idx));
       } else if (key.name === "return" || key.name === "enter") {
         if (selected.size < minSelected) {
-          return { warning: `Selecione pelo menos ${minSelected} item.` };
+          return { warning: `Select at least ${minSelected} item(s).` };
         }
         const ordered = [...selected].sort((a, b) => a - b).map((idx) => options[idx].value);
         return { done: true, value: ordered };
@@ -283,6 +283,6 @@ export async function promptMultiSelect({
     },
   });
 
-  output.write(`${ANSI.green}✔${ANSI.reset} ${title}: ${values.length} selecionado(s)\n`);
+  output.write(`${ANSI.green}✔${ANSI.reset} ${title}: ${values.length} selected\n`);
   return values;
 }

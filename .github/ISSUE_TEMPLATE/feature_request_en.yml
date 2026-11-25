@@ -1,0 +1,24 @@
+name: Suggest a provider or client (English)
+description: Propose a new provider, OAuth flow, editor or CLI.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - New provider (e.g. OpenRouter, Ollama, Groq)
+        - New client, editor or CLI (e.g. Claude Code Desktop, Cursor, Codex)
+        - OAuth or device flow
+        - Documentation or user experience
+        - Other improvement
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Describe the proposal
+      description: Include configuration paths, the expected JSON or TOML format and official links when applicable.
+    validations:
+      required: true

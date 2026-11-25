@@ -15,13 +15,15 @@
     "bin/",
     "src/",
     "data/*.json",
-    "data/README.md",
+    "data/README*.md",
     "docs/",
     "examples/",
+    "tests/README*.md",
     "README.md",
     "README.en.md",
-    "CONTRIBUTING.md",
-    "CHANGELOG.md",
+    "README.es.md",
+    "CONTRIBUTING*.md",
+    "CHANGELOG*.md",
     "LICENSE"
   ],
   "publishConfig": {

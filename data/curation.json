@@ -1,6 +1,6 @@
 {
   "reviewedAt": "2026-11-25",
-  "criteria": "Seleção editorial para programação e uso de ferramentas. Prioriza modelos de ponta com protocolos suportados e estratégias gratuitas do FreeLLMAPI.",
+  "criteria": "Editorial selection for coding and tool use. It favors capable models with supported protocols and includes free FreeLLMAPI router strategies.",
   "opencode": [
     "opencode-go/deepseek-v4-pro",
     "opencode-go/glm-5.3",

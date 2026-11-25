@@ -1,5 +1,7 @@
 # Roadmap
 
+[English](ROADMAP.en.md) · [Español](ROADMAP.es.md)
+
 ## Primeira versão
 
 - Configuração do VS Code e Copilot CLI com seleção interativa ou parâmetros.

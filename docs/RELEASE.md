@@ -1,5 +1,7 @@
 # Publicação
 
+[English](RELEASE.en.md) · [Español](RELEASE.es.md)
+
 O pacote deste projeto é `@pathbit/agentmodelkit`. Ele tem ciclo próprio de versões, com código na branch `main` e releases por tag. O fluxo valida o código, testa o tarball via npm exec e publica o mesmo arquivo no npmjs, GitHub Packages e GitHub Release.
 
 ## Antes da primeira publicação

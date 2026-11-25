@@ -18,7 +18,11 @@ const REQUIRED_PATHS = [
   ".env.example",
   ".npmrc",
   ".github/ISSUE_TEMPLATE/bug_report.yml",
+  ".github/ISSUE_TEMPLATE/bug_report_en.yml",
+  ".github/ISSUE_TEMPLATE/bug_report_es.yml",
   ".github/ISSUE_TEMPLATE/feature_request.yml",
+  ".github/ISSUE_TEMPLATE/feature_request_en.yml",
+  ".github/ISSUE_TEMPLATE/feature_request_es.yml",
   ".github/ISSUE_TEMPLATE/config.yml",
   ".github/PULL_REQUEST_TEMPLATE.md",
   ".github/workflows/ci.yml",
@@ -43,7 +47,6 @@ const REQUIRED_PATHS = [
   "examples/opencode.freellmapi.json",
   "examples/provider.local.example.json",
   "README.md",
-  "README.en.md",
   "CONTRIBUTING.md",
   "CHANGELOG.md",
   "LICENSE",
@@ -52,7 +55,7 @@ const REQUIRED_PATHS = [
 
 for (const rel of REQUIRED_PATHS) {
   const full = path.join(root, rel);
-  assert.ok(fs.existsSync(full), `Arquivo ou diretorio obrigatorio ausente: ${rel}`);
+  assert.ok(fs.existsSync(full), `Missing required file or directory: ${rel}`);
 }
 
 const JSON_FILES = [
@@ -96,12 +99,11 @@ const validVendors = new Set([
   "xai",
 ]);
 for (const block of vsSample) {
-  assert.ok(validVendors.has(block.vendor), `Vendor invalido em example VS Code: ${block.vendor}`);
+  assert.ok(validVendors.has(block.vendor), `Invalid vendor in the VS Code example: ${block.vendor}`);
 }
 
-const MD_FILES = [
+const DEFAULT_DOCS = [
   "README.md",
-  "README.en.md",
   "CONTRIBUTING.md",
   "CHANGELOG.md",
   "bin/README.md",
@@ -110,13 +112,23 @@ const MD_FILES = [
   "tests/README.md",
   "examples/README.md",
   ...fs.readdirSync(path.join(root, "docs"))
-    .filter((f) => f.endsWith(".md"))
+    .filter((f) => f.endsWith(".md") && !/\.(en|es)\.md$/.test(f))
     .map((f) => path.join("docs", f)),
+];
+
+const MD_FILES = [
+  ...DEFAULT_DOCS.flatMap((file) => [
+    file, file.replace(/\.md$/, ".en.md"), file.replace(/\.md$/, ".es.md"),
+  ]),
+  ".github/PULL_REQUEST_TEMPLATE.md",
+  ".github/PULL_REQUEST_TEMPLATE/en.md",
+  ".github/PULL_REQUEST_TEMPLATE/es.md",
 ];
 
 let checkedLinks = 0;
 for (const rel of MD_FILES) {
   const filePath = path.join(root, rel);
+  assert.ok(fs.existsSync(filePath), `Missing documentation: ${rel}`);
   const raw = fs.readFileSync(filePath, "utf8").replace(/```[\s\S]*?```/g, "");
   for (const match of raw.matchAll(/\[[^\]]+\]\(([^)\s]+)\)/g)) {
     const target = match[1];
@@ -124,15 +136,15 @@ for (const rel of MD_FILES) {
     const cleanTarget = target.split("#")[0];
     if (!cleanTarget) continue;
     const resolved = path.resolve(path.dirname(filePath), cleanTarget);
-    assert.ok(fs.existsSync(resolved), `Link quebrado em ${rel}: ${target}`);
+    assert.ok(fs.existsSync(resolved), `Broken link in ${rel}: ${target}`);
     checkedLinks++;
   }
 }
 
 const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 assert.equal(pkg.type, "module");
-assert.ok(pkg.bin?.agentmodelkit, "package.json deve declarar bin.agentmodelkit");
+assert.ok(pkg.bin?.agentmodelkit, "package.json must declare bin.agentmodelkit");
 
 console.log(
-  `check OK: ${REQUIRED_PATHS.length} itens obrigatorios, ${JSON_FILES.length} JSONs e ${checkedLinks} links Markdown validados.`
+  `check OK: ${REQUIRED_PATHS.length} required paths, ${JSON_FILES.length} JSON files, ${MD_FILES.length} documents and ${checkedLinks} Markdown links verified.`
 );

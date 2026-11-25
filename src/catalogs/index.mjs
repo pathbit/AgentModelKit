@@ -31,24 +31,24 @@ export function loadCatalog(filename, env = process.env) {
   try {
     return readCatalog(getCatalogDir(env), filename);
   } catch (error) {
-    if (error.code !== "ENOENT") throw new Error(`Cache invalido em ${getCatalogDir(env)}. Execute catalog update.`, { cause: error });
+    if (error.code !== "ENOENT") throw new Error(`Invalid cache in ${getCatalogDir(env)}. Run catalog update.`, { cause: error });
     return readCatalog(bundledDir, filename);
   }
 }
 
 export async function fetchFreeLLMCatalog(previous, fetchImpl) {
   const response = await fetchImpl(FREE_LLM_URL, { signal: AbortSignal.timeout(15000), redirect: "error" });
-  if (!response.ok) throw new Error(`FreeLLMAPI catalogo: HTTP ${response.status}`);
+  if (!response.ok) throw new Error(`FreeLLMAPI catalog: HTTP ${response.status}`);
   const bytes = Buffer.from(await response.arrayBuffer());
   const signature = response.headers.get("x-catalog-signature");
   if (!signature || !verify(null, bytes, FREE_LLM_PUBLIC_KEY, Buffer.from(signature, "base64"))) {
-    throw new Error("Assinatura invalida do catalogo mensal FreeLLMAPI.");
+    throw new Error("Invalid signature for the FreeLLMAPI monthly catalog.");
   }
   const payload = JSON.parse(bytes.toString("utf8"));
   if (payload.tier !== "monthly" || !/^\d{4}\.\d{2}\.\d{2}/.test(payload.version) ||
       !Array.isArray(payload.models) || !payload.models.length ||
       payload.models.some((row) => !row?.platform || !row.modelId || typeof row.enabled !== "boolean")) {
-    throw new Error("Catalogo mensal FreeLLMAPI invalido.");
+    throw new Error("Invalid FreeLLMAPI monthly catalog.");
   }
   return {
     sourceUrls: [FREE_LLM_URL, "https://github.com/tashfeenahmed/freellmapi"],
@@ -80,7 +80,7 @@ export async function refreshCatalogs({
   dir = getCatalogDir(), source = "all", dryRun = false, fetchImpl = globalThis.fetch,
 } = {}) {
   if (!["all", "opencode", "freellmapi"].includes(source)) {
-    throw new Error("Fonte invalida. Use opencode, freellmapi ou all.");
+    throw new Error("Invalid source. Use opencode, freellmapi or all.");
   }
   const files = source === "all" ? [OPEN_CODE, FREE_LLM] : [source === "opencode" ? OPEN_CODE : FREE_LLM];
   const plans = await Promise.all(files.map(async (file) => {
@@ -114,16 +114,16 @@ export function validateBundledCatalogs() {
   for (const { id, channel } of OPEN_CODE_GROUPS) {
     const ids = opencode.groups[id].map((model) => model.id);
     if (new Set(ids).size !== ids.length || ids.some((modelId) => !opencode.availableIds[channel].includes(modelId))) {
-      throw new Error(`Grupo invalido: ${id}`);
+      throw new Error(`Invalid group: ${id}`);
     }
   }
   if (!freellmapi.strategies.some(({ id }) => id === freellmapi.router) || !freellmapi.models.length) {
-    throw new Error("Catalogo FreeLLMAPI incompleto.");
+    throw new Error("Incomplete FreeLLMAPI catalog.");
   }
   if (curation.opencode.some((key) => {
     const [group, ...model] = key.split("/");
     return !opencode.groups[group]?.some(({ id }) => id === model.join("/"));
   }) || curation.freellmapi.some((id) => !freellmapi.strategies.some((model) => model.id === id))) {
-    throw new Error("Curadoria referencia modelos ausentes no pacote.");
+    throw new Error("The curated selection references models missing from the package.");
   }
 }

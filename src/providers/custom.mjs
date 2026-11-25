@@ -3,11 +3,11 @@ import { fetchModelRows } from "../catalogs/opencode.mjs";
 
 export function parseEndpoint(input) {
   if (typeof input !== "string" || !/^https?:\/\//i.test(input) || /[\s\\]/.test(input)) {
-    throw new Error("Informe um endpoint HTTP(S) valido.");
+    throw new Error("Specify a valid HTTP(S) endpoint.");
   }
   const url = new URL(input);
   if (url.username || url.password || url.search || url.hash) {
-    throw new Error("O endpoint deve estar livre de credenciais, query e fragmento.");
+    throw new Error("The endpoint must be free of credentials, query parameters and fragments.");
   }
   return url.href.replace(/\/+$/, "");
 }
@@ -15,7 +15,7 @@ export function parseEndpoint(input) {
 function validateModel(model) {
   if (typeof model?.id !== "string" || !model.id.trim() || model.id !== model.id.trim() || /[,\x00-\x1f]/.test(model.id) ||
       ![model.maxInputTokens, model.maxOutputTokens].every((n) => Number.isSafeInteger(n) && n > 0 && n <= 0xffffffff)) {
-    throw new Error("Modelo manual precisa de id e limites de entrada e saida inteiros positivos.");
+    throw new Error("A manual model requires an ID and positive integer input and output limits.");
   }
   return {
     id: model.id,
@@ -33,23 +33,23 @@ export function loadCustomProviders(files) {
         !Array.isArray(config?.models) || !config.models.length ||
         !["chat-completions", "responses", "messages"].includes(config.apiType ?? "chat-completions") ||
         (config.requiresKey !== undefined && typeof config.requiresKey !== "boolean")) {
-      throw new Error(`Manifesto invalido em ${file}. Consulte examples/provider.local.example.json.`);
+      throw new Error(`Invalid manifest in ${file}. See examples/provider.local.example.json.`);
     }
-    if (providers.has(config.id)) throw new Error(`Provider manual duplicado: ${config.id}`);
+    if (providers.has(config.id)) throw new Error(`Duplicate manual provider: ${config.id}`);
     const baseUrl = parseEndpoint(config.baseUrl);
     const modelsUrl = config.modelsUrl === undefined ? null : parseEndpoint(config.modelsUrl);
     if (modelsUrl && new URL(modelsUrl).origin !== new URL(baseUrl).origin) {
-      throw new Error(`modelsUrl precisa usar a mesma origem de baseUrl em ${file}.`);
+      throw new Error(`modelsUrl must use the same origin as baseUrl in ${file}.`);
     }
     const models = config.models.map((model) => ({
       ...validateModel(model),
       maxInputTokens: model.maxInputTokens,
       maxOutputTokens: model.maxOutputTokens,
     }));
-    if (new Set(models.map(({ id }) => id)).size !== models.length) throw new Error(`IDs repetidos em ${file}.`);
+    if (new Set(models.map(({ id }) => id)).size !== models.length) throw new Error(`Duplicate IDs in ${file}.`);
     if (config.powerfulIds !== undefined && (!Array.isArray(config.powerfulIds) ||
         config.powerfulIds.some((id) => !models.some((model) => model.id === id)))) {
-      throw new Error(`powerfulIds referencia modelos ausentes em ${file}.`);
+      throw new Error(`powerfulIds references missing models in ${file}.`);
     }
     const label = `AgentModelKit: ${config.id}`;
     const apiType = config.apiType ?? "chat-completions";
@@ -84,9 +84,9 @@ export function loadCustomProviders(files) {
         };
       },
       async availability({ apiKey }) {
-        if (!modelsUrl) throw new Error(`Defina modelsUrl em ${file} para consultar disponibilidade.`);
+        if (!modelsUrl) throw new Error(`Define modelsUrl in ${file} to check availability.`);
         // Without a key, an authenticated provider could return a restricted view.
-        if (this.requiresKey && !apiKey) throw new Error(`A consulta de ${this.id} exige chave.`);
+        if (this.requiresKey && !apiKey) throw new Error(`Checking ${this.id} requires an API key.`);
         return new Set((await fetchModelRows(modelsUrl, { apiKey })).map(({ id }) => id));
       },
       ownsEndpoint(url) { return url === baseUrl; },

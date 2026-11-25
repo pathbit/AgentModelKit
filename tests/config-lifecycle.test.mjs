@@ -74,14 +74,14 @@ test("preflight failures preserve both clients and any existing key", async (t) 
   const keyBefore = fs.readFileSync(key);
   fs.writeFileSync(cp, "[bad JSON");
   const alternative = ["add", "-p", "opencode", "--key", "replacement", "--models", "gpt-6.2-sol", "--yes"];
-  await assert.rejects(runCli(alternative, env), /JSON invalido/);
+  await assert.rejects(runCli(alternative, env), /Invalid JSON/);
   assert.deepEqual(fs.readFileSync(vs), vsBefore);
   assert.deepEqual(fs.readFileSync(key), keyBefore);
   assert.equal(fs.existsSync(vs + ".bak"), false);
   assert.equal(fs.existsSync(key + ".bak"), false);
   assert.equal(fs.readFileSync(cp, "utf8"), "[bad JSON");
-  await assert.rejects(runCli(["add", "-p", "opencode", "--tiers", "free", "--yes"], env), /restrito/);
-  await assert.rejects(runCli(["add", "--key"], env), /Informe o valor/);
+  await assert.rejects(runCli(["add", "-p", "opencode", "--tiers", "free", "--yes"], env), /restricted/);
+  await assert.rejects(runCli(["add", "--key"], env), /Provide a value/);
 });
 
 test("prune FreeLLMAPI uses full availability and preserves manual rows and exhausted models", async (t) => {
@@ -120,7 +120,7 @@ test("prune FreeLLMAPI uses full availability and preserves manual rows and exha
   assert.ok(seen.some(([url, auth]) => url === "/v1/models?execution_status=ready" && auth === "Bearer fake"));
   assert.ok(seen.some(([url, auth]) => url === "/v1/models" && auth === "Bearer fake"));
   for (mode of ["failure", "partial"]) {
-    await assert.rejects(runCli(["prune", ...args, "--apply"], env), /HTTP 503|incompleta/);
+    await assert.rejects(runCli(["prune", ...args, "--apply"], env), /HTTP 503|incomplete/);
     assert.deepEqual(fs.readFileSync(vs), beforeVs);
     assert.deepEqual(fs.readFileSync(cp), beforeCp);
   }
@@ -149,7 +149,7 @@ test("manual provider supports opt-in curation and same-origin availability", as
   await runCli(["prune", "--provider-file", file, "--apply"], env);
   assert.deepEqual(read(cp).models.map(({ id }) => id), ["vendor/large"]);
   write(file, { ...config, modelsUrl: "https://example.com/models" });
-  await assert.rejects(runCli(["add", "--provider-file", file, "--yes"], env), /mesma origem/);
+  await assert.rejects(runCli(["add", "--provider-file", file, "--yes"], env), /same origin/);
 });
 
 test("writes reject stale snapshots and active per-file locks before applying any changes", (t) => {
@@ -160,12 +160,12 @@ test("writes reject stale snapshots and active per-file locks before applying an
   write(b, { keep: 2 });
   const plans = [a, b].map((file) => jsonWrite(readSnapshot(file), { newValue: 1 }));
   fs.writeFileSync(b + ".agentmodelkit.lock", "");
-  assert.throws(() => commitWrites(plans), /Arquivo ocupado/);
+  assert.throws(() => commitWrites(plans), /File busy/);
   assert.deepEqual(read(a), { keep: 1 });
   assert.ok(fs.existsSync(b + ".agentmodelkit.lock"));
   fs.unlinkSync(b + ".agentmodelkit.lock");
   write(b, { external: 2 });
-  assert.throws(() => commitWrites(plans), /Arquivo alterado/);
+  assert.throws(() => commitWrites(plans), /File changed/);
   assert.deepEqual(read(a), { keep: 1 });
   assert.deepEqual(read(b), { external: 2 });
   assert.equal(fs.existsSync(a + ".bak"), false);
@@ -176,9 +176,9 @@ test("cache refresh refuses unsigned FreeLLMAPI and incomplete OpenCode payloads
   const dir = env.AGENTMODELKIT_CATALOG_DIR;
   await assert.rejects(refreshCatalogs({
     dir, source: "freellmapi", fetchImpl: async () => new Response(JSON.stringify({ models: [] })),
-  }), /Assinatura invalida/);
+  }), /Invalid signature/);
   await assert.rejects(refreshCatalogs({
     dir, source: "opencode", fetchImpl: async () => new Response(JSON.stringify({ data: [] })),
-  }), /incompleta/);
+  }), /incomplete/);
   assert.equal(fs.existsSync(dir), false);
 });
