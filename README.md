@@ -14,22 +14,26 @@ Para **usar** os modelos, você também precisa ter o cliente escolhido disponí
 
 ## Início rápido
 
-1. Abra o terminal na pasta do projeto com Node.js instalado.
-2. Execute `opencode` ou `freellmapi` para escolher o provider. Selecione onde quer configurá-lo com **↑↓**, **Espaço** e **Enter**.
-3. Escolha o plano do OpenCode ou **Local** para o FreeLLMAPI. No FreeLLMAPI local, informe a URL do servidor. Cole o token quando o assistente pedir.
+Abra o terminal na pasta do projeto com Node.js e npm. Use a prévia pública do GitHub enquanto a primeira versão aguarda publicação:
 
 ```bash
-npx --yes @pathbit/agentmodelkit opencode
-npx --yes @pathbit/agentmodelkit freellmapi
+# Abre a lista de clientes do OpenCode.
+npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/main" opencode
+
+# Aplica os endpoints do OpenCode ao VS Code e ao Copilot CLI juntos.
+npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/main" opencode vscode copilot
+
+# Aplica o FreeLLMAPI local ao VS Code e ao OpenCode do projeto.
+npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/main" freellmapi vscode opencode --url http://127.0.0.1:3001/v1
 ```
 
-Para abrir direto em um cliente, acrescente `vscode`, `copilot` ou `opencode`. Por exemplo, `opencode vscode` aplica os endpoints do OpenCode no VS Code. Sem subcomando, o assistente começa pela lista de providers.
+No menu, use **↑↓** para navegar, **Espaço** para marcar cada cliente e **Enter** para aplicar à seleção. Pressione **A** para marcar todos ou limpar a seleção. O assistente pede o plano ou a conexão e o token quando necessário.
 
-Até a primeira publicação, substitua `npx --yes @pathbit/agentmodelkit` por `node bin/agentmodelkit.mjs` a partir do checkout local. Use `--project-dir` para indicar outro projeto quando configurar o OpenCode.
+Depois da primeira publicação, use `npx --yes @pathbit/agentmodelkit` como prefixo dos comandos. Para configurar o OpenCode em outra pasta, acrescente `--project-dir <pasta>`.
 
 | Quero… | Opção rápida |
 | --- | --- |
-| Escolher os agentes do projeto | Execute o assistente ou informe `--targets opencode,vscode,copilot-cli`. |
+| Escolher os agentes do projeto | Marque vários no menu, passe `vscode copilot` após o provider ou use `--targets all`. |
 | Acrescentar um modelo ou provider | Use `add --providers <id> --models <ids>` ou `add --provider-file ./meu-provider.json`. |
 | Carregar modelos recomendados | Acrescente `--powerful`. |
 | Atualizar o catálogo | Use `catalog update`. |
@@ -40,18 +44,17 @@ Até a primeira publicação, substitua `npx --yes @pathbit/agentmodelkit` por `
 
 O `npx` baixa o pacote no cache do npm e executa a CLI. O comando configura os arquivos dos clientes e não instala editores, extensões, providers, runtimes ou modelos. Uma operação `--dry-run` não grava configuração, credenciais nem backups.
 
-**Enquanto o pacote estiver em desenvolvimento local**, rode os exemplos daqui do repositório com `node bin/agentmodelkit.mjs` no lugar de `npx --yes @pathbit/agentmodelkit`. O nome no npm estará disponível a partir da primeira publicação.
+Os exemplos abaixo usam o nome do pacote no npmjs após a primeira publicação. Para executá-los agora, substitua `@pathbit/agentmodelkit` pela URL do GitHub mostrada no início rápido.
 
 ```bash
-# Configura endpoints do OpenCode no VS Code ou no Copilot CLI.
-npx --yes @pathbit/agentmodelkit opencode vscode
-npx --yes @pathbit/agentmodelkit opencode copilot
+# Configura o OpenCode no VS Code e no Copilot CLI.
+npx --yes @pathbit/agentmodelkit opencode vscode copilot
 
 # Configura FreeLLMAPI local no VS Code (o assistente pede a chave unificada).
 npx --yes @pathbit/agentmodelkit freellmapi vscode --connection local --url http://127.0.0.1:3001/v1
 
-# Simula a configuração do FreeLLMAPI local no OpenCode do projeto.
-npx --yes @pathbit/agentmodelkit freellmapi opencode --url http://127.0.0.1:3001/v1 --dry-run
+# Simula a configuração do FreeLLMAPI local nos três clientes.
+npx --yes @pathbit/agentmodelkit freellmapi --targets all --url http://127.0.0.1:3001/v1 --dry-run
 
 # Acrescenta os modelos da curadoria do Go e Console e simula a configuração.
 npx --yes @pathbit/agentmodelkit add --providers opencode --tiers all --powerful --dry-run

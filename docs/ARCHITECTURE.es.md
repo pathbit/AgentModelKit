@@ -2,7 +2,7 @@
 
 [Português (Brasil)](ARCHITECTURE.md) · [English](ARCHITECTURE.en.md)
 
-- [bin/agentmodelkit.mjs](../bin/agentmodelkit.mjs) expone la CLI y presenta errores en la terminal.
+- [src/agentmodelkit.mjs](../src/agentmodelkit.mjs) expone la CLI y presenta errores en la terminal.
 - [src/cli.mjs](../src/cli.mjs) interpreta las opciones, obtiene las credenciales necesarias, resuelve los modelos y prepara los archivos antes de escribir.
 - [src/providers](../src/providers) resuelve los metadatos de conexión, los planes y los modelos por proveedor. Los manifiestos manuales utilizan el mismo formato interno.
 - [src/catalogs](../src/catalogs) lee las instantáneas, normaliza las API de OpenCode y verifica el catálogo público firmado de FreeLLMAPI.

@@ -21,8 +21,8 @@ const USAGE = `AgentModelKit (@pathbit/agentmodelkit)
 Usage: agentmodelkit [command] [options]
 
   init, add          Adds or updates providers and models (init is the default)
-  opencode [client]  Configures OpenCode Go or Console endpoints
-  freellmapi [client] Configures a FreeLLMAPI server (local or remote)
+  opencode [clients...]    Configures OpenCode Go or Console endpoints
+  freellmapi [clients...]  Configures a FreeLLMAPI server (local or remote)
   copilot, vscode    Configures only the named client
   prune              Previews removal of models missing upstream. Use --apply to write changes
   catalog list       Shows the catalogs in use
@@ -32,7 +32,7 @@ Usage: agentmodelkit [command] [options]
 
 Selection:
   -p, --providers <list>     opencode, freellmapi or a manual custom-* provider
-  -t, --targets <list>       opencode (default), vscode, copilot-cli or all
+  -t, --targets <list>       Comma-separated clients: opencode, vscode, copilot-cli or all
   --tiers <list>             OpenCode: go, payg or all (free only for prune)
   --models <list>            Exact IDs or <group>/<model>
   --powerful                Adds curated highlights for the selected plans
@@ -97,11 +97,9 @@ export function parseCliArgs(argv) {
   if (providerCommands.has(command)) {
     if (opts.providers) throw new Error(`'${command}' already selects a provider. Use init or add for multiple providers.`);
     if (opts.providerFiles.length) throw new Error("Use init or add with --provider-file.");
-    if (opts.positional.length > 1 || (opts.targets && opts.positional.length)) {
-      throw new Error("Specify one client after the provider or use --targets.");
-    }
+    if (opts.targets && opts.positional.length) throw new Error("Use either positional clients or --targets.");
     opts.providers = command;
-    if (opts.positional.length) opts.targets = opts.positional.pop();
+    if (opts.positional.length) opts.targets = opts.positional.splice(0).join(",");
   }
   if (command === "copilot" || command === "vscode") {
     if (opts.targets) throw new Error("Use init, add or prune to select --targets.");
@@ -202,8 +200,8 @@ async function gatherInteractiveConfig(opts) {
   }
   if (!opts.targets) {
     opts.targets = (await promptMultiSelect({
-      title: "Where should the selected providers be configured?",
-      options: listTargets().map((target) => ({ label: target.label, value: target.id, checked: target.id === "opencode" })),
+      title: "Select one or more clients",
+      options: listTargets().map((target) => ({ label: target.label, value: target.id })),
     })).join(",");
   }
   if (opts.providers?.split(",").some((id) => id.trim().toLowerCase() === "opencode") && !opts.tiers && !opts.powerful) {

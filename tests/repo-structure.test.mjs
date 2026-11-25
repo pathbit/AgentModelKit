@@ -20,7 +20,7 @@ test("repository follows PathBit standard layout", () => {
     ".editorconfig",
     ".env.example",
     ".npmrc",
-    "bin/agentmodelkit.mjs",
+    "src/agentmodelkit.mjs",
     "src/cli.mjs",
     "src/ui/prompts.mjs",
     "docs/README.md",
@@ -39,6 +39,12 @@ test("repository follows PathBit standard layout", () => {
   for (const rel of expectedEntries) {
     assert.equal(fs.existsSync(path.join(root, rel)), true, `Missing baseline file: ${rel}`);
   }
+  assert.equal(fs.existsSync(path.join(root, "bin")), false);
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+  assert.deepEqual(manifest.bin, {
+    agentmodelkit: "./src/agentmodelkit.mjs",
+    amk: "./src/agentmodelkit.mjs",
+  });
 });
 
 test("examples never use invalid VS Code vendor 'comentario'", () => {

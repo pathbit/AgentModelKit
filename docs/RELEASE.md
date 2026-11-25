@@ -4,6 +4,17 @@
 
 O pacote deste projeto é `@pathbit/agentmodelkit`. Ele tem ciclo próprio de versões, com código na branch `main` e releases por tag. O fluxo valida o código, testa o tarball via npm exec e publica o mesmo arquivo no npmjs, GitHub Packages e GitHub Release.
 
+## Executar o pacote publicado
+
+Quando a versão estiver disponível, execute diretamente com npm/npx:
+
+```bash
+npx --yes @pathbit/agentmodelkit@0.0.1 opencode vscode copilot
+npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz freellmapi
+```
+
+O segundo comando usa o tarball público anexado ao GitHub Release. Para acessar o registro GitHub Packages, configure a autenticação do npm para o escopo `@pathbit`. [Como autenticar no GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-to-github-packages).
+
 ## Antes da primeira publicação
 
 1. Mantenha as alterações de código na `main` e confirme a matriz de CI para o commit candidato.
