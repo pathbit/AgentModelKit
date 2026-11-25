@@ -1,0 +1,11 @@
+node_modules/
+coverage/
+*.log
+.DS_Store
+*.key
+*.bak
+.env
+.env.*
+!.env.example
+tmp/
+scratch/

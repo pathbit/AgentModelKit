@@ -1,0 +1,738 @@
+{
+  "updatedAt": "2026-11-25",
+  "deprecatedIds": [
+    "gpt-5-codex",
+    "gpt-5.1-codex",
+    "gpt-5.1-codex-max",
+    "gpt-5.1-codex-mini",
+    "gpt-5.2-codex",
+    "minimax-m2.5"
+  ],
+  "legacy2025Ids": [
+    "claude-haiku-4-5",
+    "claude-opus-4-5",
+    "claude-sonnet-4-5",
+    "gpt-5",
+    "gpt-5-nano",
+    "gpt-5.1",
+    "gpt-5.2"
+  ],
+  "tiers": {
+    "free": [
+      {
+        "id": "hungerg-free",
+        "name": "HungerG Free",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": null,
+        "tier": "efficiency",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "hy4-flash-free",
+        "name": "Hy4 flash Free",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "efficiency",
+        "maxInputTokens": 983040,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "beam-free",
+        "name": "Beam Free",
+        "toolCalling": true,
+        "vision": false,
+        "reasoningEffort": "high",
+        "tier": "efficiency",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 131072
+      },
+      {
+        "id": "iceman-contributor-free",
+        "name": "Iceman Contributor Free",
+        "toolCalling": true,
+        "vision": false,
+        "reasoningEffort": null,
+        "tier": "efficiency",
+        "maxInputTokens": 262144,
+        "maxOutputTokens": 131072
+      }
+    ],
+    "go": [
+      {
+        "id": "claude-haiku-5-5",
+        "name": "Claude Haiku 5.5",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gpt-6-luna",
+        "name": "GPT-6 Luna",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 922000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gemini-4-argon",
+        "name": "Gemini 4 Argon",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "deepseek-v4.1-flash",
+        "name": "DeepSeek V4.1 Flash 1017",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 384000
+      },
+      {
+        "id": "deepseek-v4-pro",
+        "name": "DeepSeek V4 Pro",
+        "toolCalling": true,
+        "vision": false,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 384000
+      },
+      {
+        "id": "kimi-k3.1-pro",
+        "name": "Kimi K3.1 Pro",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 1048576
+      },
+      {
+        "id": "kimi-k3",
+        "name": "Kimi K3",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "max",
+        "tier": "intelligence",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 1048576
+      },
+      {
+        "id": "kimi-k2.7-code",
+        "name": "Kimi K2.7 Code",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": null,
+        "tier": "intelligence",
+        "maxInputTokens": 262144,
+        "maxOutputTokens": 262144
+      },
+      {
+        "id": "qwen4-max",
+        "name": "Qwen4 Max",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 262144
+      },
+      {
+        "id": "qwen3.8-flash",
+        "name": "Qwen3.8 Flash",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "medium",
+        "tier": "balance",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 131072
+      },
+      {
+        "id": "qwen3.7-plus",
+        "name": "Qwen3.7 Plus",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": null,
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "glm-5.3",
+        "name": "GLM-5.3",
+        "toolCalling": true,
+        "vision": false,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 131072
+      },
+      {
+        "id": "glm-5.3-flash",
+        "name": "GLM-5.3-Flash",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 131072
+      },
+      {
+        "id": "grok-4.7",
+        "name": "Grok 4.7",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 500000,
+        "maxOutputTokens": 500000
+      },
+      {
+        "id": "minimax-m3",
+        "name": "MiniMax-M3",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": null,
+        "tier": "balance",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 131072
+      },
+      {
+        "id": "minimax-m3.1-flash",
+        "name": "MiniMax M3.1 Flash",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 512000
+      },
+      {
+        "id": "mimo-v2.6-pro",
+        "name": "MiMo-V2.6-Pro",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": null,
+        "tier": "intelligence",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 131072
+      },
+      {
+        "id": "mimo-v2.6-flash",
+        "name": "MiMo-V2.6-Flash",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": null,
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 131072
+      },
+      {
+        "id": "hy4",
+        "name": "Hy4",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 983040,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "longcat-2.5",
+        "name": "LongCat-2.5",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": null,
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 262144
+      },
+      {
+        "id": "muse-spark-1.3-contributor",
+        "name": "Muse Spark 1.3 Contributor",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 131072
+      },
+      {
+        "id": "step-5-preview",
+        "name": "Step 5 Preview",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 65536
+      }
+    ],
+    "payg": [
+      {
+        "id": "gemini-4-neon",
+        "name": "Gemini 4 Neon",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "gpt-6.2-sol",
+        "name": "GPT-6.2 Sol",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 922000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gpt-6.2-astra",
+        "name": "GPT-6.2 Astra",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 922000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gemini-4-hydrogen",
+        "name": "Gemini 4 Hydrogen",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "gemini-4-carbon",
+        "name": "Gemini 4 Carbon",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "muse-ember-1.0",
+        "name": "Muse Ember 1.0",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 270000
+      },
+      {
+        "id": "claude-fable-5-2",
+        "name": "Claude Fable 5.2",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "muse-wonder-1.0",
+        "name": "Muse Wonder",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 131072
+      },
+      {
+        "id": "mistral-large-4",
+        "name": "Mistral Large 4",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 524288,
+        "maxOutputTokens": 262144
+      },
+      {
+        "id": "gpt-6.1-sol",
+        "name": "GPT-6.1 Sol",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 922000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "claude-sonnet-5-5",
+        "name": "Claude Sonnet 5.5",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gpt-6-sol",
+        "name": "GPT-6 Sol",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 922000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "claude-opus-5-5",
+        "name": "Claude Opus 5.5",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gpt-6-astra",
+        "name": "GPT-6 Astra",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 922000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "muse-spark-1.3",
+        "name": "Muse Spark 1.3",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 131072
+      },
+      {
+        "id": "gemini-3.8-flash",
+        "name": "Gemini 3.8 Flash",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "claude-fable-5-1",
+        "name": "Claude Fable 5.1",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gemini-3.7-flash",
+        "name": "Gemini 3.7 Flash",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "grok-4.6",
+        "name": "Grok 4.6",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 500000,
+        "maxOutputTokens": 500000
+      },
+      {
+        "id": "muse-spark-1.2",
+        "name": "Muse Spark 1.2",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 131072
+      },
+      {
+        "id": "claude-opus-5",
+        "name": "Claude Opus 5",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gemini-3.6-flash",
+        "name": "Gemini 3.6 Flash",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "gemini-3.5-flash-lite",
+        "name": "Gemini 3.5 Flash Lite",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "gpt-5.6-terra",
+        "name": "GPT-5.6 Terra",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 922000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gpt-5.6-sol",
+        "name": "GPT-5.6 Sol",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 922000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "grok-4.5",
+        "name": "Grok 4.5",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 500000,
+        "maxOutputTokens": 500000
+      },
+      {
+        "id": "claude-sonnet-5",
+        "name": "Claude Sonnet 5",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "claude-fable-5",
+        "name": "Claude Fable 5",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "claude-opus-4-8",
+        "name": "Claude Opus 4.8",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gemini-3.5-flash",
+        "name": "Gemini 3.5 Flash",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 1048576,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "gpt-5.5-pro",
+        "name": "GPT-5.5 Pro",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 922000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gpt-5.5",
+        "name": "GPT-5.5",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 922000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "grok-build-0.1",
+        "name": "Grok Build 0.1",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": null,
+        "tier": "intelligence",
+        "maxInputTokens": 256000,
+        "maxOutputTokens": 256000
+      },
+      {
+        "id": "claude-opus-4-7",
+        "name": "Claude Opus 4.7",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "qwen3.6-plus",
+        "name": "Qwen3.6 Plus",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": null,
+        "tier": "intelligence",
+        "maxInputTokens": 262144,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "minimax-m2.7",
+        "name": "MiniMax-M2.7",
+        "toolCalling": true,
+        "vision": false,
+        "reasoningEffort": null,
+        "tier": "balance",
+        "maxInputTokens": 204800,
+        "maxOutputTokens": 131072
+      },
+      {
+        "id": "gpt-5.4-nano",
+        "name": "GPT-5.4 Nano",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 272000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gpt-5.4-mini",
+        "name": "GPT-5.4 Mini",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 272000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gpt-5.4-pro",
+        "name": "GPT-5.4 Pro",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 922000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gpt-5.4",
+        "name": "GPT-5.4",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 922000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "claude-sonnet-4-6",
+        "name": "Claude Sonnet 4.6",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "qwen3.5-plus",
+        "name": "Qwen3.5 Plus",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": null,
+        "tier": "intelligence",
+        "maxInputTokens": 262144,
+        "maxOutputTokens": 65536
+      },
+      {
+        "id": "gpt-5.3-codex-spark",
+        "name": "GPT-5.3 Codex Spark",
+        "toolCalling": true,
+        "vision": false,
+        "reasoningEffort": "high",
+        "tier": "balance",
+        "maxInputTokens": 128000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "gpt-5.3-codex",
+        "name": "GPT-5.3 Codex",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 272000,
+        "maxOutputTokens": 128000
+      },
+      {
+        "id": "claude-opus-4-6",
+        "name": "Claude Opus 4.6",
+        "toolCalling": true,
+        "vision": true,
+        "reasoningEffort": "high",
+        "tier": "intelligence",
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 128000
+      }
+    ]
+  }
+}
