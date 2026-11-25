@@ -8,7 +8,7 @@ Contribuições são muito bem-vindas! O projeto foi desenhado para facilitar a 
    - `id`, `label`, `description`
    - `availableTiers`, `defaultTiers`
    - `keyFile`, `envVar`, `keyPlaceholder`, `requiresKey`
-   - `async resolve({ tiers, baseUrl, apiKey, live })` retornando:
+   - `async resolve({ tiers, baseUrl, port, mode, apiKey, live })` retornando:
      ```js
      {
        providerId: "seu-provider",
@@ -46,7 +46,7 @@ Contribuições são muito bem-vindas! O projeto foi desenhado para facilitar a 
      }
      ```
 2. Registre o provider em `src/providers/index.mjs`.
-3. Adicione testes em `tests/` e rode `npm test`.
+3. Adicione testes em `tests/` e rode `npm run check && npm test`.
 
 ## Como adicionar um novo Target (Editor / CLI / Desktop)
 

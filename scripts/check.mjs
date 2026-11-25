@@ -25,6 +25,7 @@ const REQUIRED_PATHS = [
   "bin/README.md",
   "src",
   "src/README.md",
+  "src/ui/prompts.mjs",
   "docs",
   "docs/README.md",
   "tests",
@@ -33,6 +34,7 @@ const REQUIRED_PATHS = [
   "data/README.md",
   "examples",
   "examples/README.md",
+  "examples/opencode.freellmapi.json",
   "README.md",
   "README.en.md",
   "CONTRIBUTING.md",
@@ -53,12 +55,35 @@ const JSON_FILES = [
   "data/opencode-catalog.json",
   "examples/vscode.chatLanguageModels.free.json",
   "examples/copilot.providers.free.json",
+  "examples/opencode.freellmapi.json",
 ];
 
 for (const rel of JSON_FILES) {
   const full = path.join(root, rel);
   const raw = fs.readFileSync(full, "utf8");
   JSON.parse(raw);
+}
+
+const vsSample = JSON.parse(
+  fs.readFileSync(path.join(root, "examples/vscode.chatLanguageModels.free.json"), "utf8")
+);
+const validVendors = new Set([
+  "agent-host-claude",
+  "agent-host-codex",
+  "agent-host-copilotcli",
+  "anthropic",
+  "azure",
+  "cloud-sandbox",
+  "copilot",
+  "customendpoint",
+  "gemini",
+  "ollama",
+  "openai",
+  "openrouter",
+  "xai",
+]);
+for (const block of vsSample) {
+  assert.ok(validVendors.has(block.vendor), `Vendor invalido em example VS Code: ${block.vendor}`);
 }
 
 const MD_FILES = [

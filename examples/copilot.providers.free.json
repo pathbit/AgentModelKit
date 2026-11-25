@@ -13,7 +13,7 @@
       "apiKeyCommand": "node -e \"const f=require('fs'),o=require('os'),p=require('path');process.stdout.write(f.readFileSync(p.join(process.env.COPILOT_HOME||p.join(o.homedir(),'.copilot'),'opencode.key'),'utf8').trim())\""
     },
     {
-      "_comment": "+++++++ FREELLMAPI (100% GRATIS LOCAL ROUTER) +++++++",
+      "_comment": "+++++++ FREELLMAPI (100% GRATIS SMART ROUTER) +++++++",
       "name": "freellmapi",
       "type": "openai",
       "baseUrl": "http://localhost:3001/v1",
@@ -22,30 +22,6 @@
     }
   ],
   "models": [
-    {
-      "id": "hungerg-free",
-      "name": "[OpenCode Free] HungerG Free",
-      "provider": "opencode-free-go",
-      "maxPromptTokens": 1000000,
-      "maxOutputTokens": 65536,
-      "capabilities": {
-        "supports": {
-          "vision": true
-        }
-      }
-    },
-    {
-      "id": "hy4-flash-free",
-      "name": "[OpenCode Free] Hy4 flash Free",
-      "provider": "opencode-free-go",
-      "maxPromptTokens": 983040,
-      "maxOutputTokens": 65536,
-      "capabilities": {
-        "supports": {
-          "vision": true
-        }
-      }
-    },
     {
       "id": "beam-free",
       "name": "[OpenCode Free] Beam Free",
@@ -71,74 +47,38 @@
       }
     },
     {
+      "id": "hy4-flash-free",
+      "name": "[OpenCode Free] Hy4 flash Free",
+      "provider": "opencode-free-go",
+      "maxPromptTokens": 983040,
+      "maxOutputTokens": 65536,
+      "capabilities": {
+        "supports": {
+          "vision": true
+        }
+      }
+    },
+    {
+      "id": "hungerg-free",
+      "name": "[OpenCode Free] HungerG Free",
+      "provider": "opencode-free-go",
+      "maxPromptTokens": 1000000,
+      "maxOutputTokens": 65536,
+      "capabilities": {
+        "supports": {
+          "vision": true
+        }
+      }
+    },
+    {
       "id": "auto",
-      "name": "[FreeLLMAPI] Auto Router",
+      "name": "[FreeLLMAPI] FreeLLMAPI Auto Router",
       "provider": "freellmapi",
       "maxPromptTokens": 1048576,
       "maxOutputTokens": 65536,
       "capabilities": {
         "supports": {
           "vision": true
-        }
-      }
-    },
-    {
-      "id": "auto:smart",
-      "name": "[FreeLLMAPI] Auto Smart",
-      "provider": "freellmapi",
-      "maxPromptTokens": 1048576,
-      "maxOutputTokens": 65536,
-      "capabilities": {
-        "supports": {
-          "vision": true
-        }
-      }
-    },
-    {
-      "id": "auto:fast",
-      "name": "[FreeLLMAPI] Auto Fast",
-      "provider": "freellmapi",
-      "maxPromptTokens": 1048576,
-      "maxOutputTokens": 65536,
-      "capabilities": {
-        "supports": {
-          "vision": true
-        }
-      }
-    },
-    {
-      "id": "auto:reliable",
-      "name": "[FreeLLMAPI] Auto Reliable",
-      "provider": "freellmapi",
-      "maxPromptTokens": 1048576,
-      "maxOutputTokens": 65536,
-      "capabilities": {
-        "supports": {
-          "vision": true
-        }
-      }
-    },
-    {
-      "id": "auto:balanced",
-      "name": "[FreeLLMAPI] Auto Balanced",
-      "provider": "freellmapi",
-      "maxPromptTokens": 1048576,
-      "maxOutputTokens": 65536,
-      "capabilities": {
-        "supports": {
-          "vision": true
-        }
-      }
-    },
-    {
-      "id": "fusion",
-      "name": "[FreeLLMAPI] Fusion (Multi-Model)",
-      "provider": "freellmapi",
-      "maxPromptTokens": 1048576,
-      "maxOutputTokens": 65536,
-      "capabilities": {
-        "supports": {
-          "vision": false
         }
       }
     }

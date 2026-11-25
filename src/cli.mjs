@@ -1,11 +1,12 @@
 import fs from "node:fs";
-import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { getProvider, listProviders } from "./providers/index.mjs";
+import { detectFreeLLMApiBaseUrl } from "./providers/freellmapi.mjs";
 import { listTargets, normalizeTargets, TARGETS } from "./targets/index.mjs";
-import { promptLine, readSavedKey, resolveProviderApiKey } from "./keys.mjs";
+import { readSavedKey, resolveProviderApiKey } from "./keys.mjs";
 import { getCopilotDir, getCopilotProvidersPath, getKeyFilePath, getVSCodeChatModelsPath } from "./utils/paths.mjs";
 import { readJsonOrNull } from "./utils/json.mjs";
+import { promptMultiSelect, promptSelect, promptText } from "./ui/prompts.mjs";
 
 const USAGE = `AgentModelKit (@pathbit/agentmodelkit)
 
@@ -13,7 +14,7 @@ Uso:
   agentmodelkit [comando] [opcoes]
 
 Comandos:
-  init               Assistente interativo completo (padrao sem argumentos)
+  init               Assistente interativo com checkboxes (padrao sem argumentos)
   copilot            Configura apenas o GitHub Copilot CLI (~/.copilot/providers.json)
   vscode             Configura apenas o VS Code (chatLanguageModels.json)
   list               Lista providers, tiers e targets suportados
@@ -21,26 +22,29 @@ Comandos:
   key <provider>     Imprime a chave salva em <COPILOT_HOME>/<provider>.key
 
 Opcoes:
-  -p, --providers <lista>    opencode, freellmapi ou opencode,freellmapi
-  -t, --targets <lista>      vscode, copilot-cli ou all (padrao: ambos)
-  --tiers <lista>            OpenCode: free | go | payg | go,free | all (padrao: free)
-  --url <url>                URL base customizada (ex: FreeLLMAPI :3001 ou :31415)
-  -k, --key <valor>          Informa a API key diretamente (para 1 provider)
-  --key-file <caminho>       Caminho customizado do arquivo .key
-  -m, --default-model <id>   Modelo padrao para \`copilot config model\`
-  --live                     Busca modelos ao vivo nas APIs antes de gravar
-  --inline-key               Grava a chave literal no JSON em vez de apiKeyCommand
-  --no-save-key              Nao cria <COPILOT_HOME>/<provider>.key
-  --no-default-model         Nao altera \`copilot config model\`
-  --dry-run                  Simula e mostra resumo sem gravar arquivos
-  -y, --yes                  Modo nao interativo usando defaults seguros
-  -h, --help                 Exibe esta ajuda
+  -p, --providers <lista>        opencode, freellmapi ou opencode,freellmapi
+  -t, --targets <lista>          vscode, copilot-cli ou all (padrao: ambos)
+  --tiers <lista>                OpenCode: free | go | payg | go,free | all (padrao: free)
+  --url <url-ou-porta>           URL ou porta do FreeLLMAPI (ex: http://localhost:4000/v1 ou 4000)
+  --port <numero>                Porta dinamica para FreeLLMAPI (ex: 31416)
+  --freellmapi-mode <modo>       auto (padrao, somente roteador) | strategies | ready
+  --models <lista>               Filtra IDs especificos de modelos (ex: hungerg-free,auto)
+  -k, --key <valor>              Informa a API key diretamente (para 1 provider)
+  --key-file <caminho>           Caminho customizado do arquivo .key
+  -m, --default-model <id>       Modelo padrao para \`copilot config model\`
+  --live                         Busca modelos ao vivo nas APIs antes de gravar
+  --inline-key                   Grava a chave literal no JSON em vez de apiKeyCommand
+  --no-save-key                  Nao cria <COPILOT_HOME>/<provider>.key
+  --no-default-model             Nao altera \`copilot config model\`
+  --dry-run                      Simula e mostra resumo sem gravar arquivos
+  -y, --yes                      Modo nao interativo usando defaults seguros
+  -h, --help                     Exibe esta ajuda
 
 Exemplos:
   agentmodelkit
   agentmodelkit copilot --providers opencode --tiers free
-  agentmodelkit vscode --providers opencode,freellmapi --tiers go,free
-  agentmodelkit init --providers freellmapi --url http://localhost:3001/v1 --targets all`;
+  agentmodelkit init --providers freellmapi --port 31416 --targets all
+  agentmodelkit init --providers opencode,freellmapi --tiers go,free --models claude-haiku-5-5,auto`;
 
 export function parseCliArgs(argv) {
   const args = [...argv];
@@ -60,6 +64,9 @@ export function parseCliArgs(argv) {
     targets: null,
     tiers: null,
     url: null,
+    port: null,
+    freellmapiMode: null,
+    models: null,
     key: null,
     keyFile: null,
     defaultModel: null,
@@ -83,8 +90,11 @@ export function parseCliArgs(argv) {
     else if (a === "--dry-run") opts.dryRun = true;
     else if (a === "-p" || a === "--provider" || a === "--providers") opts.providers = args[++i];
     else if (a === "-t" || a === "--target" || a === "--targets") opts.targets = args[++i];
-    else if (a === "--tiers" || a === "--tier") opts.tiers = args[++i];
+    else if (a === "--tiers" || a === "--tier" || a === "--licenses") opts.tiers = args[++i];
     else if (a === "--url") opts.url = args[++i];
+    else if (a === "--port") opts.port = args[++i];
+    else if (a === "--freellmapi-mode") opts.freellmapiMode = args[++i];
+    else if (a === "--models" || a === "--model-filter") opts.models = args[++i];
     else if (a === "-k" || a === "--key") opts.key = args[++i];
     else if (a === "--key-file") opts.keyFile = args[++i];
     else if (a === "-m" || a === "--default-model") opts.defaultModel = args[++i];
@@ -97,6 +107,40 @@ export function parseCliArgs(argv) {
 
   opts.positional = positional;
   return opts;
+}
+
+/**
+ * Filter resolved provider groups down to a selected list of model IDs (or `<provider>/<id>`),
+ * dropping empty groups and keeping `defaultModel` valid.
+ */
+export function filterResolvedProvidersByModelIds(resolvedProviders, rawSelectedIds) {
+  const tokens = Array.isArray(rawSelectedIds)
+    ? rawSelectedIds
+    : String(rawSelectedIds || "").split(",").map((s) => s.trim()).filter(Boolean);
+
+  if (tokens.length === 0) return resolvedProviders;
+  const want = new Set(tokens);
+
+  const filteredProviders = [];
+  for (const resolved of resolvedProviders) {
+    const groups = [];
+    for (const group of resolved.groups) {
+      const models = group.models.filter((m) => want.has(m.id) || want.has(`${group.id}/${m.id}`));
+      if (models.length > 0) {
+        groups.push({ ...group, models });
+      }
+    }
+    if (groups.length > 0) {
+      const hasOriginalDefault = groups.some((g) => g.models.some((m) => `${g.id}/${m.id}` === resolved.defaultModel));
+      const fallbackDefault = `${groups[0].id}/${groups[0].models[0].id}`;
+      filteredProviders.push({
+        ...resolved,
+        groups,
+        defaultModel: hasOriginalDefault ? resolved.defaultModel : fallbackDefault,
+      });
+    }
+  }
+  return filteredProviders;
 }
 
 function cmdList() {
@@ -119,7 +163,7 @@ function checkBinaryVersion(bin, args = ["--version"]) {
   }
 }
 
-function cmdDoctor(env = process.env) {
+async function cmdDoctor(env = process.env) {
   console.log("=== AgentModelKit Doctor ===");
   console.log(`OS: ${process.platform} (${process.arch}) | Node.js: ${process.version}`);
 
@@ -146,6 +190,9 @@ function cmdDoctor(env = process.env) {
       (vscodeJson ? `${vscodeJson.length} blocos, ${vscModels} models` : "ausente")
   );
 
+  const detectedFreeUrl = await detectFreeLLMApiBaseUrl({ env });
+  console.log(`FreeLLMAPI URL detectada: ${detectedFreeUrl}`);
+
   console.log(`Chaves em ${getCopilotDir(env)}:`);
   for (const p of listProviders()) {
     const kf = getKeyFilePath(p.keyFile, env);
@@ -153,75 +200,122 @@ function cmdDoctor(env = process.env) {
   }
 }
 
-async function promptChoice(title, options, defaultChoice = "1") {
-  console.log(`\n${title}`);
-  for (let i = 0; i < options.length; i++) {
-    console.log(`  ${i + 1}) ${options[i].label}`);
-  }
-  const raw = await promptLine(`Escolha [padrao ${defaultChoice}]: `);
-  const idx = parseInt(raw || defaultChoice, 10) - 1;
-  if (Number.isNaN(idx) || idx < 0 || idx >= options.length) {
-    return options[parseInt(defaultChoice, 10) - 1].value;
-  }
-  return options[idx].value;
-}
-
-async function gatherInteractiveConfig(opts) {
+async function gatherInteractiveConfig(opts, env) {
   if (!opts.targets && !opts.command) {
-    opts.targets = await promptChoice(
-      "Quais ferramentas voce quer configurar?",
-      [
-        { label: "VS Code + GitHub Copilot CLI (ambos)", value: "vscode,copilot-cli" },
-        { label: "Somente GitHub Copilot CLI", value: "copilot-cli" },
-        { label: "Somente VS Code", value: "vscode" },
+    const pickedTargets = await promptMultiSelect({
+      title: "Quais ferramentas voce quer configurar?",
+      options: [
+        { label: "VS Code", value: "vscode", hint: "chatLanguageModels.json", checked: true },
+        { label: "GitHub Copilot CLI", value: "copilot-cli", hint: "~/.copilot/providers.json", checked: true },
       ],
-      "1"
-    );
+      minSelected: 1,
+    });
+    opts.targets = pickedTargets.join(",");
   }
 
   if (!opts.providers) {
-    opts.providers = await promptChoice(
-      "Quais providers deseja configurar?",
-      [
-        { label: "OpenCode + FreeLLMAPI (ambos)", value: "opencode,freellmapi" },
-        { label: "Somente OpenCode", value: "opencode" },
-        { label: "Somente FreeLLMAPI (100% gratis local)", value: "freellmapi" },
+    const pickedServices = await promptMultiSelect({
+      title: "Quais servicos / licencas deseja ativar (pode combinar todos)?",
+      options: [
+        { label: "OpenCode — Free", value: "opencode:free", hint: "4 modelos gratuitos do Go", checked: true },
+        { label: "OpenCode — Go", value: "opencode:go", hint: "27 modelos pagos inclusos no Go", checked: false },
+        { label: "OpenCode — Console PAYG", value: "opencode:payg", hint: "45 modelos Pay-as-you-go", checked: false },
+        { label: "FreeLLMAPI — Router 100% gratis", value: "freellmapi", hint: "porta dinamica, failover automatico", checked: false },
       ],
-      "2"
-    );
+      minSelected: 1,
+    });
+
+    const selectedProviders = [];
+    const selectedOpenCodeTiers = [];
+    for (const item of pickedServices) {
+      if (item.startsWith("opencode:")) {
+        if (!selectedProviders.includes("opencode")) selectedProviders.push("opencode");
+        selectedOpenCodeTiers.push(item.slice("opencode:".length));
+      } else if (!selectedProviders.includes(item)) {
+        selectedProviders.push(item);
+      }
+    }
+    opts.providers = selectedProviders.join(",");
+    if (selectedOpenCodeTiers.length > 0 && !opts.tiers) {
+      opts.tiers = selectedOpenCodeTiers.join(",");
+    }
   }
 
   const providerList = String(opts.providers).split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   if (providerList.includes("opencode") && !opts.tiers) {
-    opts.tiers = await promptChoice(
-      "Para OpenCode, quais tiers deseja ativar?",
-      [
-        { label: "Somente Free (4 modelos gratuitos no Go)", value: "free" },
-        { label: "Go + Free (26 modelos para assinantes Go)", value: "go,free" },
-        { label: "Somente Go (22 modelos pagos da assinatura)", value: "go" },
-        { label: "Tudo: Go + Free + PAYG (71 modelos)", value: "all" },
+    const pickedTiers = await promptMultiSelect({
+      title: "Para OpenCode, quais licencas/tiers deseja ativar?",
+      options: [
+        { label: "Free (4 modelos gratuitos no Go)", value: "free", checked: true },
+        { label: "Go (27 modelos pagos da assinatura)", value: "go", checked: false },
+        { label: "Console PAYG (45 modelos ativos)", value: "payg", checked: false },
       ],
-      "1"
-    );
+      minSelected: 1,
+    });
+    opts.tiers = pickedTiers.join(",");
   }
 
-  if (providerList.includes("freellmapi") && !opts.url) {
-    const urlChoice = await promptChoice(
-      "Onde o seu FreeLLMAPI roda?",
-      [
-        { label: "Auto-detectar local (:31415 Desktop / :3001 Docker)", value: "auto" },
-        { label: "Docker / Server (http://localhost:3001/v1)", value: "http://localhost:3001/v1" },
-        { label: "Desktop App (http://127.0.0.1:31415/v1)", value: "http://127.0.0.1:31415/v1" },
-        { label: "Informar outra URL", value: "custom" },
-      ],
-      "1"
+  if (providerList.includes("freellmapi") && !opts.url && !opts.port) {
+    const detected = await detectFreeLLMApiBaseUrl({ env });
+    const entered = await promptText(
+      `\nURL ou porta dinamica do FreeLLMAPI [Enter = auto (${detected})]: `,
+      ""
     );
-    if (urlChoice === "custom") {
-      opts.url = await promptLine("Digite a URL base do FreeLLMAPI (ex: http://localhost:3001/v1): ");
-    } else if (urlChoice !== "auto") {
-      opts.url = urlChoice;
+    if (entered) {
+      if (/^\d+$/.test(entered)) opts.port = entered;
+      else opts.url = entered;
     }
   }
+
+  if (providerList.includes("freellmapi") && !opts.freellmapiMode) {
+    opts.freellmapiMode = await promptSelect({
+      title: "Como configurar os modelos do FreeLLMAPI?",
+      options: [
+        { label: "Somente roteador 'auto' (recomendado)", value: "auto", hint: "FreeLLMAPI escolhe e faz failover sozinho" },
+        { label: "Estrategias virtuais (6 modos)", value: "strategies", hint: "auto, auto:smart, auto:fast, reliable, balanced, fusion" },
+        { label: "Buscar modelos prontos ao vivo", value: "ready", hint: "GET /v1/models?execution_status=ready" },
+      ],
+      defaultIndex: 0,
+    });
+  }
+}
+
+async function maybePickModelsInteractively(resolvedProviders) {
+  const allItems = [];
+  for (const resolved of resolvedProviders) {
+    for (const group of resolved.groups) {
+      for (const model of group.models) {
+        allItems.push({
+          label: `${group.prefix} ${model.name}`,
+          hint: model.id,
+          value: `${group.id}/${model.id}`,
+          checked: true,
+        });
+      }
+    }
+  }
+
+  if (allItems.length <= 1) return resolvedProviders;
+
+  const mode = await promptSelect({
+    title: `Foram preparados ${allItems.length} modelos. Como deseja prosseguir?`,
+    options: [
+      { label: `Ativar todos os ${allItems.length} modelos`, value: "all" },
+      { label: "Selecionar modelos manualmente com checkboxes [x]", value: "pick" },
+    ],
+    defaultIndex: 0,
+  });
+
+  if (mode === "all") return resolvedProviders;
+
+  const selectedKeys = await promptMultiSelect({
+    title: "Marque os modelos que deseja instalar",
+    options: allItems,
+    pageSize: 14,
+    minSelected: 1,
+  });
+
+  return filterResolvedProvidersByModelIds(resolvedProviders, selectedKeys);
 }
 
 export async function runCli(argv = process.argv.slice(2), env = process.env) {
@@ -236,7 +330,7 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
     return;
   }
   if (opts.command === "doctor") {
-    cmdDoctor(env);
+    await cmdDoctor(env);
     return;
   }
   if (opts.command === "key") {
@@ -247,7 +341,7 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
 
   const interactive = !opts.yes && (!opts.providers || (!opts.targets && !opts.command));
   if (interactive && process.stdin.isTTY) {
-    await gatherInteractiveConfig(opts);
+    await gatherInteractiveConfig(opts, env);
   }
 
   const targetIds = normalizeTargets(opts.targets || "vscode,copilot-cli");
@@ -257,7 +351,7 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
 
   const nonInteractive = Boolean(opts.yes || !process.stdin.isTTY);
   const inlineApiKeys = {};
-  const resolvedProviders = [];
+  let resolvedProviders = [];
 
   for (const pid of providerIds) {
     const provider = getProvider(pid);
@@ -294,12 +388,25 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
     const resolved = await provider.resolve({
       tiers: opts.tiers || provider.defaultTiers,
       baseUrl: pid === "freellmapi" ? opts.url : undefined,
+      port: pid === "freellmapi" ? opts.port : undefined,
+      mode: pid === "freellmapi" ? opts.freellmapiMode : undefined,
       apiKey,
-      live: pid === "freellmapi" ? true : opts.live,
+      live: opts.live,
+      env,
     });
     resolvedProviders.push(resolved);
     const totalModels = resolved.groups.reduce((acc, g) => acc + g.models.length, 0);
-    console.log(`[${provider.id}] ${totalModels} modelos preparados (origem: ${resolved.source}).`);
+    console.log(`[${provider.id}] ${totalModels} modelo(s) preparado(s) (origem: ${resolved.source}).`);
+  }
+
+  if (opts.models) {
+    resolvedProviders = filterResolvedProvidersByModelIds(resolvedProviders, opts.models);
+  } else if (interactive && process.stdin.isTTY) {
+    resolvedProviders = await maybePickModelsInteractively(resolvedProviders);
+  }
+
+  if (resolvedProviders.length === 0) {
+    throw new Error("Nenhum modelo selecionado para configuracao.");
   }
 
   const results = [];
@@ -318,9 +425,12 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
     results.push(res);
 
     if (res.dryRun) {
-      console.log(`[DRY-RUN -> ${tid}] ${res.modelCount} modelos seriam gravados em ${res.path}`);
+      console.log(`[DRY-RUN -> ${tid}] ${res.modelCount} modelo(s) seriam gravados em ${res.path}`);
     } else {
-      console.log(`[${tid}] ${res.modelCount} modelos gravados em: ${res.path}` + (res.backupPath ? ` (backup: ${res.backupPath})` : ""));
+      console.log(
+        `[${tid}] ${res.modelCount} modelo(s) gravados em: ${res.path}` +
+          (res.backupPath ? ` (backup: ${res.backupPath})` : "")
+      );
       if (tid === "copilot-cli" && res.defaultModel) {
         console.log(
           res.defaultModelApplied

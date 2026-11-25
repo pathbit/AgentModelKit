@@ -1,12 +1,12 @@
 # Clientes / Targets Suportados
 
-Este guia explica como cada cliente configurado pelo **AgentModelKit** armazena modelos, chaves e comentários, além de notas sobre futuros clientes desktop (como **Claude Code Desktop**).
+Este guia explica como cada cliente configurado pelo **AgentModelKit** armazena modelos, chaves e marcações visuais, além de notas sobre futuros adaptadores desktop.
 
 ---
 
 ## 1. VS Code (`vscode`)
 
-O target `vscode` (`src/targets/vscode.mjs`) configura o arquivo `chatLanguageModels.json` do GitHub Copilot Chat (BYOK / Custom Endpoints).
+O target `vscode` (`src/targets/vscode.mjs`) configura o arquivo `chatLanguageModels.json` do GitHub Copilot Chat (BYOK / `customendpoint`).
 
 ### Caminhos por sistema operacional
 
@@ -18,29 +18,25 @@ O target `vscode` (`src/targets/vscode.mjs`) configura o arquivo `chatLanguageMo
 
 É possível sobrescrever o diretório via variável `VSCODE_USER_DIR`.
 
-### Como funciona no VS Code
+### Estrutura gerada e compatibilidade com o schema do VS Code
 
-1. Para cada provider ativado, é inserido um marcador visual com `"vendor": "comentario"`:
+1. Todo item de grupo e separador visual usa `"vendor": "customendpoint"` (um dos valores oficiais aceitos pelo schema `vscode://schemas/language-models`):
    ```json
    {
    	"name": "+++++++ CONFIGURACAO OPENCODE +++++++",
-   	"vendor": "comentario"
+   	"vendor": "customendpoint"
    }
    ```
-2. Cada grupo de tier vira um bloco `"vendor": "customendpoint"` (ex.: `OpenCode Free`, `OpenCode Go`, `OpenCode PAYG`, `FreeLLMAPI`).
-3. A propriedade `"apiKey"` usa referências nativas do cofre de segredos do VS Code:
-   - OpenCode: `${input:chat.lm.secret.66290ed1}`
-   - FreeLLMAPI: `${input:chat.lm.secret.freellmapi}`
-   *(Se quiser gravar a chave literal diretamente no JSON, passe `--inline-key`.)*
-4. Os endpoints apontam para `<baseUrl>/chat/completions`, incluindo `requestHeaders` quando exigidos (como `x-opencode-session` no OpenCode Go/Free).
+   *(Outros valores aceitos pelo VS Code incluem `openai`, `anthropic`, `azure`, `gemini`, `ollama`, `openrouter`, `xai`, `copilot`; `"comentario"` não existe no schema e gera erro de validação).*
+2. Cada grupo ativo vira um bloco `"vendor": "customendpoint"` (ex.: `OpenCode Free`, `OpenCode Go`, `OpenCode PAYG`, `FreeLLMAPI`).
+3. A propriedade `"apiKey"` usa o cofre nativo do VS Code (`${input:chat.lm.secret...}`), evitando chaves em texto plano (a menos que `--inline-key` seja passado).
+4. Cada modelo dentro de `models[]` segue as propriedades válidas de `customendpoint`: `id`, `name`, `url` (`<baseUrl>/chat/completions`), `toolCalling`, `vision`, `maxInputTokens`, `maxOutputTokens`, além de `thinking` e `supportsReasoningEffort` para modelos com raciocínio e `requestHeaders` sem headers reservados (como `Authorization`).
 
 ### Pós-instalação no VS Code
 
 1. Execute **`Developer: Reload Window`** na Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`).
-2. Abra o seletor de modelos do Chat / Agent Mode -> **Manage Models**.
+2. Abra o seletor de modelos do Chat -> **Manage Language Models**.
 3. Na primeira seleção de um grupo `${input:...}`, o VS Code pedirá sua API key uma única vez e a guardará no cofre nativo do sistema.
-
-> **Observação conhecida do VS Code:** se algum modelo específico retornar erro de parâmetro de `temperature` / compatibilidade em versões antigas do Copilot Chat, veja o tracking upstream citado na documentação do OpenCode Go (VS Code issue `#334186`).
 
 ---
 
@@ -62,23 +58,16 @@ Cada entrada em `providers[]` recebe:
 ```json
 "apiKeyCommand": "node -e \"const f=require('fs'),o=require('os'),p=require('path');process.stdout.write(f.readFileSync(p.join(process.env.COPILOT_HOME||p.join(o.homedir(),'.copilot'),'opencode.key'),'utf8').trim())\""
 ```
-Por que esse formato?
 - O Copilot CLI executa `apiKeyCommand` via `sh -c` no macOS/Linux e via `cmd.exe /d /s /c` no Windows.
-- Ao evitar `$`, `%`, `sh -c` e aspas duplas internas, o comando funciona igualmente em **Windows, macOS e Linux** sem exigir variáveis de ambiente globais no terminal.
+- Sem `$`, `%`, `sh -c` ou aspas duplas internas, o comando funciona igualmente em **Windows, macOS e Linux** sem exigir variáveis de ambiente globais no terminal.
 
 ### Prefixos de modelo e comportamento do `Shift+Tab`
 
-No Copilot CLI interativo, o comando `/model` usa `Shift+Tab` para alternar o modo de agrupamento (`provider`, `recommended`, `vendor`, `category`). Como modelos customizados definidos em `providers.json` não carregam metadados nativos de `vendor`/`category`, o `AgentModelKit` adiciona prefixos claros no campo `name` de cada modelo:
-- `[OpenCode Free] ...`
-- `[OpenCode Go] ...`
-- `[OpenCode PAYG] ...`
-- `[FreeLLMAPI] ...`
-
-Assim, você pode digitar `Free`, `Go`, `PAYG` ou `FreeLLMAPI` diretamente no seletor `/model` para filtrar na hora.
+No Copilot CLI interativo, o comando `/model` usa `Shift+Tab` para alternar o modo de agrupamento (`provider`, `recommended`, `vendor`, `category`). Como modelos customizados em `providers.json` não possuem metadados nativos de `vendor`/`category`, o `AgentModelKit` prefixa cada nome (`[OpenCode Free]`, `[OpenCode Go]`, `[OpenCode PAYG]`, `[FreeLLMAPI]`) para filtragem rápida ao digitar no seletor.
 
 ### Definindo ou trocando o modelo padrão
 
-Em chamadas via CLI ou config, modelos BYOK do Copilot CLI exigem o prefixo `<provider>/<model-id>`:
+Modelos customizados exigem o prefixo `<provider>/<model-id>`:
 
 ```bash
 copilot config model opencode-free-go/hungerg-free
@@ -86,17 +75,11 @@ copilot config model opencode-go/claude-haiku-5-5
 copilot config model freellmapi/auto
 ```
 
-Ou rodando uma única chamada:
-
-```bash
-copilot --model freellmapi/auto -p "Explique este repositorio"
-```
-
 ---
 
 ## 3. Notas sobre Claude Code Desktop e clientes futuros
 
-Para suportar **Claude Code Desktop / CLI** em versões futuras (ver [ROADMAP.md](./ROADMAP.md)):
-- O Claude Code espera a **wire API da Anthropic** (`/v1/messages`, não `/v1/chat/completions`), controlada por variáveis ou configurações equivalentes a `ANTHROPIC_BASE_URL` e `ANTHROPIC_AUTH_TOKEN` (ou `ANTHROPIC_API_KEY`).
-- No **Claude Desktop**, habilitar configurações avançadas / modo de desenvolvedor ou apontar para um gateway local compatível com `/messages` (por exemplo, o endpoint Anthropic do **FreeLLMAPI** fica na raiz sem `/v1`: `http://localhost:3001` ou `http://127.0.0.1:31415`) exige cuidados distintos de editores baseados em OpenAI-compatible JSON.
-- O OpenCode Go também possui endpoint Anthropic compatível para clientes Anthropic; esse adaptador será adicionado como um novo target dedicado em `src/targets/claude-code.mjs`.
+Para suportar **Claude Code CLI / Claude Desktop** em versões futuras (ver [ROADMAP.md](./ROADMAP.md)):
+- O Claude Code e o Claude Desktop (via opção **Setup -> Gateway**) falam a **Anthropic Messages API** (`/v1/messages`).
+- No **FreeLLMAPI**, a URL base para o Claude Desktop/Code deve apontar para a **raiz sem `/v1`** (ex.: `http://127.0.0.1:31415` ou `http://localhost:3001`), pois o Claude adiciona `/v1/models` e `/v1/messages`.
+- Em ambientes com auto mode no Claude Code CLI, define-se `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN` e `CLAUDE_CODE_AUTO_MODE_SERVER=0`.

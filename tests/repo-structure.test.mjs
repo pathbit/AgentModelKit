@@ -22,9 +22,12 @@ test("repository follows PathBit standard layout", () => {
     ".npmrc",
     "bin/agentmodelkit.mjs",
     "src/cli.mjs",
+    "src/ui/prompts.mjs",
     "docs/README.md",
     "tests/cli.test.mjs",
+    "tests/prompts.test.mjs",
     "examples/README.md",
+    "examples/opencode.freellmapi.json",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
     "LICENSE",
@@ -38,9 +41,22 @@ test("repository follows PathBit standard layout", () => {
   }
 });
 
+test("examples never use invalid VS Code vendor 'comentario'", () => {
+  const vscExample = fs.readFileSync(
+    path.join(root, "examples/vscode.chatLanguageModels.free.json"),
+    "utf8"
+  );
+  assert.equal(vscExample.includes('"comentario"'), false);
+  assert.equal(vscExample.includes('"customendpoint"'), true);
+});
+
 test("repository contains no committed .key, .bak, or .env secret files", () => {
   const forbidden = [".env", "opencode.key", "freellmapi.key", "providers.json", "chatLanguageModels.json"];
   for (const name of forbidden) {
-    assert.equal(fs.existsSync(path.join(root, name)), false, `Sensitive/generated file must not live at repo root: ${name}`);
+    assert.equal(
+      fs.existsSync(path.join(root, name)),
+      false,
+      `Sensitive/generated file must not live at repo root: ${name}`
+    );
   }
 });

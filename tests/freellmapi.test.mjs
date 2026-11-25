@@ -9,7 +9,10 @@ import {
   detectFreeLLMApiBaseUrl,
   fetchFreeLLMApiModels,
   freellmapiProvider,
+  getFreeLLMDesktopConfigPath,
   normalizeFreeLLMBaseUrl,
+  normalizeFreeLLMMode,
+  readFreeLLMDesktopPort,
 } from "../src/providers/freellmapi.mjs";
 import { runCli } from "../src/cli.mjs";
 
@@ -25,10 +28,14 @@ function makeTempEnv() {
   delete env.COPILOT_PROVIDERS_CONFIG;
   delete env.OPENCODE_API_KEY;
   delete env.FREELLMAPI_API_KEY;
+  delete env.FREELLMAPI_URL;
+  delete env.FREELLMAPI_BASE_URL;
+  delete env.FREELLMAPI_PORT;
+  delete env.FREELLMAPI_CONFIG_PATH;
   return { root, copilotHome, vscodeUser, env };
 }
 
-test("normalizeFreeLLMBaseUrl handles root, /v1, trailing slash, and /chat/completions", () => {
+test("normalizeFreeLLMBaseUrl handles full URLs, paths, host:port, and bare port numbers", () => {
   assert.equal(normalizeFreeLLMBaseUrl("http://localhost:3001"), "http://localhost:3001/v1");
   assert.equal(normalizeFreeLLMBaseUrl("http://localhost:3001/"), "http://localhost:3001/v1");
   assert.equal(normalizeFreeLLMBaseUrl("http://127.0.0.1:31415/v1/"), "http://127.0.0.1:31415/v1");
@@ -36,31 +43,78 @@ test("normalizeFreeLLMBaseUrl handles root, /v1, trailing slash, and /chat/compl
     normalizeFreeLLMBaseUrl("http://localhost:3001/v1/chat/completions"),
     "http://localhost:3001/v1"
   );
+  assert.equal(normalizeFreeLLMBaseUrl("http://localhost:4000/messages"), "http://localhost:4000/v1");
+  assert.equal(normalizeFreeLLMBaseUrl("4000"), "http://localhost:4000/v1");
+  assert.equal(normalizeFreeLLMBaseUrl(":31420"), "http://localhost:31420/v1");
+  assert.equal(normalizeFreeLLMBaseUrl("192.168.1.50:8080"), "http://192.168.1.50:8080/v1");
+  assert.throws(() => normalizeFreeLLMBaseUrl("99999"), /Porta invalida/);
 });
 
-test("detectFreeLLMApiBaseUrl prefers desktop :31415 and falls back to server :3001", async () => {
-  const desktopFirst = await detectFreeLLMApiBaseUrl(async (url) => {
-    if (url.includes("31415")) return { status: 200 };
-    throw new Error("unreachable");
-  });
-  assert.equal(desktopFirst, "http://127.0.0.1:31415/v1");
+test("detectFreeLLMApiBaseUrl resolves Desktop config.json port, --port, env vars, and probing dynamically", async (t) => {
+  const { root, env } = makeTempEnv();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
 
-  const serverFallback = await detectFreeLLMApiBaseUrl(async (url) => {
-    if (url.includes("31415")) throw new Error("ECONNREFUSED");
-    if (url.includes("3001")) return { status: 401 };
-    throw new Error("unreachable");
-  });
-  assert.equal(serverFallback, "http://localhost:3001/v1");
+  assert.equal(
+    getFreeLLMDesktopConfigPath("darwin", {}, "/Users/dev"),
+    path.join("/Users/dev", "Library", "Application Support", "FreeLLMAPI", "config.json")
+  );
+  assert.equal(
+    getFreeLLMDesktopConfigPath("win32", { APPDATA: "C:\\Users\\dev\\AppData\\Roaming" }, "C:\\Users\\dev"),
+    path.join("C:\\Users\\dev\\AppData\\Roaming", "FreeLLMAPI", "config.json")
+  );
 
-  const offlineDefault = await detectFreeLLMApiBaseUrl(async () => {
-    throw new Error("ECONNREFUSED");
+  // Desktop App listenWithScan dynamic port recorded in config.json
+  const desktopCfgPath = path.join(root, "FreeLLMAPI", "config.json");
+  fs.mkdirSync(path.dirname(desktopCfgPath), { recursive: true });
+  fs.writeFileSync(desktopCfgPath, JSON.stringify({ port: 31422 }), "utf8");
+  const desktopEnv = { ...env, FREELLMAPI_CONFIG_PATH: desktopCfgPath };
+  assert.equal(readFreeLLMDesktopPort({ env: desktopEnv }), 31422);
+
+  const fromConfig = await detectFreeLLMApiBaseUrl({
+    env: desktopEnv,
+    fetchImpl: async (url) => {
+      if (url.includes("31422")) return { status: 200 };
+      throw new Error("unreachable");
+    },
+  });
+  assert.equal(fromConfig, "http://127.0.0.1:31422/v1");
+
+  // Explicit FREELLMAPI_URL overrides desktop config
+  const fromEnvUrl = await detectFreeLLMApiBaseUrl({
+    env: { ...desktopEnv, FREELLMAPI_URL: "http://10.0.0.5:4100" },
+    fetchImpl: null,
+  });
+  assert.equal(fromEnvUrl, "http://10.0.0.5:4100/v1");
+
+  // Explicit port probes 127.0.0.1 and localhost
+  const fromExplicitPort = await detectFreeLLMApiBaseUrl({
+    env: desktopEnv,
+    port: 4567,
+    fetchImpl: async (url) => {
+      if (url.includes("127.0.0.1:4567")) return { status: 401 };
+      throw new Error("unreachable");
+    },
+  });
+  assert.equal(fromExplicitPort, "http://127.0.0.1:4567/v1");
+
+  // Fallback when config is absent and servers are offline
+  const offlineDefault = await detectFreeLLMApiBaseUrl({
+    env,
+    fetchImpl: async () => {
+      throw new Error("ECONNREFUSED");
+    },
   });
   assert.equal(offlineDefault, "http://localhost:3001/v1");
 });
 
-test("freellmapiProvider discovers ready chat models from live HTTP server and configures both targets", async (t) => {
+test("freellmapiProvider defaults to clean auto-only router mode and supports strategies and ready discovery", async (t) => {
   const { root, copilotHome, vscodeUser, env } = makeTempEnv();
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  assert.equal(normalizeFreeLLMMode(), "auto");
+  assert.equal(normalizeFreeLLMMode("strategies"), "strategies");
+  assert.equal(normalizeFreeLLMMode("ready"), "ready");
+  assert.throws(() => normalizeFreeLLMMode("bad"), /Modo invalido/);
 
   let capturedAuth = null;
   let requestedQuery = null;
@@ -94,18 +148,8 @@ test("freellmapiProvider discovers ready chat models from live HTTP server and c
               supports_vision: true,
               supports_reasoning: true,
             },
-            {
-              id: "openai/gpt-4o",
-              name: "Needs Key",
-              execution_status: "needsKey",
-              type: "chat",
-            },
-            {
-              id: "cohere/embed-v4",
-              name: "Embedder",
-              execution_status: "ready",
-              type: "embedding",
-            },
+            { id: "openai/gpt-4o", name: "Needs Key", execution_status: "needsKey", type: "chat" },
+            { id: "cohere/embed-v4", name: "Embedder", execution_status: "ready", type: "embedding" },
           ],
         })
       );
@@ -120,6 +164,21 @@ test("freellmapiProvider discovers ready chat models from live HTTP server and c
   const { port } = server.address();
   const baseUrl = `http://127.0.0.1:${port}/v1`;
 
+  // 1) Default clean router-only mode ("auto" = 1 model, dynamic port detected!)
+  const autoOnly = await freellmapiProvider.resolve({ port, apiKey: "freellmapi-secret-1", env });
+  assert.equal(autoOnly.source, "router-auto");
+  assert.equal(autoOnly.groups[0].baseUrl, baseUrl);
+  assert.deepEqual(
+    autoOnly.groups[0].models.map((m) => m.id),
+    ["auto"]
+  );
+
+  // 2) Strategies mode (6 virtual router strategies)
+  const strategiesOnly = await freellmapiProvider.resolve({ port, mode: "strategies", env });
+  assert.equal(strategiesOnly.source, "router-strategies");
+  assert.equal(strategiesOnly.groups[0].models.length, 6);
+
+  // 3) Live ready discovery mode
   const discovered = await fetchFreeLLMApiModels(baseUrl, "freellmapi-secret-1");
   assert.equal(capturedAuth, "Bearer freellmapi-secret-1");
   assert.equal(requestedQuery, "/v1/models?execution_status=ready");
@@ -127,25 +186,25 @@ test("freellmapiProvider discovers ready chat models from live HTTP server and c
     discovered.map((m) => m.id),
     ["groq/llama-3.3-70b-versatile", "gemini/gemini-2.5-flash"]
   );
-  assert.equal(discovered[1].vision, true);
-  assert.equal(discovered[1].reasoningEffort, "high");
 
-  const resolved = await freellmapiProvider.resolve({
-    baseUrl: `http://127.0.0.1:${port}`,
+  const readyResolved = await freellmapiProvider.resolve({
+    port,
     apiKey: "freellmapi-secret-1",
-    live: true,
+    mode: "ready",
+    env,
   });
-  assert.equal(resolved.source, "live:2-ready");
-  assert.equal(resolved.defaultModel, "freellmapi/auto");
-  assert.equal(resolved.groups[0].models.length, 8); // 6 virtual + 2 ready
+  assert.equal(readyResolved.source, "live:2-ready");
+  assert.equal(readyResolved.defaultModel, "freellmapi/auto");
+  assert.equal(readyResolved.groups[0].models.length, 8); // 6 virtual + 2 ready
 
+  // 4) Run CLI end-to-end with dynamic --port & clean auto-only default
   await runCli(
     [
       "init",
       "--providers",
       "freellmapi",
-      "--url",
-      `http://127.0.0.1:${port}`,
+      "--port",
+      String(port),
       "--key",
       "freellmapi-secret-1",
       "--no-default-model",
@@ -154,7 +213,6 @@ test("freellmapiProvider discovers ready chat models from live HTTP server and c
     env
   );
 
-  // Also add OpenCode free alongside FreeLLMAPI and ensure both coexist cleanly
   await runCli(
     [
       "init",
@@ -171,14 +229,16 @@ test("freellmapiProvider discovers ready chat models from live HTTP server and c
   );
 
   const copJson = JSON.parse(fs.readFileSync(path.join(copilotHome, "providers.json"), "utf8"));
+  const freeProvider = copJson.providers.find((p) => p.name === "freellmapi");
+  assert.equal(freeProvider.baseUrl, baseUrl);
   assert.deepEqual(
     copJson.providers.map((p) => p.name),
     ["freellmapi", "opencode-free-go"]
   );
-  assert.equal(copJson.models.length, 12); // 8 freellmapi + 4 opencode-free-go
-  assert.ok(copJson.models.some((m) => m.name === "[FreeLLMAPI] Llama 3.3 70B"));
+  assert.equal(copJson.models.length, 5); // 1 freellmapi (auto) + 4 opencode-free-go
 
   const vscJson = JSON.parse(fs.readFileSync(path.join(vscodeUser, "chatLanguageModels.json"), "utf8"));
+  assert.ok(vscJson.every((b) => b.vendor === "customendpoint"));
   assert.deepEqual(
     vscJson.map((b) => b.name),
     [
@@ -188,13 +248,17 @@ test("freellmapiProvider discovers ready chat models from live HTTP server and c
       "OpenCode Free",
     ]
   );
+  const vscFreeBlock = vscJson.find((b) => b.name === "FreeLLMAPI");
+  assert.equal(vscFreeBlock.models.length, 1);
+  assert.equal(vscFreeBlock.models[0].id, "auto");
+  assert.equal(vscFreeBlock.models[0].url, `${baseUrl}/chat/completions`);
 });
 
-test("freellmapiProvider falls back cleanly to 6 built-in virtual models when offline", async () => {
+test("freellmapiProvider falls back cleanly when ready mode is offline", async () => {
   const resolved = await freellmapiProvider.resolve({
     baseUrl: "http://127.0.0.1:1/v1",
     apiKey: "freellmapi-offline",
-    live: true,
+    mode: "ready",
     fetchImpl: async () => {
       throw new Error("ECONNREFUSED");
     },

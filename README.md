@@ -5,36 +5,33 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E%3D18-blue.svg)](https://nodejs.org/)
 
-CLI multiplataforma (**Windows, macOS e Linux**, sem dependências externas) para configurar **providers, tiers de modelos e API keys** em editores e ferramentas de agentes de código — começando por **VS Code** (`chatLanguageModels.json`) e **GitHub Copilot CLI** (`~/.copilot/providers.json`).
+CLI multiplataforma (**Windows, macOS e Linux**, **zero dependências externas**) para configurar **providers de IA, licenças/tiers, seleção de modelos com checkboxes no terminal e API keys** em editores e ferramentas de código — começando por **VS Code** (`chatLanguageModels.json`) e **GitHub Copilot CLI** (`~/.copilot/providers.json`).
 
-Projeto irmão do [AgentDevKit](https://github.com/pathbit/AgentDevKit): enquanto o `AgentDevKit` gerencia skills, regras e instruções de agentes, o **`AgentModelKit`** gerencia os **motores de IA (providers, endpoints, modelos e chaves)**.
+Projeto irmão do [AgentDevKit](https://github.com/pathbit/AgentDevKit): enquanto o `AgentDevKit` distribui skills, regras e instruções de agentes, o **`AgentModelKit`** gerencia os **motores de IA (endpoints, licenças, roteamento e credenciais)**.
 
 ---
 
 ## Por que usar
 
-- **Configuração em 1 comando:** escolha **VS Code**, **GitHub Copilot CLI** ou **ambos**.
-- **Controle por tier:** no OpenCode, ative **somente `free`**, **`go` + `free`**, somente **`go`**, ou **`all`** (`go` + `free` + `payg`). No **FreeLLMAPI**, ative o roteador **100% grátis** com auto-detecção local (`:3001` Docker/Server ou `:31415` Desktop) e descoberta ao vivo de modelos prontos (`/v1/models?execution_status=ready`).
-- **Zero segredos expostos e zero `zshrc`:**
-  - No **Copilot CLI**, o `providers.json` usa um `apiKeyCommand` multiplataforma (`node -e "..."` — sem `sh -c` e sem `$`/`%`) lendo `<COPILOT_HOME>/<provider>.key` (`chmod 600`). Funciona igual em `cmd.exe` (Windows), macOS e Linux.
-  - No **VS Code**, usa o cofre nativo `${input:chat.lm.secret...}` com separadores visuais por provider.
-- **Merge não destrutivo:** preserva todos os outros providers/modelos que você já tiver configurados e gera backup `.bak` antes de gravar.
-- **Extensível para contribuições:** arquitetura simples em `src/providers/` e `src/targets/` para adicionar novos providers e clientes (Claude Code Desktop, Cursor, Codex, OpenCode CLI etc.).
+- **Checkboxes interativos no terminal (`npx`):** marque com `Espaço` e setas ↑↓ os clientes (`VS Code`, `Copilot CLI`), as licenças/serviços combinados (`OpenCode Free`, `OpenCode Go`, `OpenCode PAYG`, `FreeLLMAPI`) e até **modelos individuais** que deseja habilitar.
+- **FreeLLMAPI com porta dinâmica & modo `auto` enxuto:** detecta automaticamente a porta dinâmica do FreeLLMAPI Desktop (`config.json`) ou Docker (`:3001`), aceita `--url` ou `--port` customizados e registra apenas o roteador `auto` por padrão — deixando o próprio FreeLLMAPI escolher modelos e fazer failover entre provedores gratuitos.
+- **Zero segredos expostos e zero `~/.zshrc`:**
+  - **GitHub Copilot CLI:** grava `apiKeyCommand` multiplataforma (`node -e "..."`, sem `sh -c`, `$` ou `%`) lendo `<COPILOT_HOME>/<provider>.key` (`0600`) igual no Windows `cmd.exe`, macOS e Linux.
+  - **VS Code (`customendpoint`):** usa `${input:chat.lm.secret...}` com separadores visuais compatíveis com o schema oficial `"vendor": "customendpoint"`.
+- **Merge idempotente e backup `.bak`:** alternar de `--tiers all` para `--tiers free` limpa apenas os grupos antigos do provider mantendo todos os demais intactos.
 
 ---
 
 ## Pré-requisitos
 
 - **Node.js ≥ 18** (`node -v`)
-- Ferramentas que você quiser configurar:
-  - **VS Code** com GitHub Copilot Chat
-  - **GitHub Copilot CLI** (`copilot`)
+- Clientes suportados: **VS Code** (GitHub Copilot Chat) e/ou **GitHub Copilot CLI** (`copilot`)
 
 ---
 
 ## Uso rápido
 
-### 1) Modo interativo (assistente guiado)
+### 1) Assistente interativo com checkboxes (`init`)
 
 ```bash
 npx @pathbit/agentmodelkit
@@ -42,42 +39,33 @@ npx @pathbit/agentmodelkit
 node bin/agentmodelkit.mjs
 ```
 
-O assistente pergunta:
-1. Quais ferramentas configurar (`VS Code`, `Copilot CLI` ou ambos)
-2. Quais providers ativar (`OpenCode`, `FreeLLMAPI` ou ambos)
-3. Para `OpenCode`: qual tier (`free`, `go,free`, `go` ou `all`)
-4. Para `FreeLLMAPI`: auto-detecção (`:31415` / `:3001`) ou URL customizada
-5. Sua API key (somente na primeira vez; salva em `~/.copilot/<provider>.key` ou `%USERPROFILE%\.copilot\<provider>.key`)
+No assistente interativo você escolhe com `[x]`:
+1. Quais ferramentas configurar (`VS Code`, `GitHub Copilot CLI` ou ambas)
+2. Quais serviços / licenças combinar ao mesmo tempo (`OpenCode Free`, `OpenCode Go`, `OpenCode PAYG`, `FreeLLMAPI`)
+3. Para `FreeLLMAPI`: URL ou porta dinâmica (`Enter` = auto-detectar) e modo (`auto` roteador único recomendado, `strategies` ou modelos `ready` ao vivo)
+4. Se deseja instalar todos os modelos das licenças marcadas ou **selecionar modelos um a um com checkboxes `[x]`**
+5. Sua API key (salva em `<COPILOT_HOME>/<provider>.key` na primeira vez)
 
 ### 2) Exemplos diretos por linha de comando
 
-#### Ativar OpenCode **somente grátis (`free`)** + FreeLLMAPI no VS Code e Copilot CLI:
 ```bash
+# OpenCode SOMENTE Free (4 modelos) + FreeLLMAPI (somente roteador auto) no VS Code e Copilot CLI:
 node bin/agentmodelkit.mjs init --providers opencode,freellmapi --tiers free --targets all
-```
 
-#### Configurar **apenas o GitHub Copilot CLI** com OpenCode (`go,free`):
-```bash
-node bin/agentmodelkit.mjs copilot --providers opencode --tiers go,free
-```
+# FreeLLMAPI apontando para uma porta dinâmica ou servidor LAN customizado:
+node bin/agentmodelkit.mjs init --providers freellmapi --port 31416 --targets all
+node bin/agentmodelkit.mjs init --providers freellmapi --url http://192.168.1.50:4000/v1 --targets all
 
-#### Configurar **apenas o VS Code** com todos os 71 modelos atuais do OpenCode (`all`):
-```bash
-node bin/agentmodelkit.mjs vscode --providers opencode --tiers all
-```
+# OpenCode Go + Free filtrando exatamente os modelos desejados:
+node bin/agentmodelkit.mjs copilot --providers opencode --tiers go,free --models claude-haiku-5-5,gpt-6-luna,hungerg-free
 
-#### Configurar **FreeLLMAPI** com descoberta ao vivo de modelos:
-```bash
-node bin/agentmodelkit.mjs init --providers freellmapi --url http://localhost:3001/v1 --targets all
-```
+# FreeLLMAPI listando modelos prontos ao vivo (/v1/models?execution_status=ready):
+node bin/agentmodelkit.mjs init --providers freellmapi --freellmapi-mode ready --targets all
 
-#### Buscar catálogo mais recente do OpenCode ao vivo da API (`--live`) ou simular (`--dry-run`):
-```bash
-node bin/agentmodelkit.mjs init --providers opencode --tiers go,free --live --dry-run
-```
+# Atualizar catálogo do OpenCode direto da API ao vivo e simular sem gravar:
+node bin/agentmodelkit.mjs init --providers opencode --tiers all --live --dry-run
 
-#### Verificar diagnóstico de caminhos, binários e chaves:
-```bash
+# Diagnóstico de caminhos, URL do FreeLLMAPI detectada e chaves salvas:
 node bin/agentmodelkit.mjs doctor
 ```
 
@@ -87,51 +75,59 @@ node bin/agentmodelkit.mjs doctor
 
 | Comando | Descrição |
 | --- | --- |
-| `init` *(padrão)* | Configura um ou mais providers nos targets escolhidos |
-| `copilot` | Atalho direto para configurar apenas o GitHub Copilot CLI |
-| `vscode` | Atalho direto para configurar apenas o VS Code |
+| `init` *(padrão)* | Assistente interativo com checkboxes para clientes, serviços, licenças e modelos |
+| `copilot` | Configura apenas o GitHub Copilot CLI (`~/.copilot/providers.json`) |
+| `vscode` | Configura apenas o VS Code (`chatLanguageModels.json`) |
 | `list` | Lista providers, tiers e targets disponíveis |
-| `doctor` | Verifica Node.js, `copilot`, `code`, arquivos de config e `.key` salvos |
+| `doctor` | Verifica Node.js, `copilot`, `code`, configs, URL do FreeLLMAPI e chaves `.key` |
 | `key <provider>` | Imprime a chave salva em `<COPILOT_HOME>/<provider>.key` |
 
 | Flag | Descrição |
 | --- | --- |
 | `-p, --providers <lista>` | `opencode`, `freellmapi` ou `opencode,freellmapi` |
 | `-t, --targets <lista>` | `vscode`, `copilot-cli` ou `all` |
-| `--tiers <lista>` | Para OpenCode: `free`, `go`, `payg`, `go,free` ou `all` |
-| `--url <url>` | URL base para FreeLLMAPI (`http://localhost:3001/v1` ou `http://127.0.0.1:31415/v1`) |
-| `-k, --key <valor>` | Informa a chave diretamente na chamada |
+| `--tiers <lista>` | OpenCode (`--licenses`): `free`, `go`, `payg`, `go,free` ou `all` |
+| `--url <url-ou-porta>` | Endereço base ou porta do FreeLLMAPI (ex.: `http://localhost:4000/v1` ou `4000`) |
+| `--port <numero>` | Porta dinâmica do FreeLLMAPI (ex.: `31416`) |
+| `--freellmapi-mode <modo>` | `auto` *(padrão: somente roteador)* \| `strategies` \| `ready` |
+| `--models <lista>` | Filtra IDs de modelos específicos (ex.: `hungerg-free,claude-haiku-5-5,auto`) |
+| `-k, --key <valor>` | Passa a API key diretamente pela linha de comando |
 | `--key-file <caminho>` | Lê a chave de um arquivo específico |
-| `-m, --default-model <id>` | Define o modelo padrão no `copilot config model` |
-| `--live` | Atualiza o catálogo do OpenCode consultando os endpoints públicos antes de gravar |
+| `-m, --default-model <id>` | Define o modelo padrão via `copilot config model` |
+| `--live` | Consulta APIs ao vivo antes de gravar |
 | `--inline-key` | Grava a chave literal no JSON em vez de `apiKeyCommand` / `${input:...}` |
-| `--no-save-key` | Não salva `<provider>.key` em `<COPILOT_HOME>` |
-| `--dry-run` | Simula sem alterar arquivos no disco |
+| `--no-save-key` | Não cria `<COPILOT_HOME>/<provider>.key` |
+| `--dry-run` | Simula sem alterar arquivos ou gravar chaves no disco |
 
 ---
 
-## Providers incluídos
+## Providers e catálogos de referência
 
-- **OpenCode (`opencode`)** — [ver detalhes em docs/PROVIDERS.md](docs/PROVIDERS.md)
-  - `free`: 4 modelos gratuitos do Go que funcionam no VS Code e Copilot CLI (`hungerg-free`, `hy4-flash-free`, `beam-free`, `iceman-contributor-free`)
-  - `go`: 22 modelos pagos inclusos no plano Go (`/inference/go/openai/v1` com header `x-opencode-session`)
-  - `payg`: 45 modelos ativos de 2026 do OpenCode Console (Pay-as-you-go), excluindo descontinuados e legados de 2025
-- **FreeLLMAPI (`freellmapi`)** — [ver detalhes em docs/PROVIDERS.md](docs/PROVIDERS.md)
-  - `free`: roteador local 100% gratuito (`auto`, `auto:smart`, `auto:fast`, `auto:reliable`, `auto:balanced`, `fusion`) + descoberta automática dos modelos prontos via `GET /v1/models?execution_status=ready`
+- **OpenCode (`opencode`)** — [ver detalhes em docs/PROVIDERS.md](docs/PROVIDERS.md) e [OpenCode Console Models](https://opencode.ai/docs/console/models/):
+  - `free`: 4 modelos gratuitos do Go compatíveis com VS Code e Copilot CLI
+  - `go`: 27 modelos pagos do plano Go (`/inference/go/openai/v1` + `x-opencode-session`)
+  - `payg`: 45 modelos ativos de 2026 do Console (`/inference/openai/v1`)
+- **FreeLLMAPI (`freellmapi`)** — [catálogo freellmapi.co/models](https://freellmapi.co/models) e [docs/PROVIDERS.md](docs/PROVIDERS.md):
+  - Por padrão configura apenas o roteador `auto` (sem lista gigante de modelos) com porta/URL dinâmica e pode inclusive ser ligado **dentro do OpenCode CLI** (veja [`examples/opencode.freellmapi.json`](examples/opencode.freellmapi.json)).
+- **Awesome Free LLM APIs** — veja em [docs/PROVIDERS.md](docs/PROVIDERS.md#3-cat%C3%A1logo-de-apis-gratuitas-diretas-awesome-free-llm-apis) as principais APIs gratuitas sem cartão de [mnfst/awesome-free-llm-apis](https://github.com/mnfst/awesome-free-llm-apis) (Google Gemini, Groq, Cloudflare, Cohere, AxForge, Kilo Gateway).
 
 ---
 
-## Documentação
+## Documentação e desenvolvimento
 
 - [Índice geral da documentação](docs/README.md)
 - [Arquitetura e como estender](docs/ARCHITECTURE.md)
-- [Providers suportados (OpenCode & FreeLLMAPI)](docs/PROVIDERS.md)
+- [Providers suportados (OpenCode, FreeLLMAPI & Awesome Free LLM APIs)](docs/PROVIDERS.md)
 - [Clientes suportados (VS Code & Copilot CLI)](docs/CLIENTS.md)
-- [Exemplos de saída (VS Code & Copilot CLI)](examples/README.md)
-- [Roadmap público (Claude Code Desktop, Cursor, Codex, Login OAuth)](docs/ROADMAP.md)
+- [Exemplos de saída](examples/README.md)
+- [Roadmap público](docs/ROADMAP.md)
 - [Guia de contribuição](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
----
+```bash
+npm run check
+npm test
+npm pack --dry-run
+```
 
 ## Licença
 

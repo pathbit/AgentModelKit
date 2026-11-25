@@ -1,6 +1,8 @@
 import { getVSCodeChatModelsPath } from "../utils/paths.mjs";
 import { readJsonOrNull, writeJsonWithBackup } from "../utils/json.mjs";
 
+const RESERVED_VSCODE_HEADERS = new Set(["authorization", "api-key", "content-type"]);
+
 function toVSCodeModel(model, group) {
   const entry = {
     id: model.id,
@@ -10,21 +12,24 @@ function toVSCodeModel(model, group) {
     vision: Boolean(model.vision),
   };
   if (model.reasoningEffort) {
-    entry.reasoningEffort = model.reasoningEffort;
-  }
-  if (model.tier) {
-    entry.tier = model.tier;
+    entry.thinking = true;
+    entry.supportsReasoningEffort = ["low", "medium", "high"];
   }
   entry.maxInputTokens = model.maxInputTokens;
   entry.maxOutputTokens = model.maxOutputTokens;
   if (group.vscodeHeaders) {
-    entry.requestHeaders = { ...group.vscodeHeaders };
+    const filtered = Object.fromEntries(
+      Object.entries(group.vscodeHeaders).filter(([k]) => !RESERVED_VSCODE_HEADERS.has(k.toLowerCase()))
+    );
+    if (Object.keys(filtered).length > 0) {
+      entry.requestHeaders = filtered;
+    }
   }
   return entry;
 }
 
 /**
- * Build VS Code `chatLanguageModels.json` blocks from resolved provider outputs.
+ * Build VS Code `chatLanguageModels.json` blocks conforming to the `customendpoint` schema.
  */
 export function buildVSCodeBlocks(resolvedProviders, { inlineApiKeys = {} } = {}) {
   const blocks = [];
@@ -32,7 +37,7 @@ export function buildVSCodeBlocks(resolvedProviders, { inlineApiKeys = {} } = {}
     if (resolved.separatorName) {
       blocks.push({
         name: resolved.separatorName,
-        vendor: "comentario",
+        vendor: "customendpoint",
       });
     }
     for (const group of resolved.groups) {
@@ -76,7 +81,7 @@ export const vscodeTarget = {
         path: targetPath,
         dryRun: true,
         modelCount,
-        groupCount: incoming.filter((b) => b.vendor === "customendpoint").length,
+        groupCount: incoming.filter((b) => b.vendor === "customendpoint" && Array.isArray(b.models)).length,
         merged,
       };
     }
@@ -87,7 +92,7 @@ export const vscodeTarget = {
       path: targetPath,
       backupPath,
       modelCount,
-      groupCount: incoming.filter((b) => b.vendor === "customendpoint").length,
+      groupCount: incoming.filter((b) => b.vendor === "customendpoint" && Array.isArray(b.models)).length,
     };
   },
 };

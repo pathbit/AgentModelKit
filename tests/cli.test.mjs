@@ -17,7 +17,7 @@ import { readSavedKey, resolveProviderApiKey } from "../src/keys.mjs";
 import { normalizeOpenCodeTiers, opencodeProvider } from "../src/providers/opencode.mjs";
 import { vscodeTarget } from "../src/targets/vscode.mjs";
 import { copilotCliTarget } from "../src/targets/copilot-cli.mjs";
-import { parseCliArgs, runCli } from "../src/cli.mjs";
+import { filterResolvedProvidersByModelIds, parseCliArgs, runCli } from "../src/cli.mjs";
 
 function makeTempEnv() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "amk-cli-test-"));
@@ -31,6 +31,9 @@ function makeTempEnv() {
   delete env.COPILOT_PROVIDERS_CONFIG;
   delete env.OPENCODE_API_KEY;
   delete env.FREELLMAPI_API_KEY;
+  delete env.FREELLMAPI_URL;
+  delete env.FREELLMAPI_PORT;
+  delete env.FREELLMAPI_CONFIG_PATH;
   return { root, copilotHome, vscodeUser, env };
 }
 
@@ -91,12 +94,13 @@ test("normalizeOpenCodeTiers and opencodeProvider separate free, go, and payg ac
   assert.equal(freeOnly.groups[0].models.length, 4);
   assert.equal(freeOnly.defaultModel, "opencode-free-go/hungerg-free");
   assert.equal(freeOnly.groups[0].copilotHeaders["x-opencode-session"], "copilot-cli");
+  assert.deepEqual(freeOnly.groups[0].vscodeHeaders, { "x-opencode-session": "vscode-copilot" });
 
   const allTiers = await opencodeProvider.resolve({ tiers: "all" });
   assert.equal(allTiers.groups.length, 3);
   const counts = Object.fromEntries(allTiers.groups.map((g) => [g.id, g.models.length]));
   assert.deepEqual(counts, {
-    "opencode-go": 22,
+    "opencode-go": 27,
     "opencode-free-go": 4,
     "opencode-payg": 45,
   });
@@ -128,7 +132,7 @@ test("resolveProviderApiKey persists 0600 .key file and readSavedKey reads it ba
   assert.throws(() => readSavedKey("", env), /Informe o nome do provider/);
 });
 
-test("targets perform idempotent tier downgrade while preserving unrelated providers and backups", async (t) => {
+test("vscode output uses strict customendpoint schema and targets downgrade idempotently", async (t) => {
   const { root, vscodeUser, copilotHome, env } = makeTempEnv();
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
 
@@ -156,10 +160,22 @@ test("targets perform idempotent tier downgrade while preserving unrelated provi
   const vscAll = vscodeTarget.apply([allOpenCode], {}, env);
   const copAll = copilotCliTarget.apply([allOpenCode], { noDefaultModel: true }, env);
 
-  assert.equal(vscAll.modelCount, 71);
-  assert.equal(copAll.modelCount, 71);
+  assert.equal(vscAll.modelCount, 76);
+  assert.equal(copAll.modelCount, 76);
   assert.ok(fs.existsSync(`${vscodePath}.bak`));
   assert.ok(fs.existsSync(`${copilotPath}.bak`));
+
+  // Verify every VS Code block uses vendor "customendpoint" (never "comentario")
+  // and schema-compliant fields without reserved Authorization header
+  const vscFull = JSON.parse(fs.readFileSync(vscodePath, "utf8"));
+  assert.ok(vscFull.every((b) => b.vendor === "customendpoint"));
+  const freeBlock = vscFull.find((b) => b.name === "OpenCode Free");
+  const hy4 = freeBlock.models.find((m) => m.id === "hy4-flash-free");
+  assert.equal(hy4.thinking, true);
+  assert.deepEqual(hy4.supportsReasoningEffort, ["low", "medium", "high"]);
+  assert.equal(hy4.requestHeaders?.["x-opencode-session"], "vscode-copilot");
+  assert.equal(hy4.requestHeaders?.Authorization, undefined);
+  assert.equal(hy4.tier, undefined);
 
   // Downgrade from `all` to `free` should remove opencode-go and opencode-payg cleanly
   const freeOpenCode = await opencodeProvider.resolve({ tiers: "free" });
@@ -181,13 +197,65 @@ test("targets perform idempotent tier downgrade while preserving unrelated provi
   assert.ok(copAfter.models.some((m) => m.name.startsWith("[OpenCode Free] ")));
 });
 
+test("filterResolvedProvidersByModelIds and --models flag select exact models cleanly", async (t) => {
+  const { root, copilotHome, env } = makeTempEnv();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  const resolvedAll = await opencodeProvider.resolve({ tiers: "go,free" });
+  const filtered = filterResolvedProvidersByModelIds(resolvedAll ? [resolvedAll] : [], "beam-free");
+  assert.equal(filtered.length, 1);
+  assert.equal(filtered[0].groups.length, 1);
+  assert.equal(filtered[0].groups[0].models.length, 1);
+  assert.equal(filtered[0].groups[0].models[0].id, "beam-free");
+  assert.equal(filtered[0].defaultModel, "opencode-free-go/beam-free");
+
+  await runCli(
+    [
+      "copilot",
+      "--providers",
+      "opencode",
+      "--tiers",
+      "free",
+      "--models",
+      "beam-free,hungerg-free",
+      "-k",
+      "oc_filtered",
+      "--no-default-model",
+      "--yes",
+    ],
+    env
+  );
+
+  const copJson = JSON.parse(fs.readFileSync(path.join(copilotHome, "providers.json"), "utf8"));
+  assert.deepEqual(
+    copJson.models.map((m) => m.id).sort(),
+    ["beam-free", "hungerg-free"]
+  );
+});
+
 test("parseCliArgs and runCli configure targets non-interactively and support --dry-run", async (t) => {
   const { root, vscodeUser, copilotHome, env } = makeTempEnv();
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
 
-  const parsed = parseCliArgs(["copilot", "-p", "opencode", "--tiers", "free", "--dry-run"]);
+  const parsed = parseCliArgs([
+    "copilot",
+    "-p",
+    "opencode,freellmapi",
+    "--tiers",
+    "free",
+    "--port",
+    "31416",
+    "--freellmapi-mode",
+    "auto",
+    "--models",
+    "hungerg-free,auto",
+    "--dry-run",
+  ]);
   assert.equal(parsed.command, "copilot");
   assert.equal(parsed.targets, "copilot-cli");
+  assert.equal(parsed.port, "31416");
+  assert.equal(parsed.freellmapiMode, "auto");
+  assert.equal(parsed.models, "hungerg-free,auto");
   assert.equal(parsed.dryRun, true);
   assert.throws(() => parseCliArgs(["--unknown-flag"]), /Opcao desconhecida/);
 
@@ -220,5 +288,6 @@ test("parseCliArgs and runCli configure targets non-interactively and support --
     env,
   });
   assert.match(doctorOutput, /AgentModelKit Doctor/);
+  assert.match(doctorOutput, /FreeLLMAPI URL detectada/);
   assert.match(doctorOutput, /opencode.*OK/);
 });

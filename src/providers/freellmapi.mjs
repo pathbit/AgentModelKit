@@ -1,17 +1,25 @@
-const DEFAULT_SERVER_URL = "http://localhost:3001/v1";
-const DEFAULT_DESKTOP_URL = "http://127.0.0.1:31415/v1";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
-const BUILTIN_VIRTUAL_MODELS = [
-  {
-    id: "auto",
-    name: "Auto Router",
-    toolCalling: true,
-    vision: true,
-    reasoningEffort: null,
-    tier: "balance",
-    maxInputTokens: 1048576,
-    maxOutputTokens: 65536,
-  },
+const DEFAULT_SERVER_PORT = 3001;
+const DEFAULT_DESKTOP_PORT = 31415;
+const DEFAULT_SERVER_URL = `http://localhost:${DEFAULT_SERVER_PORT}/v1`;
+const DEFAULT_DESKTOP_URL = `http://127.0.0.1:${DEFAULT_DESKTOP_PORT}/v1`;
+
+const AUTO_ROUTER_MODEL = {
+  id: "auto",
+  name: "FreeLLMAPI Auto Router",
+  toolCalling: true,
+  vision: true,
+  reasoningEffort: null,
+  tier: "balance",
+  maxInputTokens: 1048576,
+  maxOutputTokens: 65536,
+};
+
+const STRATEGY_VIRTUAL_MODELS = [
+  AUTO_ROUTER_MODEL,
   {
     id: "auto:smart",
     name: "Auto Smart",
@@ -64,34 +72,150 @@ const BUILTIN_VIRTUAL_MODELS = [
   },
 ];
 
-/**
- * Normalize a FreeLLMAPI base URL so it always ends cleanly with `/v1`.
- */
-export function normalizeFreeLLMBaseUrl(rawUrl) {
-  const trimmed = (rawUrl || DEFAULT_SERVER_URL).trim().replace(/\/+$/, "");
-  if (trimmed.endsWith("/chat/completions")) {
-    return trimmed.slice(0, -"/chat/completions".length);
+function validatePort(port) {
+  const num = Number(port);
+  if (!Number.isInteger(num) || num < 1 || num > 65535) {
+    throw new Error(`Porta invalida para FreeLLMAPI: '${port}'. Use um numero entre 1 e 65535.`);
   }
-  if (trimmed.endsWith("/v1")) return trimmed;
-  return `${trimmed}/v1`;
+  return num;
 }
 
 /**
- * Probe local FreeLLMAPI desktop (`31415`) and server (`3001`) ports.
+ * Normalize a FreeLLMAPI URL, `host:port`, `:port`, or bare port number so it ends with `/v1`.
  */
-export async function detectFreeLLMApiBaseUrl(fetchImpl = globalThis.fetch) {
-  if (!fetchImpl) return DEFAULT_SERVER_URL;
-  for (const candidate of [DEFAULT_DESKTOP_URL, DEFAULT_SERVER_URL]) {
-    try {
-      const res = await fetchImpl(`${candidate}/models`, { signal: AbortSignal.timeout(700) });
-      if (res.status === 200 || res.status === 401 || res.status === 403) {
-        return candidate;
-      }
-    } catch {
-      // Ignore unreachable candidate
+export function normalizeFreeLLMBaseUrl(rawInput, defaultHost = "localhost") {
+  const raw = String(rawInput || "").trim();
+  if (!raw) return DEFAULT_SERVER_URL;
+
+  if (/^:?\d+$/.test(raw)) {
+    const port = validatePort(raw.replace(/^:/, ""));
+    return `http://${defaultHost}:${port}/v1`;
+  }
+
+  const withScheme = /^https?:\/\//i.test(raw) ? raw : `http://${raw}`;
+  const trimmed = withScheme.replace(/\/+$/, "");
+
+  for (const suffix of ["/chat/completions", "/responses", "/messages"]) {
+    if (trimmed.endsWith(suffix)) {
+      const stripped = trimmed.slice(0, -suffix.length);
+      return stripped.endsWith("/v1") ? stripped : `${stripped}/v1`;
     }
   }
-  return DEFAULT_SERVER_URL;
+  return trimmed.endsWith("/v1") ? trimmed : `${trimmed}/v1`;
+}
+
+/**
+ * Resolve the FreeLLMAPI Desktop App runtime `config.json` path across OSes.
+ */
+export function getFreeLLMDesktopConfigPath(
+  platform = process.platform,
+  env = process.env,
+  homeDir = os.homedir()
+) {
+  if (env.FREELLMAPI_CONFIG_PATH?.trim()) {
+    return env.FREELLMAPI_CONFIG_PATH.trim();
+  }
+  if (platform === "darwin") {
+    return path.join(homeDir, "Library", "Application Support", "FreeLLMAPI", "config.json");
+  }
+  if (platform === "win32") {
+    return path.join(env.APPDATA || path.join(homeDir, "AppData", "Roaming"), "FreeLLMAPI", "config.json");
+  }
+  return path.join(env.XDG_CONFIG_HOME || path.join(homeDir, ".config"), "FreeLLMAPI", "config.json");
+}
+
+/**
+ * Read the dynamic listening port recorded by the FreeLLMAPI Desktop app (`listenWithScan`).
+ */
+export function readFreeLLMDesktopPort({
+  platform = process.platform,
+  env = process.env,
+  homeDir = os.homedir(),
+  fsImpl = fs,
+} = {}) {
+  try {
+    const cfgPath = getFreeLLMDesktopConfigPath(platform, env, homeDir);
+    if (!fsImpl.existsSync(cfgPath)) return null;
+    const cfg = JSON.parse(fsImpl.readFileSync(cfgPath, "utf8"));
+    const port = Number(cfg?.port);
+    return Number.isInteger(port) && port >= 1 && port <= 65535 ? port : null;
+  } catch {
+    return null;
+  }
+}
+
+async function probeCandidate(baseUrl, fetchImpl) {
+  try {
+    const res = await fetchImpl(`${baseUrl}/models`, { signal: AbortSignal.timeout(600) });
+    return res.status === 200 || res.status === 401 || res.status === 403;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Dynamically resolve FreeLLMAPI base URL from explicit `--port`/`FREELLMAPI_PORT`,
+ * `FREELLMAPI_URL`, Desktop App `config.json`, or probing running local ports.
+ */
+export async function detectFreeLLMApiBaseUrl(options = {}) {
+  const isFn = typeof options === "function";
+  const {
+    fetchImpl = isFn ? options : globalThis.fetch,
+    port,
+    env = process.env,
+    platform = process.platform,
+    homeDir = os.homedir(),
+    fsImpl = fs,
+  } = isFn ? {} : options;
+
+  const explicitPort = port ?? env.FREELLMAPI_PORT?.trim();
+  if (explicitPort) {
+    const validPort = validatePort(explicitPort);
+    const localCandidates = [
+      `http://127.0.0.1:${validPort}/v1`,
+      `http://localhost:${validPort}/v1`,
+    ];
+    if (fetchImpl) {
+      for (const c of localCandidates) {
+        if (await probeCandidate(c, fetchImpl)) return c;
+      }
+    }
+    return `http://localhost:${validPort}/v1`;
+  }
+
+  const envUrl = env.FREELLMAPI_URL?.trim() || env.FREELLMAPI_BASE_URL?.trim();
+  if (envUrl) {
+    return normalizeFreeLLMBaseUrl(envUrl);
+  }
+
+  const desktopPort = readFreeLLMDesktopPort({ platform, env, homeDir, fsImpl });
+  const candidates = [];
+  if (desktopPort) {
+    candidates.push(`http://127.0.0.1:${desktopPort}/v1`);
+  }
+  candidates.push(DEFAULT_DESKTOP_URL, DEFAULT_SERVER_URL);
+  const uniqueCandidates = [...new Set(candidates)];
+
+  if (fetchImpl) {
+    for (const candidate of uniqueCandidates) {
+      if (await probeCandidate(candidate, fetchImpl)) {
+        return candidate;
+      }
+    }
+  }
+
+  return desktopPort ? `http://127.0.0.1:${desktopPort}/v1` : DEFAULT_SERVER_URL;
+}
+
+/**
+ * Validate FreeLLMAPI catalog mode (`auto`, `strategies`, or `ready`).
+ */
+export function normalizeFreeLLMMode(rawMode) {
+  const mode = String(rawMode || "auto").trim().toLowerCase();
+  if (!["auto", "strategies", "ready"].includes(mode)) {
+    throw new Error(`Modo invalido para FreeLLMAPI: '${rawMode}'. Use: auto, strategies ou ready.`);
+  }
+  return mode;
 }
 
 /**
@@ -110,7 +234,7 @@ export async function fetchFreeLLMApiModels(baseUrl, apiKey, fetchImpl = globalT
   const payload = await res.json();
   const rows = Array.isArray(payload.data) ? payload.data : [];
 
-  const virtualIds = new Set(BUILTIN_VIRTUAL_MODELS.map((m) => m.id));
+  const virtualIds = new Set(STRATEGY_VIRTUAL_MODELS.map((m) => m.id));
   const discovered = [];
   for (const m of rows) {
     if (!m?.id || virtualIds.has(m.id)) continue;
@@ -135,9 +259,10 @@ export async function fetchFreeLLMApiModels(baseUrl, apiKey, fetchImpl = globalT
 export const freellmapiProvider = {
   id: "freellmapi",
   label: "FreeLLMAPI",
-  description: "FreeLLMAPI router local 100% gratis (Docker :3001 / Desktop :31415)",
+  description: "FreeLLMAPI smart router 100% gratis (porta/URL dinamica; modo auto sem listar centenas de modelos)",
   availableTiers: ["free"],
   defaultTiers: ["free"],
+  availableModes: ["auto", "strategies", "ready"],
   keyFile: "freellmapi.key",
   envVar: "FREELLMAPI_API_KEY",
   keyPlaceholder: "freellmapi-...",
@@ -149,24 +274,33 @@ export const freellmapiProvider = {
 
   async resolve({
     baseUrl,
+    port,
     apiKey,
-    live = true,
+    live = false,
+    mode,
     fetchImpl = globalThis.fetch,
+    env = process.env,
+    platform = process.platform,
+    homeDir = os.homedir(),
+    fsImpl = fs,
     secretInputId = "chat.lm.secret.freellmapi",
   } = {}) {
+    const resolvedMode = normalizeFreeLLMMode(mode ?? (live ? "ready" : "auto"));
     const resolvedBaseUrl = baseUrl
       ? normalizeFreeLLMBaseUrl(baseUrl)
-      : await detectFreeLLMApiBaseUrl(fetchImpl);
+      : await detectFreeLLMApiBaseUrl({ fetchImpl, port, env, platform, homeDir, fsImpl });
 
-    let models = [...BUILTIN_VIRTUAL_MODELS];
-    let source = "virtual-builtin";
+    let models = resolvedMode === "auto" ? [AUTO_ROUTER_MODEL] : [...STRATEGY_VIRTUAL_MODELS];
+    let source = resolvedMode === "auto" ? "router-auto" : "router-strategies";
 
-    if (live) {
+    if (resolvedMode === "ready") {
       try {
         const readyModels = await fetchFreeLLMApiModels(resolvedBaseUrl, apiKey, fetchImpl);
         if (readyModels.length > 0) {
-          models = [...models, ...readyModels];
+          models = [...STRATEGY_VIRTUAL_MODELS, ...readyModels];
           source = `live:${readyModels.length}-ready`;
+        } else {
+          source = "router-strategies";
         }
       } catch {
         source = "virtual-fallback";
@@ -187,7 +321,7 @@ export const freellmapiProvider = {
           id: "freellmapi",
           label: "FreeLLMAPI",
           prefix: "[FreeLLMAPI]",
-          comment: "+++++++ FREELLMAPI (100% GRATIS LOCAL ROUTER) +++++++",
+          comment: "+++++++ FREELLMAPI (100% GRATIS SMART ROUTER) +++++++",
           baseUrl: resolvedBaseUrl,
           copilotHeaders: null,
           vscodeHeaders: null,

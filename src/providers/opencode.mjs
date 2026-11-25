@@ -143,7 +143,6 @@ export const opencodeProvider = {
         baseUrl: GO_BASE_URL,
         copilotHeaders: { "x-opencode-session": "copilot-cli" },
         vscodeHeaders: {
-          Authorization: "Bearer ${apiKey}",
           "x-opencode-session": "vscode-copilot",
         },
         vscodeSecretId: secretInputId,
@@ -160,7 +159,6 @@ export const opencodeProvider = {
         baseUrl: GO_BASE_URL,
         copilotHeaders: { "x-opencode-session": "copilot-cli" },
         vscodeHeaders: {
-          Authorization: "Bearer ${apiKey}",
           "x-opencode-session": "vscode-copilot",
         },
         vscodeSecretId: secretInputId,

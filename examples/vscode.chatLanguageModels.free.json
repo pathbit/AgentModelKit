@@ -1,7 +1,7 @@
 [
   {
     "name": "+++++++ CONFIGURACAO OPENCODE +++++++",
-    "vendor": "comentario"
+    "vendor": "customendpoint"
   },
   {
     "name": "OpenCode Free",
@@ -9,46 +9,20 @@
     "apiKey": "${input:chat.lm.secret.66290ed1}",
     "models": [
       {
-        "id": "hungerg-free",
-        "name": "HungerG Free",
-        "url": "https://opencode.ai/inference/go/openai/v1/chat/completions",
-        "toolCalling": true,
-        "vision": true,
-        "tier": "efficiency",
-        "maxInputTokens": 1000000,
-        "maxOutputTokens": 65536,
-        "requestHeaders": {
-          "Authorization": "Bearer ${apiKey}",
-          "x-opencode-session": "vscode-copilot"
-        }
-      },
-      {
-        "id": "hy4-flash-free",
-        "name": "Hy4 flash Free",
-        "url": "https://opencode.ai/inference/go/openai/v1/chat/completions",
-        "toolCalling": true,
-        "vision": true,
-        "reasoningEffort": "high",
-        "tier": "efficiency",
-        "maxInputTokens": 983040,
-        "maxOutputTokens": 65536,
-        "requestHeaders": {
-          "Authorization": "Bearer ${apiKey}",
-          "x-opencode-session": "vscode-copilot"
-        }
-      },
-      {
         "id": "beam-free",
         "name": "Beam Free",
         "url": "https://opencode.ai/inference/go/openai/v1/chat/completions",
         "toolCalling": true,
         "vision": false,
-        "reasoningEffort": "high",
-        "tier": "efficiency",
+        "thinking": true,
+        "supportsReasoningEffort": [
+          "low",
+          "medium",
+          "high"
+        ],
         "maxInputTokens": 1048576,
         "maxOutputTokens": 131072,
         "requestHeaders": {
-          "Authorization": "Bearer ${apiKey}",
           "x-opencode-session": "vscode-copilot"
         }
       },
@@ -58,11 +32,39 @@
         "url": "https://opencode.ai/inference/go/openai/v1/chat/completions",
         "toolCalling": true,
         "vision": false,
-        "tier": "efficiency",
         "maxInputTokens": 262144,
         "maxOutputTokens": 131072,
         "requestHeaders": {
-          "Authorization": "Bearer ${apiKey}",
+          "x-opencode-session": "vscode-copilot"
+        }
+      },
+      {
+        "id": "hy4-flash-free",
+        "name": "Hy4 flash Free",
+        "url": "https://opencode.ai/inference/go/openai/v1/chat/completions",
+        "toolCalling": true,
+        "vision": true,
+        "thinking": true,
+        "supportsReasoningEffort": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "maxInputTokens": 983040,
+        "maxOutputTokens": 65536,
+        "requestHeaders": {
+          "x-opencode-session": "vscode-copilot"
+        }
+      },
+      {
+        "id": "hungerg-free",
+        "name": "HungerG Free",
+        "url": "https://opencode.ai/inference/go/openai/v1/chat/completions",
+        "toolCalling": true,
+        "vision": true,
+        "maxInputTokens": 1000000,
+        "maxOutputTokens": 65536,
+        "requestHeaders": {
           "x-opencode-session": "vscode-copilot"
         }
       }
@@ -70,7 +72,7 @@
   },
   {
     "name": "+++++++ CONFIGURACAO FREELLMAPI +++++++",
-    "vendor": "comentario"
+    "vendor": "customendpoint"
   },
   {
     "name": "FreeLLMAPI",
@@ -79,63 +81,10 @@
     "models": [
       {
         "id": "auto",
-        "name": "Auto Router",
+        "name": "FreeLLMAPI Auto Router",
         "url": "http://localhost:3001/v1/chat/completions",
         "toolCalling": true,
         "vision": true,
-        "tier": "balance",
-        "maxInputTokens": 1048576,
-        "maxOutputTokens": 65536
-      },
-      {
-        "id": "auto:smart",
-        "name": "Auto Smart",
-        "url": "http://localhost:3001/v1/chat/completions",
-        "toolCalling": true,
-        "vision": true,
-        "reasoningEffort": "high",
-        "tier": "intelligence",
-        "maxInputTokens": 1048576,
-        "maxOutputTokens": 65536
-      },
-      {
-        "id": "auto:fast",
-        "name": "Auto Fast",
-        "url": "http://localhost:3001/v1/chat/completions",
-        "toolCalling": true,
-        "vision": true,
-        "tier": "efficiency",
-        "maxInputTokens": 1048576,
-        "maxOutputTokens": 65536
-      },
-      {
-        "id": "auto:reliable",
-        "name": "Auto Reliable",
-        "url": "http://localhost:3001/v1/chat/completions",
-        "toolCalling": true,
-        "vision": true,
-        "tier": "balance",
-        "maxInputTokens": 1048576,
-        "maxOutputTokens": 65536
-      },
-      {
-        "id": "auto:balanced",
-        "name": "Auto Balanced",
-        "url": "http://localhost:3001/v1/chat/completions",
-        "toolCalling": true,
-        "vision": true,
-        "tier": "balance",
-        "maxInputTokens": 1048576,
-        "maxOutputTokens": 65536
-      },
-      {
-        "id": "fusion",
-        "name": "Fusion (Multi-Model)",
-        "url": "http://localhost:3001/v1/chat/completions",
-        "toolCalling": true,
-        "vision": false,
-        "reasoningEffort": "high",
-        "tier": "intelligence",
         "maxInputTokens": 1048576,
         "maxOutputTokens": 65536
       }
