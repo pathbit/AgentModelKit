@@ -22,7 +22,9 @@ To **use** a configured model, you also need the chosen client. If you choose Fr
 npx --yes @pathbit/agentmodelkit
 ```
 
-Until the first publication, run `node bin/agentmodelkit.mjs` from the local repository. To preview a parameterized configuration in this project, use `npx --yes @pathbit/agentmodelkit init --providers freellmapi --dry-run`.
+To configure FreeLLMAPI, copy the **agent URL** from **Keys → Agents** in the server dashboard. Paste the URL into the wizard. The selected client receives the `auto` model and the URL authenticates the connection.
+
+Until the first publication, run `node bin/agentmodelkit.mjs` from the local repository.
 
 | To… | Quick option |
 | --- | --- |
@@ -43,11 +45,11 @@ Until the first publication, run `node bin/agentmodelkit.mjs` from the local rep
 # Select clients, providers and models interactively.
 npx --yes @pathbit/agentmodelkit
 
-# Preview FreeLLMAPI configuration with the auto router.
-npx --yes @pathbit/agentmodelkit init --providers freellmapi --targets all --dry-run
+# Configure OpenCode with a FreeLLMAPI agent URL (example token).
+npx --yes @pathbit/agentmodelkit --url 'https://llm.example.com/v1/t/EXAMPLE_TOKEN'
 
-# Configure an existing FreeLLMAPI server.
-npx --yes @pathbit/agentmodelkit add --providers freellmapi --port 31415 --key-file ./freellmapi.key --yes
+# Preview the same setup for all supported clients.
+npx --yes @pathbit/agentmodelkit --url 'https://llm.example.com/v1/t/EXAMPLE_TOKEN' --targets all --dry-run
 
 # Add an OpenCode Console model to Copilot CLI.
 npx --yes @pathbit/agentmodelkit add --providers opencode --tiers payg --models gpt-6.2-sol --targets copilot-cli --key-file ./opencode.key --yes
@@ -71,7 +73,7 @@ To configure OpenCode in another directory, pass `--project-dir <directory>`. Wi
 ```bash
 npx --yes @pathbit/agentmodelkit prune --providers opencode
 npx --yes @pathbit/agentmodelkit prune --providers opencode --apply
-npx --yes @pathbit/agentmodelkit prune --providers freellmapi --port 31415 --key-file ./freellmapi.key
+npx --yes @pathbit/agentmodelkit prune --url 'https://llm.example.com/v1/t/EXAMPLE_TOKEN'
 ```
 
 Every change to an existing file saves its previous bytes in a unique `.bak` file. The CLI prints the backup paths. Invalid configuration JSON stops the operation before either client is written.
@@ -81,7 +83,7 @@ Every change to an existing file saves its previous bytes in a unique `.bak` fil
 | Provider | Options |
 | --- | --- |
 | OpenCode | `--tiers go` for a subscription and `--tiers payg` for Console. `all` includes both. OpenCode Free is restricted to the OpenCode client. Free entries appear in `catalog list` for reference. |
-| FreeLLMAPI | `auto` by default or `--freellmapi-mode strategies\|ready`. Use `--url` or `--port` for a particular server. `ready` queries the models that can serve requests on that server. |
+| FreeLLMAPI | Pass the agent URL with `--url`. The default is `auto`. For advanced selection, use `--freellmapi-mode strategies\\|ready`. |
 | Manual provider | Pass a [JSON manifest](examples/provider.local.example.json) with `--provider-file`. Repeat the flag to include multiple providers. |
 
 `--powerful` loads the editorial selection from [data/curation.json](data/curation.json). For FreeLLMAPI it includes router strategies. For a manual provider, list recommended models in `powerfulIds`. The selection is versioned and can be reviewed monthly. AgentModelKit uses the published data directly when selecting models.

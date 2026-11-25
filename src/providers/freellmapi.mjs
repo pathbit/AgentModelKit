@@ -1,9 +1,11 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { loadCatalog, loadCuration } from "../catalogs/index.mjs";
 import { fetchModelRows } from "../catalogs/opencode.mjs";
 import { parseEndpoint } from "./custom.mjs";
+import { getKeyFilePath } from "../utils/paths.mjs";
 
 const DEFAULT_SERVER_PORT = 3001;
 const DEFAULT_DESKTOP_PORT = 31415;
@@ -19,7 +21,7 @@ function validatePort(port) {
 }
 
 /**
- * Normalize a FreeLLMAPI URL, `host:port`, `:port`, or bare port number so it ends with `/v1`.
+ * Normalize a server address or a revocable agent URL to the API base.
  */
 export function normalizeFreeLLMBaseUrl(rawInput, defaultHost = "localhost") {
   const raw = String(rawInput || "").trim();
@@ -33,13 +35,31 @@ export function normalizeFreeLLMBaseUrl(rawInput, defaultHost = "localhost") {
   const withScheme = /^https?:\/\//i.test(raw) ? raw : `http://${raw}`;
   const trimmed = parseEndpoint(withScheme);
 
-  for (const suffix of ["/chat/completions", "/responses", "/messages"]) {
-    if (trimmed.endsWith(suffix)) {
-      const stripped = trimmed.slice(0, -suffix.length);
-      return stripped.endsWith("/v1") ? stripped : `${stripped}/v1`;
+  const pathname = new URL(trimmed).pathname;
+  const tokenRoute = pathname.match(/\/v1\/t(?:\/|$)/);
+  if (tokenRoute) {
+    const agentPath = pathname.slice(tokenRoute.index);
+    const match = agentPath.match(/^\/v1\/t\/[A-Za-z0-9_-]+(?=\/|$)/);
+    const endpoint = match && agentPath.slice(match[0].length);
+    if (!match || !["", "/models", "/chat/completions", "/responses"].includes(endpoint)) {
+      throw new Error("Invalid FreeLLMAPI agent URL. Copy the URL from Keys → Agents.");
     }
+    return endpoint ? trimmed.slice(0, -endpoint.length) : trimmed;
   }
-  return trimmed.endsWith("/v1") ? trimmed : `${trimmed}/v1`;
+
+  const base = trimmed.replace(/\/(?:chat\/completions|responses|messages|models)$/, "");
+  return base.endsWith("/v1") ? base : `${base}/v1`;
+}
+
+export function isFreeLLMTokenUrl(baseUrl) {
+  return /\/v1\/t\/[A-Za-z0-9_-]+$/.test(new URL(baseUrl).pathname);
+}
+
+export function freeLLMProjectUrlFile(baseUrl, env) {
+  const digest = createHash("sha256").update(baseUrl).digest("hex");
+  const file = path.resolve(getKeyFilePath(`freellmapi-url-${digest}.key`, env));
+  if (file.includes("}")) throw new Error("OpenCode URL file paths cannot contain a closing brace.");
+  return file;
 }
 
 /**
@@ -93,19 +113,22 @@ async function probeCandidate(baseUrl, fetchImpl) {
 }
 
 /**
- * Dynamically resolve FreeLLMAPI base URL from explicit `--port`/`FREELLMAPI_PORT`,
+ * Dynamically resolve FreeLLMAPI base URL from explicit URL, `--port`/`FREELLMAPI_PORT`,
  * `FREELLMAPI_URL`, Desktop App `config.json`, or probing running local ports.
  */
 export async function detectFreeLLMApiBaseUrl(options = {}) {
   const isFn = typeof options === "function";
   const {
     fetchImpl = isFn ? options : globalThis.fetch,
+    baseUrl,
     port,
     env = process.env,
     platform = process.platform,
     homeDir = os.homedir(),
     fsImpl = fs,
   } = isFn ? {} : options;
+
+  if (baseUrl) return normalizeFreeLLMBaseUrl(baseUrl);
 
   const explicitPort = port ?? env.FREELLMAPI_PORT?.trim();
   if (explicitPort) {
@@ -157,11 +180,21 @@ export function normalizeFreeLLMMode(rawMode) {
   return mode;
 }
 
-/**
- * Fetch ready models from a live FreeLLMAPI `/v1/models?execution_status=ready` endpoint.
- */
+/** Fetch model rows without disclosing an agent URL if the server request fails. */
+export async function fetchFreeLLMModelRows(baseUrl, { apiKey, fetchImpl, ready = false } = {}) {
+  const tokenUrl = isFreeLLMTokenUrl(baseUrl);
+  try {
+    return await fetchModelRows(`${baseUrl}/models${ready ? "?execution_status=ready" : ""}`, {
+      apiKey: tokenUrl ? undefined : apiKey, fetchImpl,
+    });
+  } catch (error) {
+    if (!tokenUrl) throw error;
+    throw new Error(`Could not list FreeLLMAPI models on ${new URL(baseUrl).host}. Check whether the agent URL is valid and active.`);
+  }
+}
+
 export async function fetchFreeLLMApiModels(baseUrl, apiKey, fetchImpl = globalThis.fetch) {
-  const rows = await fetchModelRows(`${baseUrl}/models?execution_status=ready`, { apiKey, fetchImpl });
+  const rows = await fetchFreeLLMModelRows(baseUrl, { apiKey, fetchImpl, ready: true });
   const virtualIds = new Set(loadCatalog("freellmapi-catalog.json").strategies.map(({ id }) => id));
   const discovered = [];
   for (const m of rows) {
@@ -215,9 +248,8 @@ export const freellmapiProvider = {
     secretInputId = "chat.lm.secret.freellmapi",
   } = {}) {
     const resolvedMode = normalizeFreeLLMMode(mode ?? (live ? "ready" : "auto"));
-    const resolvedBaseUrl = baseUrl
-      ? normalizeFreeLLMBaseUrl(baseUrl)
-      : await detectFreeLLMApiBaseUrl({ fetchImpl, port, env, platform, homeDir, fsImpl });
+    const resolvedBaseUrl = await detectFreeLLMApiBaseUrl({ baseUrl, fetchImpl, port, env, platform, homeDir, fsImpl });
+    const tokenUrl = isFreeLLMTokenUrl(resolvedBaseUrl);
 
     const catalog = loadCatalog("freellmapi-catalog.json", env);
     const curated = new Set(loadCuration().freellmapi);
@@ -238,12 +270,12 @@ export const freellmapiProvider = {
         {
           id: "freellmapi",
           apiType: "chat-completions",
-          label: "FreeLLMAPI",
+          label: tokenUrl ? "FreeLLMAPI (agent URL)" : "FreeLLMAPI",
           prefix: "[FreeLLMAPI]",
           baseUrl: resolvedBaseUrl,
           copilotHeaders: null,
           vscodeHeaders: null,
-          vscodeSecretId: secretInputId,
+          vscodeSecretId: tokenUrl ? null : secretInputId,
           models,
         },
       ],

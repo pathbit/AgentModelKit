@@ -12,7 +12,11 @@ Provide the key in `OPENCODE_API_KEY` or with `--key-file`. The availability lis
 
 ## FreeLLMAPI
 
-The provider connects to a running FreeLLMAPI server. Set a unified key in `FREELLMAPI_API_KEY` or with `--key-file`. Set the server with `--url`, `--port`, `FREELLMAPI_URL` or `FREELLMAPI_PORT`. The CLI can also read the Desktop app port and check the standard Desktop and Docker ports.
+In the FreeLLMAPI server dashboard, open **Keys → Agents** and copy the agent URL. Paste it into the wizard or pass it with `--url`. A revocable token URL has the form `https://llm.example.com/v1/t/EXAMPLE_TOKEN`. AgentModelKit also accepts the copied URL ending in `/chat/completions`. The token in the URL authenticates access. The default mode configures `auto`.
+
+Treat the agent URL as a credential. Prefer pasting it into the wizard, which hides the input. For automation, set `FREELLMAPI_URL` in a private environment. OpenCode references a private file outside the project. VS Code and Copilot CLI store the URL in their profile files. Keep those files and their backups private.
+
+For a standard server address such as `http://localhost:3001/v1`, set the unified key using `FREELLMAPI_API_KEY` or `--key-file`. The wizard can also detect the local port. Advanced modes remain available.
 
 - `auto` registers the default router.
 - `strategies` registers the virtual strategies bundled in `data/`.

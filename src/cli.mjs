@@ -2,14 +2,16 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { getProvider, listProviders } from "./providers/index.mjs";
-import { detectFreeLLMApiBaseUrl, normalizeFreeLLMBaseUrl } from "./providers/freellmapi.mjs";
+import {
+  detectFreeLLMApiBaseUrl, fetchFreeLLMModelRows, freeLLMProjectUrlFile, isFreeLLMTokenUrl,
+} from "./providers/freellmapi.mjs";
 import { loadCustomProviders } from "./providers/custom.mjs";
 import { normalizeOpenCodeTiers } from "./providers/opencode.mjs";
-import { OPEN_CODE_GROUPS, fetchModelRows, fetchOpenCodeDirectory } from "./catalogs/opencode.mjs";
+import { OPEN_CODE_GROUPS, fetchOpenCodeDirectory } from "./catalogs/opencode.mjs";
 import { getCatalogDir, loadCatalog, refreshCatalogs } from "./catalogs/index.mjs";
 import { listTargets, normalizeTargets, TARGETS } from "./targets/index.mjs";
 import { describeApply } from "./targets/config.mjs";
-import { readSavedKey, resolveProviderApiKey } from "./keys.mjs";
+import { planKeyFile, readSavedKey, resolveProviderApiKey } from "./keys.mjs";
 import { getCopilotDir, getCopilotProvidersPath, getKeyFilePath, getVSCodeChatModelsPath } from "./utils/paths.mjs";
 import { commitWrites, jsonWrite, parseSnapshot, readJsonOrNull, readSnapshot } from "./utils/json.mjs";
 import { promptMultiSelect, promptSelect, promptText } from "./ui/prompts.mjs";
@@ -36,7 +38,7 @@ Selection:
   --provider-file <json>     Local provider manifest (repeatable)
   --replace                 Replaces the managed selection for the specified providers
   --live                    Checks availability before adding
-  --url <url-or-port>        FreeLLMAPI base address
+  --url <url-or-port>        FreeLLMAPI agent URL or server address
   --port <number>            FreeLLMAPI port
   --freellmapi-mode <mode>   auto | strategies | ready
 
@@ -150,7 +152,8 @@ async function cmdDoctor(env, projectDir) {
       console.log(`${location}: ${error.message}`);
     }
   }
-  console.log(`Detected FreeLLMAPI URL: ${await detectFreeLLMApiBaseUrl({ env })}`);
+  const freeLLMUrl = await detectFreeLLMApiBaseUrl({ env });
+  console.log(`Detected FreeLLMAPI URL: ${isFreeLLMTokenUrl(freeLLMUrl) ? "agent URL (hidden)" : freeLLMUrl}`);
   for (const p of listProviders()) console.log(`${p.id}: local key ${fs.existsSync(getKeyFilePath(p.keyFile, env)) ? "OK" : "missing"}`);
 }
 
@@ -199,16 +202,8 @@ async function gatherInteractiveConfig(opts) {
       ],
     })).join(",");
   }
-  if (opts.providers?.split(",").some((id) => id.trim().toLowerCase() === "freellmapi") && !opts.freellmapiMode && !opts.powerful && !opts.live) {
-    if (!opts.url && !opts.port) opts.url = await promptText("FreeLLMAPI URL or port [Enter = detect]: ");
-    opts.freellmapiMode = await promptSelect({
-      title: "Select the FreeLLMAPI models",
-      options: [
-        { label: "Auto router only", value: "auto" },
-        { label: "Virtual strategies", value: "strategies" },
-        { label: "Ready models on the local server", value: "ready" },
-      ],
-    });
+  if (list(opts.providers?.toLowerCase() ?? "none").includes("freellmapi") && !opts.url && !opts.port) {
+    opts.url = await promptText("Paste your FreeLLMAPI agent URL [Enter = detect]: ", "", { secret: true });
   }
 }
 
@@ -228,8 +223,9 @@ async function maybePickModels(resolved) {
 
 function selectProviders(opts) {
   const custom = loadCustomProviders(opts.providerFiles);
+  const defaultId = opts.command === "prune" && !opts.url && !opts.port ? "opencode" : "freellmapi";
   const ids = opts.providers ? list(opts.providers.toLowerCase()) :
-    (custom.size ? [...custom.keys()] : [opts.command === "prune" ? "opencode" : "freellmapi"]);
+    (custom.size ? [...custom.keys()] : [defaultId]);
   return ids.map((id) => custom.get(id) ?? getProvider(id));
 }
 
@@ -244,14 +240,19 @@ async function buildPruneRules(providers, opts, env) {
         return group && allowed.includes(group.tier) && !available[group.channel].has(id);
       }];
     }
-    const { apiKey } = await resolveProviderApiKey(provider, { ...opts, noSaveKey: true, nonInteractive: true, optional: !provider.requiresKey }, env);
+    const keyOptions = { ...opts, noSaveKey: true, nonInteractive: true };
     if (provider.id === "freellmapi") {
-      const baseUrl = opts.url ? normalizeFreeLLMBaseUrl(opts.url) : await detectFreeLLMApiBaseUrl({ port: opts.port, env });
-      const data = await fetchModelRows(`${baseUrl}/models`, { apiKey });
+      const baseUrl = await detectFreeLLMApiBaseUrl({ baseUrl: opts.url, port: opts.port, env });
+      const tokenUrl = isFreeLLMTokenUrl(baseUrl);
+      const { apiKey } = tokenUrl ? {} : await resolveProviderApiKey(provider, keyOptions, env);
+      const data = await fetchFreeLLMModelRows(baseUrl, { apiKey });
       const virtual = loadCatalog("freellmapi-catalog.json", env).strategies;
       const ids = new Set([...data, ...virtual].map(({ id }) => id));
-      return [provider.id, (_group, id, url) => [baseUrl, `${baseUrl}/chat/completions`].includes(url) && !ids.has(id)];
+      const endpoints = new Set([baseUrl, `${baseUrl}/chat/completions`]);
+      if (tokenUrl) endpoints.add(`{file:${freeLLMProjectUrlFile(baseUrl, env)}}`);
+      return [provider.id, (_group, id, url) => endpoints.has(url) && !ids.has(id)];
     }
+    const { apiKey } = await resolveProviderApiKey(provider, { ...keyOptions, optional: !provider.requiresKey }, env);
     const ids = await provider.availability({ apiKey });
     return [provider.id, (_group, id, url) => {
       const base = url?.replace(/\/(?:chat\/completions|responses|messages)$/, "");
@@ -318,7 +319,7 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
     throw new Error("Use prune with --providers and --targets. Add --apply to save changes. See --help.");
   }
   const interactive = !opts.yes && !prune && process.stdin.isTTY && process.stdout.isTTY;
-  const wizard = interactive && !opts.providers && !opts.providerFiles.length;
+  const wizard = interactive && !opts.url && !opts.providers && !opts.providerFiles.length;
   if (wizard) await gatherInteractiveConfig(opts);
   const targetIds = normalizeTargets(opts.targets);
   if (opts.projectDir && !targetIds.includes("opencode")) throw new Error("--project-dir requires the opencode target.");
@@ -334,7 +335,7 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
   }
   if ((opts.url || opts.port || opts.freellmapiMode) && !providerIds.includes("freellmapi")) throw new Error("Select freellmapi to use server options.");
   const dryRun = Boolean(opts.dryRun || (prune && !opts.apply));
-  const config = { dryRun, apiKeys: new Map(), projectKeyRefs: new Map(), projectDir: opts.projectDir };
+  const config = { dryRun, apiKeys: new Map(), projectKeyRefs: new Map(), projectUrlRefs: new Map(), projectDir: opts.projectDir };
   const keyWrites = [];
   const keys = new Map();
   async function getKey(provider, discovering = false) {
@@ -347,16 +348,21 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
     }
     return keys.get(provider.id);
   }
+  const freeLLMUrl = !prune && providerIds.includes("freellmapi")
+    ? await detectFreeLLMApiBaseUrl({ baseUrl: opts.url, port: opts.port, env })
+    : null;
+  const freeLLMToken = freeLLMUrl && isFreeLLMTokenUrl(freeLLMUrl);
   let resolved = [];
   if (prune) config.prune = await buildPruneRules(providers, opts, env);
   else {
     for (const provider of providers) {
       const discovering = (provider.id === "freellmapi" && (opts.freellmapiMode === "ready" || opts.live) && !opts.powerful) ||
         (opts.live && provider.id.startsWith("custom-"));
-      const { apiKey } = discovering ? await getKey(provider, true) : {};
+      const urlAuthenticated = provider.id === "freellmapi" && freeLLMToken;
+      const { apiKey } = discovering && !urlAuthenticated ? await getKey(provider, true) : {};
       const tiers = opts.tiers ?? (opts.powerful && provider.id === "opencode" ? "all" : provider.defaultTiers);
       resolved.push(await provider.resolve({
-        tiers, baseUrl: opts.url, port: opts.port, mode: opts.freellmapiMode, apiKey,
+        tiers, baseUrl: provider.id === "freellmapi" ? freeLLMUrl : undefined, mode: opts.freellmapiMode, apiKey,
         live: opts.live, powerful: opts.powerful, env,
       }));
     }
@@ -368,6 +374,15 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
     const required = targetIds.includes("copilot-cli") || opts.key || opts.keyFile;
     for (const { providerId } of resolved) {
       const provider = providers.find(({ id }) => id === providerId);
+      if (providerId === "freellmapi" && freeLLMToken) {
+        if (targetIds.includes("opencode")) {
+          const file = freeLLMProjectUrlFile(freeLLMUrl, env);
+          config.projectUrlRefs.set(providerId, `{file:${file}}`);
+          config.projectKeyRefs.set(providerId, null);
+          if (!dryRun) keyWrites.push(planKeyFile(file, freeLLMUrl));
+        }
+        continue;
+      }
       if (targetIds.includes("opencode") && provider.requiresKey) {
         config.projectKeyRefs.set(providerId, `{env:${provider.envVar}}`);
       }
