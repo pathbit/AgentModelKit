@@ -14,18 +14,18 @@ Para **usar** os modelos, você também precisa ter o cliente escolhido disponí
 
 ## Início rápido
 
-1. Abra o terminal na pasta do projeto com Node.js instalado.
+1. Com Node.js instalado, abra o terminal na cópia local do AgentModelKit.
 2. Execute `opencode` ou `freellmapi` para escolher o provider. Selecione onde quer configurá-lo com **↑↓**, **Espaço** e **Enter**.
 3. Escolha o plano do OpenCode ou **Local** para o FreeLLMAPI. No FreeLLMAPI local, informe a URL do servidor. Cole o token quando o assistente pedir.
 
 ```bash
-npx --yes @pathbit/agentmodelkit opencode
-npx --yes @pathbit/agentmodelkit freellmapi
+node bin/agentmodelkit.mjs opencode
+node bin/agentmodelkit.mjs freellmapi
 ```
 
 Para abrir direto em um cliente, acrescente `vscode`, `copilot` ou `opencode`. Por exemplo, `opencode vscode` aplica os endpoints do OpenCode no VS Code. Sem subcomando, o assistente começa pela lista de providers.
 
-Até a primeira publicação, substitua `npx --yes @pathbit/agentmodelkit` por `node bin/agentmodelkit.mjs` a partir do checkout local. Use `--project-dir` para indicar outro projeto quando configurar o OpenCode.
+Use `--project-dir` para indicar outro projeto quando configurar o OpenCode. Os comandos com o nome do pacote no npm ficam disponíveis após a publicação.
 
 | Quero… | Opção rápida |
 | --- | --- |
@@ -143,7 +143,7 @@ O guia também cobre atualização e diagnóstico. [Início rápido do AgentDevK
 
 ## Contributing and Branch Protection
 
-- Envie mudanças para a branch `main` por pull request e confira os testes da CI antes de pedir revisão.
+- Envie o pull request do seu fork para `main` e confira os testes da CI antes de pedir revisão.
 - Consulte o [guia de contribuição](CONTRIBUTING.md). Para bugs ou pedidos de suporte a novos providers, abra uma [issue](https://github.com/pathbit/AgentModelKit/issues).
 
 ---
