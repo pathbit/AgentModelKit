@@ -110,7 +110,7 @@ test("generated clients use correct protocols and preserve user settings", async
   fs.mkdirSync(copilotHome);
   fs.writeFileSync(vsFile, JSON.stringify([ollama]));
   fs.writeFileSync(cpFile, JSON.stringify(previousCopilot));
-  await runCli(["init", "-p", "opencode", "--tiers", "payg", "--powerful", "--key", key, "--yes"], env);
+  await runCli(["init", "-p", "opencode", "--tiers", "payg", "--powerful", "--targets", "vscode,copilot-cli", "--key", key, "--yes"], env);
   const vscode = JSON.parse(fs.readFileSync(vsFile, "utf8"));
   const copilot = JSON.parse(fs.readFileSync(cpFile, "utf8"));
   assert.deepEqual(vscode[0], ollama);
@@ -169,7 +169,7 @@ test("parseCliArgs and runCli configure targets non-interactively and support --
   assert.throws(() => parseCliArgs(["--unknown-flag"]), /Unknown option/);
 
   const dryResults = await runCli(
-    ["init", "-p", "opencode", "--tiers", "payg", "-t", "all", "-k", "oc_dry", "--dry-run", "--yes"],
+    ["init", "-p", "opencode", "--tiers", "payg", "-t", "vscode,copilot-cli", "-k", "oc_dry", "--dry-run", "--yes"],
     env
   );
   assert.equal(dryResults.length, 2);
@@ -178,7 +178,7 @@ test("parseCliArgs and runCli configure targets non-interactively and support --
   assert.equal(fs.existsSync(path.join(copilotHome, "opencode.key")), false);
 
   await runCli(
-    ["init", "-p", "opencode", "--tiers", "payg", "-t", "all", "-k", "oc_real_123", "--no-default-model", "--yes"],
+    ["init", "-p", "opencode", "--tiers", "payg", "-t", "vscode,copilot-cli", "-k", "oc_real_123", "--no-default-model", "--yes"],
     env
   );
   assert.equal(fs.existsSync(path.join(vscodeUser, "chatLanguageModels.json")), true);

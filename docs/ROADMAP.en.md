@@ -4,7 +4,7 @@
 
 ## First release
 
-- VS Code and Copilot CLI configuration through a picker or command-line parameters.
+- OpenCode, VS Code and Copilot CLI configuration through a picker or command-line parameters.
 - Incremental additions, explicit replacement, removal based on availability and backups.
 - Bundled catalogs, manual refresh and a monthly review workflow.
 - OpenCode, FreeLLMAPI and endpoints defined through a manifest.

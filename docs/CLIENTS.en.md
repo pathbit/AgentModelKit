@@ -2,6 +2,12 @@
 
 [Português (Brasil)](CLIENTS.md) · [Español](CLIENTS.es.md)
 
+## OpenCode in a project
+
+Use `--targets opencode` or check **OpenCode (current project)** with **Space** in the wizard. Run from the project directory or pass `--project-dir`. AgentModelKit writes `.opencode/opencode.json` for **OpenCode 2** and records the managed models in `.opencode/agentmodelkit-models.json`. The direct `opencode.json(c)` remains available for your settings.
+
+Set a provider environment variable such as `FREELLMAPI_API_KEY` or pass `--key-file <file> --no-save-key` to reference an existing file. Open the project in the client and choose models in `/models`. [OpenCode project configuration](https://opencode.ai/docs/config/#locations).
+
 ## GitHub Copilot CLI
 
 The BYOK registry uses `providers.json` in `COPILOT_HOME` or the path set in `COPILOT_PROVIDERS_CONFIG`. The default is `~/.copilot/providers.json`. Restart the client after configuring it and choose a model with `/model`.

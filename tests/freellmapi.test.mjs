@@ -200,6 +200,8 @@ test("freellmapiProvider defaults to clean auto-only router mode and supports st
   await runCli(
     [
       "init",
+      "--targets",
+      "vscode,copilot-cli",
       "--providers",
       "freellmapi",
       "--port",
@@ -215,6 +217,8 @@ test("freellmapiProvider defaults to clean auto-only router mode and supports st
   await runCli(
     [
       "init",
+      "--targets",
+      "vscode,copilot-cli",
       "--providers",
       "opencode",
       "--tiers",

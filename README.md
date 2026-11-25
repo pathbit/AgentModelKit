@@ -2,7 +2,7 @@
 
 [English](README.en.md) · [Español](README.es.md) · [Documentação](docs/README.md) · [Exemplos](examples/README.md)
 
-O AgentModelKit configura providers e modelos de IA no **VS Code** e no **GitHub Copilot CLI**. O CLI roda no Windows, macOS e Linux, aceita parâmetros para automação e oferece um seletor no terminal. O projeto é mantido pela PathBit junto com o [AgentDevKit](https://github.com/pathbit/AgentDevKit).
+O AgentModelKit configura providers e modelos de IA no **OpenCode**, no **VS Code** e no **GitHub Copilot CLI**. O CLI roda no Windows, macOS e Linux, aceita parâmetros para automação e oferece um seletor no terminal. O projeto é mantido pela PathBit junto com o [AgentDevKit](https://github.com/pathbit/AgentDevKit).
 
 A ajuda e as mensagens da CLI são exibidas em inglês.
 
@@ -12,7 +12,28 @@ A ajuda e as mensagens da CLI são exibidas em inglês.
 
 Para **usar** os modelos, você também precisa ter o cliente escolhido disponível. O FreeLLMAPI precisa estar rodando se for seu provider. Uma conta ou chave pode ser exigida pelo provider. A CLI gera a configuração mesmo que o cliente ainda esteja ausente.
 
-## Executar sem instalação permanente
+## Início rápido
+
+1. Abra o terminal na pasta do projeto com Node.js instalado.
+2. Execute o comando abaixo. Use ↑↓ para navegar, **Espaço** para marcar agentes, providers e modelos e **Enter** para confirmar.
+3. Abra o cliente escolhido para usar o modelo. O OpenCode é a opção padrão e lê a configuração do projeto em `.opencode/opencode.json`. O VS Code e o Copilot CLI usam seus arquivos de perfil.
+
+```bash
+npx --yes @pathbit/agentmodelkit
+```
+
+Até a primeira publicação, rode `node bin/agentmodelkit.mjs` no repositório local. Para simular a configuração deste projeto com parâmetros, use `npx --yes @pathbit/agentmodelkit init --providers freellmapi --dry-run`.
+
+| Quero… | Opção rápida |
+| --- | --- |
+| Escolher os agentes do projeto | Execute o assistente ou informe `--targets opencode,vscode,copilot-cli`. |
+| Acrescentar um modelo ou provider | Use `add --providers <id> --models <ids>` ou `add --provider-file ./meu-provider.json`. |
+| Carregar modelos recomendados | Acrescente `--powerful`. |
+| Atualizar o catálogo | Use `catalog update`. |
+| Conferir e remover modelos ausentes | Execute `prune --providers <id>` e acrescente `--apply` para aplicar. |
+| Ver os arquivos e clientes detectados | Execute `doctor`. |
+
+## Uso direto e automação
 
 O `npx` baixa o pacote no cache do npm e executa a CLI. O comando configura os arquivos dos clientes e não instala editores, extensões, providers, runtimes ou modelos. Uma operação `--dry-run` não grava configuração, credenciais nem backups.
 
@@ -36,6 +57,8 @@ npx --yes @pathbit/agentmodelkit add --providers opencode --tiers all --powerful
 ```
 
 O `--yes` **após o nome do pacote** desativa as perguntas do AgentModelKit. O `--yes` antes do nome responde à confirmação do npm para uso do cache.
+
+Para configurar o OpenCode em outra pasta, use `--project-dir <pasta>`. Sem `--targets`, a CLI também usa o OpenCode como destino padrão em modo não interativo. Use `--targets all` para incluir os três clientes.
 
 ## Acrescentar, substituir e remover modelos
 
@@ -81,6 +104,7 @@ Os catálogos acompanham o pacote em `data/`. `catalog update` atualiza um cache
 
 ## Credenciais e clientes
 
+- **OpenCode 2** lê modelos em `.opencode/opencode.json`. A chave fica como referência a uma variável de ambiente do provider ou ao caminho informado com `--key-file`. Use `--no-save-key` para manter só o arquivo que você informou.
 - Para o **Copilot CLI**, o formato de providers nomeados utiliza `apiKey` no próprio `providers.json`. Use `--key-file`, a variável `OPENCODE_API_KEY` ou `FREELLMAPI_API_KEY`, ou o prompt protegido do terminal. `--no-save-key` evita uma segunda cópia em `.key`. Em sistemas POSIX, os arquivos gerenciados e backups usam permissões restritas.
 - No **VS Code**, o padrão é uma referência de segredo. Informe a chave no editor de modelos quando o cliente pedir. A chave fica no armazenamento de segredos do VS Code. O cliente usa `chatLanguageModels.json` do perfil escolhido.
 - `doctor` lista versões, caminhos e presença de arquivos de chave sem imprimir os valores. Para caminhos personalizados, backups e restauração, veja [Clientes](docs/CLIENTS.md).

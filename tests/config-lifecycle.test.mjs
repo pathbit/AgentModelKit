@@ -35,7 +35,7 @@ async function listen(t, responder) {
 }
 
 function setupArgs(...suffix) {
-  return ["add", "-p", "opencode", "--tiers", "payg", "--key", "fixture", "--yes", ...suffix];
+  return ["add", "--targets", "vscode,copilot-cli", "-p", "opencode", "--tiers", "payg", "--key", "fixture", "--yes", ...suffix];
 }
 
 test("incremental add, replacement, default model, backups and no-op retry", async (t) => {
@@ -73,7 +73,7 @@ test("preflight failures preserve both clients and any existing key", async (t) 
   const key = path.join(env.COPILOT_HOME, "opencode.key");
   const keyBefore = fs.readFileSync(key);
   fs.writeFileSync(cp, "[bad JSON");
-  const alternative = ["add", "-p", "opencode", "--key", "replacement", "--models", "gpt-6.2-sol", "--yes"];
+  const alternative = ["add", "--targets", "vscode,copilot-cli", "-p", "opencode", "--key", "replacement", "--models", "gpt-6.2-sol", "--yes"];
   await assert.rejects(runCli(alternative, env), /Invalid JSON/);
   assert.deepEqual(fs.readFileSync(vs), vsBefore);
   assert.deepEqual(fs.readFileSync(key), keyBefore);
@@ -101,7 +101,7 @@ test("prune FreeLLMAPI uses full availability and preserves manual rows and exha
     res.end(JSON.stringify({ data }));
   });
 
-  const args = ["-p", "freellmapi", "--url", baseUrl, "--key", "fake"];
+  const args = ["--targets", "vscode,copilot-cli", "-p", "freellmapi", "--url", baseUrl, "--key", "fake"];
   await runCli(["add", ...args, "--freellmapi-mode", "ready", "--models", "auto,vendor/exhausted,vendor/retired", "--yes"], env);
   const vc = read(vs);
   vc[0].models.push({ id: "manual", url: baseUrl + "/chat/completions" });
@@ -142,14 +142,14 @@ test("manual provider supports opt-in curation and same-origin availability", as
     models: [model("vendor/large"), model("vendor/old")], powerfulIds: ["vendor/large"],
   };
   write(file, config);
-  await runCli(["add", "--provider-file", file, "--powerful", "--yes"], env);
+  await runCli(["add", "--targets", "vscode,copilot-cli", "--provider-file", file, "--powerful", "--yes"], env);
   assert.deepEqual(read(cp).models.map(({ id }) => id), ["vendor/large"]);
-  await runCli(["add", "--provider-file", file, "--models", "custom-test/vendor/old", "--yes"], env);
+  await runCli(["add", "--targets", "vscode,copilot-cli", "--provider-file", file, "--models", "custom-test/vendor/old", "--yes"], env);
   assert.deepEqual(read(cp).models.map(({ id }) => id), ["vendor/large", "vendor/old"]);
-  await runCli(["prune", "--provider-file", file, "--apply"], env);
+  await runCli(["prune", "--targets", "vscode,copilot-cli", "--provider-file", file, "--apply"], env);
   assert.deepEqual(read(cp).models.map(({ id }) => id), ["vendor/large"]);
   write(file, { ...config, modelsUrl: "https://example.com/models" });
-  await assert.rejects(runCli(["add", "--provider-file", file, "--yes"], env), /same origin/);
+  await assert.rejects(runCli(["add", "--targets", "vscode,copilot-cli", "--provider-file", file, "--yes"], env), /same origin/);
 });
 
 test("writes reject stale snapshots and active per-file locks before applying any changes", (t) => {
@@ -181,4 +181,55 @@ test("cache refresh refuses unsigned FreeLLMAPI and incomplete OpenCode payloads
     dir, source: "opencode", fetchImpl: async () => new Response(JSON.stringify({ data: [] })),
   }), /incomplete/);
   assert.equal(fs.existsSync(dir), false);
+});
+
+test("OpenCode project setup preserves manual models and uses credential references", async (t) => {
+  const { root, env } = profiles(t);
+  const project = path.join(root, "app");
+  const configDir = path.join(project, ".opencode");
+  const configFile = path.join(configDir, "opencode.json");
+  fs.mkdirSync(configDir, { recursive: true });
+  const manual = { models: { custom: { name: "Manual" } } };
+  write(configFile, { model: "manual/custom", providers: { manual } });
+  const args = ["--project-dir", project, "-p", "freellmapi", "--url", "http://127.0.0.1:1/v1"];
+  await runCli(["add", ...args, "--yes"], env);
+  const config = read(configFile);
+  const router = config.providers["agentmodelkit-freellmapi"];
+  assert.equal(router.settings.apiKey, "{env:FREELLMAPI_API_KEY}");
+  assert.equal(router.package, "@opencode/ai/providers/openai-compatible");
+  assert.deepEqual(Object.keys(router.models), ["auto"]);
+  assert.deepEqual(config.providers.manual, manual);
+  assert.equal(config.model, "manual/custom");
+  assert.equal(read(configFile + ".bak").model, "manual/custom");
+  assert.equal(fs.existsSync(env.COPILOT_HOME), false);
+  assert.equal(fs.existsSync(env.VSCODE_USER_DIR), false);
+  const result = await runCli(["add", ...args, "--yes"], env);
+  assert.equal(result[0].changed, false);
+});
+
+test("OpenCode pruning updates the project without touching its direct JSONC configuration", async (t) => {
+  const { root, env } = profiles(t);
+  let ids = ["keep", "old"];
+  const url = await listen(t, (_, res) => res.end(JSON.stringify({ data: ids.map((id) => ({ id })) })));
+  const manifest = path.join(root, "provider.json");
+  write(manifest, {
+    id: "custom-project", requiresKey: false, baseUrl: url, modelsUrl: `${url}/models`,
+    models: ids.map((id) => ({ id, maxInputTokens: 1024, maxOutputTokens: 128 })),
+  });
+  const directConfig = path.join(root, "opencode.jsonc");
+  const userConfig = '{ // preserve this comment\n  "model": "manual/keep",\n}\n';
+  fs.writeFileSync(directConfig, userConfig);
+  const args = ["--project-dir", root, "--provider-file", manifest];
+  await runCli(["add", ...args, "--dry-run"], env);
+  assert.equal(fs.existsSync(path.join(root, ".opencode")), false);
+  await runCli(["add", ...args, "--yes"], env);
+  ids = ["keep"];
+  const configFile = path.join(root, ".opencode", "opencode.json");
+  const modelMap = () => read(configFile).providers["agentmodelkit-custom-project"].models;
+  const [plan] = await runCli(["prune", ...args], env);
+  assert.deepEqual(plan.removed, ["agentmodelkit-custom-project/old"]);
+  assert.ok(modelMap().old);
+  await runCli(["prune", ...args, "--apply"], env);
+  assert.deepEqual(Object.keys(modelMap()), ["keep"]);
+  assert.equal(fs.readFileSync(directConfig, "utf8"), userConfig);
 });

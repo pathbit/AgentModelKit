@@ -1,7 +1,7 @@
 {
   "name": "@pathbit/agentmodelkit",
   "version": "0.0.1",
-  "description": "Cross-platform CLI to configure LLM providers, tiers, and API keys across coding editors and CLIs (VS Code, GitHub Copilot CLI, and extensible targets).",
+  "description": "Cross-platform CLI to configure LLM providers, tiers, and API keys across coding editors and CLIs (OpenCode, VS Code, and GitHub Copilot CLI).",
   "type": "module",
   "license": "MIT",
   "engines": {

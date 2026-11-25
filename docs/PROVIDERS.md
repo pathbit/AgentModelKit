@@ -6,7 +6,7 @@
 
 Use `--providers opencode` e selecione `--tiers payg`, `go` ou `all`. PAYG usa os créditos e a política do seu workspace. Go exige uma assinatura compatível. O catálogo também exibe os modelos Free, que o OpenCode restringe ao cliente OpenCode. Modelos de chat usam Chat Completions, Responses ou Messages conforme o catálogo. Para modelos com API nativa Gemini, os outros protocolos podem ser usados por meio da tradução do Console. [OpenCode Console e clientes externos](https://opencode.ai/docs/console/harnesses/).
 
-O OpenCode Go pede um identificador de sessão por conversa. Os campos de headers estáticos desses dois clientes permitem configurar um identificador estável por perfil. As conversas feitas com o mesmo perfil compartilham esse identificador. A compatibilidade com Go também depende das regras de sessão e das políticas da sua conta. [Requisitos e clientes validados do Go](https://opencode.ai/docs/console/go/#where-can-i-use-it).
+O OpenCode Go pede um identificador de sessão por conversa. O AgentModelKit usa headers estáticos com um identificador por perfil no VS Code e no Copilot CLI ou por projeto no OpenCode. As conversas no mesmo perfil ou projeto compartilham o identificador. A compatibilidade com Go também depende das regras de sessão e das políticas da sua conta. [Requisitos e clientes validados do Go](https://opencode.ai/docs/console/go/#where-can-i-use-it).
 
 A chave pode ser passada em `OPENCODE_API_KEY` ou `--key-file`. A lista de disponibilidade para remoção vem dos endpoints públicos do Go e do Console.
 

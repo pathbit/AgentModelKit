@@ -2,7 +2,7 @@
 
 [Português (Brasil)](README.md) · [Español](README.es.md) · [Documentation](docs/README.en.md) · [Examples](examples/README.en.md)
 
-AgentModelKit configures AI providers and models in **VS Code** and **GitHub Copilot CLI**. The CLI runs on Windows, macOS and Linux, accepts parameters for automation, and includes an interactive terminal picker. PathBit maintains it alongside [AgentDevKit](https://github.com/pathbit/AgentDevKit/blob/main/README.en.md).
+AgentModelKit configures AI providers and models in **OpenCode**, **VS Code** and **GitHub Copilot CLI**. The CLI runs on Windows, macOS and Linux, accepts parameters for automation, and includes an interactive terminal picker. PathBit maintains it alongside [AgentDevKit](https://github.com/pathbit/AgentDevKit/blob/main/README.en.md).
 
 CLI help and messages are in English.
 
@@ -12,7 +12,28 @@ CLI help and messages are in English.
 
 To **use** a configured model, you also need the chosen client. If you choose FreeLLMAPI, it must already be running. Your provider may require an account or a key. AgentModelKit can generate the configuration before the client is available.
 
-## Run without a permanent installation
+## Quick start
+
+1. With Node.js installed, open a terminal in your project directory.
+2. Run the command below. Use ↑↓ to navigate, **Space** to check agents, providers and models, and **Enter** to confirm.
+3. Open the selected client to use the model. OpenCode is the default and reads the project configuration from `.opencode/opencode.json`. VS Code and Copilot CLI use profile files.
+
+```bash
+npx --yes @pathbit/agentmodelkit
+```
+
+Until the first publication, run `node bin/agentmodelkit.mjs` from the local repository. To preview a parameterized configuration in this project, use `npx --yes @pathbit/agentmodelkit init --providers freellmapi --dry-run`.
+
+| To… | Quick option |
+| --- | --- |
+| Choose the project's agents | Run the wizard or pass `--targets opencode,vscode,copilot-cli`. |
+| Add a model or provider | Use `add --providers <id> --models <ids>` or `add --provider-file ./my-provider.json`. |
+| Load recommended models | Add `--powerful`. |
+| Refresh the catalog | Use `catalog update`. |
+| Check and remove missing models | Run `prune --providers <id>` and add `--apply` to apply. |
+| Review detected files and clients | Run `doctor`. |
+
+## Direct use and automation
 
 `npx` downloads the package to the npm cache and runs the CLI. The command configures client files and leaves installation of editors, extensions, providers, runtimes and models to you. A `--dry-run` leaves configuration, credentials and backups untouched.
 
@@ -36,6 +57,8 @@ npx --yes @pathbit/agentmodelkit add --providers opencode --tiers all --powerful
 ```
 
 `--yes` **after the package name** disables AgentModelKit prompts. `--yes` before the name confirms npm's cache prompt.
+
+To configure OpenCode in another directory, pass `--project-dir <directory>`. Without `--targets`, OpenCode is also the non-interactive default. Use `--targets all` to include all three clients.
 
 ## Add, replace and remove models
 
@@ -81,6 +104,7 @@ The package includes catalog files in `data/`. `catalog update` uses a cache out
 
 ## Credentials and clients
 
+- **OpenCode 2** reads models from `.opencode/opencode.json`. The key stays as a reference to the provider environment variable or the file passed with `--key-file`. Use `--no-save-key` to keep only the file you provided.
 - **Copilot CLI** uses `apiKey` in the named-provider `providers.json` schema. Use `--key-file`, `OPENCODE_API_KEY`, `FREELLMAPI_API_KEY` or the masked terminal prompt. `--no-save-key` skips the separate `.key` copy. Managed files and backups use restrictive permissions on POSIX systems.
 - **VS Code** uses a secret reference by default. Enter the key in the model manager. The key stays in VS Code secret storage. The client uses `chatLanguageModels.json` from the chosen profile.
 - `doctor` reports versions, paths and key-file presence. See [Clients](docs/CLIENTS.en.md) for custom paths, backups and restoration.

@@ -11,3 +11,4 @@
 - Compatibilidad con los protocolos Chat Completions, Responses y Messages.
 - Flujo de validación y publicación en npmjs y GitHub con aprobación del mantenedor.
 - Documentación en portugués de Brasil, inglés y español con la CLI en inglés.
+- Configuración nativa de OpenCode 2 por proyecto y selección de agentes con casillas.

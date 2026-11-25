@@ -4,7 +4,7 @@
 
 ## Primeira versão
 
-- Configuração do VS Code e Copilot CLI com seleção interativa ou parâmetros.
+- Configuração do OpenCode, do VS Code e do Copilot CLI com seleção interativa ou parâmetros.
 - Adição incremental, substituição explícita, remoção por disponibilidade e backups.
 - Catálogo incluído no pacote, atualização manual e rotina mensal de revisão.
 - Providers OpenCode, FreeLLMAPI e endpoints definidos por manifesto.

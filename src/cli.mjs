@@ -28,10 +28,11 @@ Usage: agentmodelkit [command] [options]
 
 Selection:
   -p, --providers <list>     opencode, freellmapi or a manual custom-* provider
-  -t, --targets <list>       vscode, copilot-cli or all
+  -t, --targets <list>       opencode (default), vscode, copilot-cli or all
   --tiers <list>             OpenCode: go, payg or all (free only for prune)
   --models <list>            Exact IDs or <group>/<model>
   --powerful                Adds curated highlights for the selected plans
+  --project-dir <path>      OpenCode project directory (defaults to the working directory)
   --provider-file <json>     Local provider manifest (repeatable)
   --replace                 Replaces the managed selection for the specified providers
   --live                    Checks availability before adding
@@ -66,7 +67,7 @@ const params = {
   "--url": "url", "--port": "port", "--freellmapi-mode": "freellmapiMode",
   "--models": "models", "--model-filter": "models", "--provider-file": "providerFiles",
   "-k": "key", "--key": "key", "--key-file": "keyFile",
-  "-m": "defaultModel", "--default-model": "defaultModel", "--source": "source",
+  "-m": "defaultModel", "--default-model": "defaultModel", "--source": "source", "--project-dir": "projectDir",
 };
 
 export function parseCliArgs(argv) {
@@ -132,14 +133,18 @@ function checkBinaryVersion(bin, env) {
   }
 }
 
-async function cmdDoctor(env) {
+async function cmdDoctor(env, projectDir) {
   console.log(`=== AgentModelKit Doctor ===\n${process.platform}/${process.arch} | Node.js ${process.version}`);
   console.log(`GitHub Copilot CLI: ${checkBinaryVersion("copilot", env)}`);
   console.log(`VS Code CLI: ${checkBinaryVersion("code", env)}`);
-  for (const location of [getCopilotProvidersPath(env), getVSCodeChatModelsPath(process.platform, env)]) {
+  console.log(`OpenCode CLI: ${checkBinaryVersion("opencode", env)}`);
+  const project = path.resolve(projectDir ?? process.cwd(), ".opencode", "opencode.json");
+  for (const location of [getCopilotProvidersPath(env), getVSCodeChatModelsPath(process.platform, env), project]) {
     try {
       const data = readJsonOrNull(location);
-      const count = Array.isArray(data) ? data.reduce((sum, block) => sum + (block.models?.length ?? 0), 0) : data?.models?.length;
+      const count = location === project
+        ? Object.values(data?.providers ?? {}).reduce((sum, provider) => sum + Object.keys(provider.models ?? {}).length, 0)
+        : Array.isArray(data) ? data.reduce((sum, block) => sum + (block.models?.length ?? 0), 0) : data?.models?.length;
       console.log(`${location}: ${data ? `${count ?? 0} model(s)` : "missing"}`);
     } catch (error) {
       console.log(`${location}: ${error.message}`);
@@ -174,8 +179,8 @@ async function cmdCatalog(opts, env) {
 async function gatherInteractiveConfig(opts) {
   if (!opts.targets) {
     opts.targets = (await promptMultiSelect({
-      title: "Which tools would you like to configure?",
-      options: listTargets().map((target) => ({ label: target.label, value: target.id, checked: true })),
+      title: "Which coding agents would you like to configure?",
+      options: listTargets().map((target) => ({ label: target.label, value: target.id, checked: target.id === "opencode" })),
     })).join(",");
   }
   if (!opts.providers && !opts.providerFiles.length) {
@@ -299,7 +304,7 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
   }
   if (opts.positional.length) throw new Error(`Unexpected argument: ${opts.positional[0]}`);
   if (opts.command === "list") return cmdList();
-  if (opts.command === "doctor") return cmdDoctor(env);
+  if (opts.command === "doctor") return cmdDoctor(env, opts.projectDir);
 
   const prune = opts.command === "prune";
   if (opts.inlineKey) throw new Error("Use the VS Code model manager to store the key in the editor. Copilot CLI receives apiKey automatically.");
@@ -316,6 +321,10 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
   const wizard = interactive && !opts.providers && !opts.providerFiles.length;
   if (wizard) await gatherInteractiveConfig(opts);
   const targetIds = normalizeTargets(opts.targets);
+  if (opts.projectDir && !targetIds.includes("opencode")) throw new Error("--project-dir requires the opencode target.");
+  if (opts.key && opts.noSaveKey && targetIds.includes("opencode")) {
+    throw new Error("Use --key-file or a provider environment variable with --no-save-key for OpenCode.");
+  }
   const providers = selectProviders(opts);
   if ((opts.key || opts.keyFile) && providers.length > 1) throw new Error("Use provider-specific environment variables when selecting multiple providers.");
   const providerIds = providers.map(({ id }) => id);
@@ -325,7 +334,7 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
   }
   if ((opts.url || opts.port || opts.freellmapiMode) && !providerIds.includes("freellmapi")) throw new Error("Select freellmapi to use server options.");
   const dryRun = Boolean(opts.dryRun || (prune && !opts.apply));
-  const config = { dryRun, apiKeys: new Map() };
+  const config = { dryRun, apiKeys: new Map(), projectKeyRefs: new Map(), projectDir: opts.projectDir };
   const keyWrites = [];
   const keys = new Map();
   async function getKey(provider, discovering = false) {
@@ -359,11 +368,19 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
     const required = targetIds.includes("copilot-cli") || opts.key || opts.keyFile;
     for (const { providerId } of resolved) {
       const provider = providers.find(({ id }) => id === providerId);
+      if (targetIds.includes("opencode") && provider.requiresKey) {
+        config.projectKeyRefs.set(providerId, `{env:${provider.envVar}}`);
+      }
       if (!required && !keys.has(providerId)) continue;
       const key = await getKey(provider);
       if (!key.apiKey) continue;
       config.apiKeys.set(providerId, key.apiKey);
       if (key.write) keyWrites.push(key.write);
+      if (targetIds.includes("opencode") && provider.requiresKey && (opts.keyFile || key.write)) {
+        const file = path.resolve(opts.keyFile ?? key.keyFilePath);
+        if (file.includes("}")) throw new Error("OpenCode key file paths cannot contain a closing brace.");
+        config.projectKeyRefs.set(providerId, `{file:${file}}`);
+      }
     }
   }
   const plans = targetIds.map((id) => TARGETS[id].plan(resolved, config, env));
@@ -384,6 +401,9 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
   if (!dryRun && targetIds.includes("vscode") && resolved.some((provider) =>
     provider.groups.some((group) => group.vscodeSecretId))) {
     console.log("[vscode] Use Chat: Manage Language Models to enter keys in the editor.");
+  }
+  if (!dryRun && targetIds.includes("opencode") && !prune) {
+    console.log("[opencode] Open this project in OpenCode and choose an AgentModelKit model with /models.");
   }
   if (defaultModel) console.log(`${dryRun ? "Planned default model" : "Default model set"}: ${defaultModel.selected}`);
   return results;

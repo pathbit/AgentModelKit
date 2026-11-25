@@ -41,14 +41,20 @@ try {
   const npmCommand = (command, ...args) => run(["exec", "--yes", "--offline", "--package", artifact, "--", command, ...args], { cwd, env });
   assert.match(npmCommand("agentmodelkit", "catalog", "list"), /FreeLLMAPI/);
   assert.match(npmCommand("amk", "--help"), /^AgentModelKit.*\n\nUsage: agentmodelkit/m);
-  assert.match(npmCommand("agentmodelkit", "add", "--provider-file", manifest, "--dry-run"), /dry run/);
+  assert.match(npmCommand("agentmodelkit", "add", "--provider-file", manifest, "--targets", "all", "--dry-run"), /dry run/);
   assert.equal(fs.existsSync(env.COPILOT_HOME), false);
   assert.equal(fs.existsSync(env.VSCODE_USER_DIR), false);
-  assert.match(npmCommand("agentmodelkit", "add", "--provider-file", manifest, "--yes"), /updated/);
+  assert.deepEqual(fs.readdirSync(cwd), []);
+  assert.match(npmCommand("agentmodelkit", "add", "--provider-file", manifest, "--yes"), /\[opencode\] updated/);
+  assert.equal(fs.existsSync(env.COPILOT_HOME), false);
+  assert.equal(fs.existsSync(env.VSCODE_USER_DIR), false);
+  assert.match(npmCommand("agentmodelkit", "add", "--provider-file", manifest, "--targets", "all", "--yes"), /updated/);
   const config = JSON.parse(fs.readFileSync(env.COPILOT_PROVIDERS_CONFIG, "utf8"));
   assert.equal(config.models[0].id, "qwen3:8b");
   assert.equal(config.providers[0].apiKey, undefined);
-  assert.deepEqual(fs.readdirSync(cwd), []);
+  assert.deepEqual(fs.readdirSync(cwd), [".opencode"]);
+  const project = JSON.parse(fs.readFileSync(path.join(cwd, ".opencode", "opencode.json"), "utf8"));
+  assert.ok(project.providers["agentmodelkit-custom-ollama"].models["qwen3:8b"]);
   if (process.env.AGENTMODELKIT_ARTIFACT_DIR) {
     const dir = path.resolve(process.env.AGENTMODELKIT_ARTIFACT_DIR);
     fs.mkdirSync(dir, { recursive: true });

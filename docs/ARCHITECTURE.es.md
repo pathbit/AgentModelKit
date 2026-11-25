@@ -9,7 +9,7 @@
 - [src/targets](../src/targets) convierte los grupos a la configuración de cada cliente, conserva las entradas manuales y modifica solo los modelos seleccionados o administrados.
 - [src/utils/json.mjs](../src/utils/json.mjs) prepara archivos temporales, detecta cambios concurrentes mediante bloqueos, crea copias y renombra los archivos. Si falla la escritura, intenta restaurar los archivos ya modificados.
 
-Copilot CLI agrupa las conexiones por protocolo. VS Code registra el endpoint en cada modelo y guarda el registro de propiedad en un archivo adyacente. AgentModelKit reconoce las marcas de las versiones preliminares y permite una migración gradual.
+OpenCode usa `.opencode/opencode.json` y un registro adyacente de modelos administrados. Copilot CLI agrupa las conexiones por protocolo. VS Code registra el endpoint en cada modelo y guarda el registro de propiedad en un archivo adyacente. AgentModelKit reconoce las marcas de las versiones preliminares y permite una migración gradual.
 
 Para eliminar modelos se usa una lista completa y validada del origen, independiente de la selección configurable. Una lista parcial, vacía o no válida interrumpe la operación.
 

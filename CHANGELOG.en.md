@@ -11,3 +11,4 @@
 - Chat Completions, Responses and Messages protocol support.
 - Validation and publishing workflow for npmjs and GitHub with maintainer approval.
 - Brazilian Portuguese, English and Spanish documentation with an English CLI.
+- Native per-project OpenCode 2 configuration and checkbox selection for coding agents.
