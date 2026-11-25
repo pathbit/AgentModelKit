@@ -2,7 +2,7 @@
 
 [Português (Brasil)](CHANGELOG.md) · [Español](CHANGELOG.es.md)
 
-## 0.0.1 in preparation
+## 0.0.1
 
 - Runtime dependency-free CLI that configures VS Code and GitHub Copilot CLI through `npx`.
 - OpenCode Go/PAYG, FreeLLMAPI and local provider manifests.
