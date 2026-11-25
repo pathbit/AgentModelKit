@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "amk-pack-"));
 const npm = process.env.npm_execpath;
@@ -15,7 +16,7 @@ try {
   const files = new Set(pack.files.map((file) => file.path));
   for (const required of [
     "data/opencode-catalog.json", "data/freellmapi-catalog.json", "data/awesome-free-providers.json",
-    "data/curation.json", "bin/agentmodelkit.mjs", "examples/provider.local.example.json", "README.md",
+    "data/curation.json", "src/agentmodelkit.mjs", "examples/provider.local.example.json", "README.md",
   ]) assert.ok(files.has(required), `Missing ${required} in the tarball`);
   for (const file of files) {
     if (!file.endsWith(".md") || /\.(en|es)\.md$/.test(file)) continue;
@@ -24,7 +25,7 @@ try {
       assert.ok(files.has(translation), `Missing ${translation} in the tarball`);
     }
   }
-  assert.ok(![...files].some((name) => /(?:\.bak|\.key|\.tmp|\.tgz)$|(?:^|\/)\.env/.test(name)));
+  assert.ok(![...files].some((name) => /(?:\.bak|\.key|\.tmp|\.tgz)$|(?:^|\/)\.env|^(?:bin|tests)\//.test(name)));
   const artifact = path.join(root, pack.filename);
   const cwd = path.join(root, "consumer");
   fs.mkdirSync(cwd);
@@ -38,9 +39,14 @@ try {
     AGENTMODELKIT_CATALOG_DIR: path.join(root, "catalogs"),
     npm_config_cache: path.join(root, "npm-cache"),
   };
+  for (const variable of Object.keys(env)) {
+    if (variable.toLowerCase() === "npm_config_package") delete env[variable];
+  }
   const npmCommand = (command, ...args) => run(["exec", "--yes", "--offline", "--package", artifact, "--", command, ...args], { cwd, env });
   assert.match(npmCommand("agentmodelkit", "catalog", "list"), /FreeLLMAPI/);
   assert.match(npmCommand("amk", "--help"), /^AgentModelKit.*\n\nUsage: agentmodelkit/m);
+  const inferred = run(["exec", "--yes", "--offline", "--", pathToFileURL(artifact).href, "--help"], { cwd, env });
+  assert.match(inferred, /Usage: agentmodelkit/);
   assert.match(npmCommand("agentmodelkit", "add", "--provider-file", manifest, "--targets", "all", "--dry-run"), /dry run/);
   assert.equal(fs.existsSync(env.COPILOT_HOME), false);
   assert.equal(fs.existsSync(env.VSCODE_USER_DIR), false);
@@ -70,9 +76,11 @@ try {
   const fixtureKey = path.join(root, "package-test.key");
   fs.writeFileSync(fixtureKey, "package-fixture-key\n", { mode: 0o600 });
   const openCodeProviderOutput = npmCommand(
-    "agentmodelkit", "opencode", "vscode", "--tiers", "payg", "--key-file", fixtureKey, "--yes",
+    "agentmodelkit", "opencode", "vscode", "copilot", "--tiers", "payg", "--key-file", fixtureKey, "--yes",
   );
   assert.match(openCodeProviderOutput, /\[vscode\] updated/);
+  assert.match(openCodeProviderOutput, /\[copilot-cli\] updated/);
+  assert.doesNotMatch(openCodeProviderOutput, /\[opencode\]/);
   const freeLLMProviderOutput = npmCommand(
     "agentmodelkit", "freellmapi", "copilot", "--connection", "local", "--url", "http://127.0.0.1:3001/v1",
     "--key-file", fixtureKey, "--yes",

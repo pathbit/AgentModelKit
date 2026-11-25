@@ -204,20 +204,22 @@ export async function promptMultiSelect({
       if (options[i].checked) defaultNums.push(String(i + 1));
       output.write(`  ${i + 1}) ${mark} ${options[i].label}\n`);
     }
-    const answer = await promptText(
-      `Enter comma-separated numbers [Enter = ${defaultNums.join(",") || "all"}]: `,
-      defaultNums.join(","),
-      { input, output }
-    );
-    if (!answer) {
-      return options.map((o) => o.value);
+    const defaults = defaultNums.join(",");
+    while (true) {
+      const answer = await promptText(
+        defaults ? `Enter comma-separated numbers [Enter = ${defaults}]: ` : "Enter comma-separated numbers: ",
+        defaults,
+        { input, output }
+      );
+      const parts = answer ? answer.split(",").map((item) => item.trim()) : [];
+      const indices = [...new Set(parts.map(Number))];
+      if (parts.every((item) => /^\d+$/.test(item)) &&
+          indices.every((value) => value >= 1 && value <= options.length) &&
+          indices.length >= minSelected) {
+        return indices.map((value) => options[value - 1].value);
+      }
+      output.write(`Select at least ${minSelected} item(s) using the displayed numbers.\n`);
     }
-    const indices = answer
-      .split(",")
-      .map((s) => Number.parseInt(s.trim(), 10) - 1)
-      .filter((idx) => Number.isInteger(idx) && idx >= 0 && idx < options.length);
-    const unique = [...new Set(indices)].map((idx) => options[idx].value);
-    return unique.length >= minSelected ? unique : options.filter((o) => o.checked).map((o) => o.value);
   }
 
   let cursor = 0;
@@ -235,7 +237,8 @@ export async function promptMultiSelect({
     render(warning) {
       ensureCursorVisible();
       const lines = [
-        `${ANSI.bold}${title}${ANSI.reset} ${ANSI.dim}(${selected.size}/${options.length} checked | ↑↓ move, Space toggle, a all, Enter confirm)${ANSI.reset}`,
+        `${ANSI.bold}${title}${ANSI.reset} (${selected.size}/${options.length} selected)`,
+        `${ANSI.dim}↑↓ Move · Space Toggle · A Toggle all · Enter Confirm${ANSI.reset}`,
       ];
       if (subtitle) lines.push(`${ANSI.dim}${subtitle}${ANSI.reset}`);
 
@@ -283,6 +286,10 @@ export async function promptMultiSelect({
     },
   });
 
-  output.write(`${ANSI.green}✔${ANSI.reset} ${title}: ${values.length} selected\n`);
+  output.write(`${ANSI.green}✔${ANSI.reset} ${values.length} selected\n`);
+  if (values.length <= 3) {
+    const labels = options.filter(({ value }) => values.includes(value)).map(({ label }) => label);
+    for (const label of labels) output.write(`  ${label}\n`);
+  }
   return values;
 }
