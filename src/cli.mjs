@@ -217,7 +217,7 @@ async function gatherInteractiveConfig(opts) {
   }
 }
 
-async function resolveFreeLLMConnection(opts, env, guided, providerCommand) {
+async function resolveFreeLLMConnection(opts, env, { guided = false, requireAddress = true } = {}) {
   const connection = opts.connection ?? (guided && !opts.url && !opts.port ? await promptSelect({
     title: "Where is FreeLLMAPI running?",
     options: [
@@ -234,7 +234,7 @@ async function resolveFreeLLMConnection(opts, env, guided, providerCommand) {
     if (protocol !== "https:") throw new Error("Use an HTTPS URL for remote FreeLLMAPI.");
     return { baseUrl, remote: true };
   }
-  if (guided || providerCommand || connection === "local") {
+  if (requireAddress || connection === "local") {
     let address = opts.url || env.FREELLMAPI_URL?.trim() || env.FREELLMAPI_BASE_URL?.trim();
     if (!address && !opts.port && guided) {
       address = await promptText("FreeLLMAPI server URL (required): ", "", { secret: true });
@@ -280,7 +280,7 @@ async function buildPruneRules(providers, opts, env) {
     }
     const keyOptions = { ...opts, noSaveKey: true, nonInteractive: true };
     if (provider.id === "freellmapi") {
-      const { baseUrl, remote } = await resolveFreeLLMConnection(opts, env);
+      const { baseUrl, remote } = await resolveFreeLLMConnection(opts, env, { requireAddress: false });
       const credential = remote ? remoteFreeLLMCredentials(baseUrl) : provider;
       const tokenUrl = isFreeLLMTokenUrl(baseUrl);
       const { apiKey } = tokenUrl ? {} : await resolveProviderApiKey(credential, keyOptions, env);
@@ -383,7 +383,7 @@ export async function runCli(argv = process.argv.slice(2), env = process.env) {
     projectUrlRefs: new Map(), projectDir: opts.projectDir,
   };
   const freeLLM = !prune && providerIds.includes("freellmapi")
-    ? await resolveFreeLLMConnection(opts, env, guided, providerCommand)
+    ? await resolveFreeLLMConnection(opts, env, { guided })
     : null;
   const freeLLMUrl = freeLLM?.baseUrl;
   const freeLLMToken = freeLLMUrl && isFreeLLMTokenUrl(freeLLMUrl);

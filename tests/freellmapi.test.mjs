@@ -349,6 +349,7 @@ test("named FreeLLMAPI setup requires the local URL and installs bearer credenti
   const serverUrl = "http://localhost:3001/v1";
   const args = ["freellmapi", "--targets", "all", "--project-dir", root, "--yes"];
   await assert.rejects(runCli(args, env), /Provide the FreeLLMAPI server URL/);
+  await assert.rejects(runCli(["add", "--providers", "freellmapi", "--yes"], env), /Provide the FreeLLMAPI server URL/);
   await assert.rejects(runCli([...args, "--url", serverUrl], env), /Missing API key/);
   assert.deepEqual(fs.readdirSync(root), []);
   await runCli(["freellmapi", "vscode", "--connection", "local", "--yes", "--dry-run"], { ...env, FREELLMAPI_URL: serverUrl });
