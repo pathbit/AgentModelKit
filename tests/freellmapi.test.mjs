@@ -341,3 +341,66 @@ test("an agent URL configures the three clients without a separate key and suppo
   assert.equal(openCode().settings.apiKey, undefined);
   assert.equal(openCode().settings.baseURL, reference);
 });
+
+test("named FreeLLMAPI setup requires the local URL and installs bearer credentials for every client", async (t) => {
+  const { root, env, copilotHome, vscodeUser } = makeTempEnv();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const auth = "local-fixture-key";
+  const serverUrl = "http://localhost:3001/v1";
+  const args = ["freellmapi", "--targets", "all", "--project-dir", root, "--yes"];
+  await assert.rejects(runCli(args, env), /Provide the FreeLLMAPI server URL/);
+  await assert.rejects(runCli(["add", "--providers", "freellmapi", "--yes"], env), /Provide the FreeLLMAPI server URL/);
+  await assert.rejects(runCli([...args, "--url", serverUrl], env), /Missing API key/);
+  assert.deepEqual(fs.readdirSync(root), []);
+  await runCli(["freellmapi", "vscode", "--connection", "local", "--yes", "--dry-run"], { ...env, FREELLMAPI_URL: serverUrl });
+  assert.deepEqual(fs.readdirSync(root), []);
+
+  await runCli([...args, "--connection", "local", "--url", serverUrl], { ...env, FREELLMAPI_API_KEY: auth });
+  const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
+  const [block] = readJson(path.join(vscodeUser, "chatLanguageModels.json"));
+  assert.equal(block.apiKey, undefined);
+  assert.equal(block.models[0].url, serverUrl + "/chat/completions");
+  assert.equal(block.models[0].requestHeaders.Authorization, `Bearer ${auth}`);
+  const copilot = readJson(path.join(copilotHome, "providers.json"));
+  assert.equal(copilot.providers[0].baseUrl, serverUrl);
+  assert.equal(copilot.providers[0].apiKey, auth);
+  const project = readJson(path.join(root, ".opencode", "opencode.json"));
+  const router = project.providers["agentmodelkit-freellmapi"];
+  assert.equal(router.settings.baseURL, serverUrl);
+  assert.deepEqual(Object.keys(router.models), ["auto"]);
+  assert.equal(fs.readFileSync(router.settings.apiKey.slice(6, -1), "utf8").trim(), auth);
+
+  const newUrl = "http://localhost:5000/v1";
+  await runCli(["add", "--providers", "freellmapi", "--targets", "vscode", "--url", newUrl, "--yes"], env);
+  const [updated] = readJson(path.join(vscodeUser, "chatLanguageModels.json"));
+  assert.equal(updated.models[0].url, newUrl + "/chat/completions");
+  assert.equal(updated.models[0].requestHeaders?.Authorization, undefined);
+});
+
+test("named remote FreeLLMAPI chooses its configured address and keeps local credentials separate", async (t) => {
+  const { root, env, copilotHome, vscodeUser } = makeTempEnv();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  delete env.FREELLMAPI_REMOTE_URL;
+  delete env.FREELLMAPI_REMOTE_API_KEY;
+  const args = ["freellmapi", "vscode", "--connection", "remote", "--yes"];
+  await assert.rejects(runCli(args, env), /Set FREELLMAPI_REMOTE_URL/);
+  await assert.rejects(runCli([...args, "--url", "https://api.freellmapi.co/v1"], env), /serves the catalog/);
+  await assert.rejects(runCli([...args, "--url", "http://llm.example.com/v1"], env), /Use an HTTPS URL/);
+  const localKey = "local-saved-fixture-key";
+  fs.mkdirSync(copilotHome);
+  fs.writeFileSync(path.join(copilotHome, "freellmapi.key"), localKey);
+  const remoteUrl = "https://llm.example.com/v1";
+  const remoteEnv = { ...env, FREELLMAPI_API_KEY: localKey, FREELLMAPI_REMOTE_URL: remoteUrl };
+  await assert.rejects(runCli(args, remoteEnv), /Missing API key.*FREELLMAPI_REMOTE_API_KEY/);
+  assert.equal(fs.existsSync(vscodeUser), false);
+  const remoteKey = "remote-fixture-key";
+  await runCli(args, { ...remoteEnv, FREELLMAPI_REMOTE_API_KEY: remoteKey });
+  const [vscode] = JSON.parse(fs.readFileSync(path.join(vscodeUser, "chatLanguageModels.json"), "utf8"));
+  assert.equal(vscode.models[0].url, remoteUrl + "/chat/completions");
+  assert.equal(vscode.models[0].requestHeaders.Authorization, `Bearer ${remoteKey}`);
+  assert.equal(fs.readFileSync(path.join(copilotHome, "freellmapi.key"), "utf8"), localKey);
+  await assert.rejects(runCli([...args, "--url", "https://other.example.com/v1"], remoteEnv), /Missing API key/);
+  await runCli(["freellmapi", "copilot", "--connection", "remote", "--yes"], remoteEnv);
+  const copilot = JSON.parse(fs.readFileSync(path.join(copilotHome, "providers.json"), "utf8"));
+  assert.equal(copilot.providers[0].apiKey, remoteKey);
+});

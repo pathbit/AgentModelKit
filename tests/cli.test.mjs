@@ -200,3 +200,48 @@ test("parseCliArgs and runCli configure targets non-interactively and support --
   assert.match(doctorOutput, /Detected FreeLLMAPI URL/);
   assert.match(doctorOutput, /opencode.*OK/);
 });
+
+test("provider commands accept a client alias and reject competing selections", () => {
+  assert.deepEqual(parseCliArgs(["opencode", "vscode"]), {
+    command: "opencode", providerFiles: [], positional: [], providers: "opencode", targets: "vscode",
+  });
+  assert.equal(parseCliArgs(["freellmapi", "copilot", "--connection", "local"]).targets, "copilot");
+  assert.equal(parseCliArgs(["freellmapi", "--targets", "all"]).targets, "all");
+  assert.throws(() => parseCliArgs(["opencode", "vscode", "--targets", "copilot"]), /one client/);
+  assert.throws(() => parseCliArgs(["freellmapi", "--providers", "opencode"]), /already selects/);
+});
+
+test("named OpenCode setup authenticates VS Code and Copilot without replacing unrelated settings", async (t) => {
+  const { root, env, vscodeUser, copilotHome } = makeTempEnv();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const auth = "opencode-fixture-key";
+  const vsFile = path.join(vscodeUser, "chatLanguageModels.json");
+  const cpFile = path.join(copilotHome, "providers.json");
+  const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
+  await assert.rejects(runCli(["opencode", "vscode", "--yes"], env), /Missing API key/);
+  await runCli(["opencode", "vscode", "--yes", "--dry-run"], env);
+  assert.deepEqual(fs.readdirSync(root), []);
+
+  await runCli(["opencode", "vscode", "--tiers", "all", "--yes"], { ...env, OPENCODE_API_KEY: auth });
+  const blocks = readJson(vsFile);
+  assert.equal(blocks.length, 2);
+  assert.equal(fs.existsSync(cpFile), false);
+  for (const group of blocks) {
+    assert.equal(group.apiKey, undefined);
+    for (const model of group.models) {
+      assert.equal(new URL(model.url).hostname, "opencode.ai");
+      assert.equal(model.requestHeaders.Authorization, model.apiType === "messages" ? undefined : `Bearer ${auth}`);
+      assert.equal(model.requestHeaders["x-api-key"], model.apiType === "messages" ? auth : undefined);
+      if (group.name === "OpenCode Go") assert.match(model.requestHeaders["x-opencode-session"], /^ses_/);
+    }
+  }
+  assert.equal(fs.readFileSync(`${vsFile}.agentmodelkit.json`, "utf8").includes(auth), false);
+  if (process.platform !== "win32") assert.equal(fs.statSync(vsFile).mode & 0o777, 0o600);
+
+  await runCli(["opencode", "copilot", "--tiers", "payg", "--yes"], env);
+  assert.ok(readJson(cpFile).providers.every((provider) => provider.apiKey === auth));
+  assert.deepEqual(readJson(vsFile), blocks);
+
+  await runCli(["add", "--providers", "opencode", "--targets", "vscode", "--tiers", "all", "--yes"], env);
+  assert.deepEqual(readJson(vsFile), blocks);
+});

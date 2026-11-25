@@ -12,11 +12,11 @@ Puede proporcionar la clave en `OPENCODE_API_KEY` o con `--key-file`. La lista d
 
 ## FreeLLMAPI
 
-En el panel del servidor FreeLLMAPI, abra **Keys → Agents** y copie la URL de agente. Péguela en el asistente o indíquela con `--url`. Una URL con token revocable tiene el formato `https://llm.example.com/v1/t/EXAMPLE_TOKEN`. AgentModelKit también acepta la URL copiada con `/chat/completions` al final. El token en la URL autentica el acceso. El modo predeterminado configura `auto`.
+Ejecute `freellmapi` y seleccione los clientes. **Local** es la primera opción. Indique la dirección del servidor, por ejemplo `http://127.0.0.1:3001/v1` para Docker o la URL que muestra la aplicación Desktop. Use la clave unificada del panel. Para automatizar, indique `--url` o `FREELLMAPI_URL` e introduzca la clave con `FREELLMAPI_API_KEY` o `--key-file`.
 
-Trate la URL de agente como una credencial. Péguela en el asistente, que oculta la entrada. Para automatizar, defina `FREELLMAPI_URL` en un entorno privado. OpenCode usa una referencia a un archivo privado fuera del proyecto. VS Code y Copilot CLI guardan la URL en sus archivos de perfil. Mantenga privados estos archivos y sus copias.
+**Remoto** usa la URL HTTPS de su propia instancia, definida en `FREELLMAPI_REMOTE_URL` o indicada con `--url`. La opción usa `FREELLMAPI_REMOTE_API_KEY` o solicita la clave de esa instancia. Use `--connection remote` en scripts. El dominio público `api.freellmapi.co` sirve el catálogo. Consulte la [guía oficial de despliegue](https://github.com/tashfeenahmed/freellmapi/blob/main/docs/en/install/01-install.md) para exponer su instancia.
 
-Para usar una dirección normal como `http://localhost:3001/v1`, indique la clave unificada con `FREELLMAPI_API_KEY` o `--key-file`. El asistente también puede detectar el puerto local. Los modos avanzados siguen disponibles.
+El panel **Keys → Agents** también genera una URL con token revocable, como `https://llm.example.com/v1/t/EXAMPLE_TOKEN`. La URL autentica el acceso por sí sola. El asistente oculta la entrada. OpenCode usa una referencia a un archivo privado. VS Code y Copilot CLI guardan la URL en los archivos de perfil.
 
 - `auto` registra el enrutador predeterminado.
 - `strategies` registra las estrategias virtuales incluidas en `data/`.

@@ -12,11 +12,11 @@ A chave pode ser passada em `OPENCODE_API_KEY` ou `--key-file`. A lista de dispo
 
 ## FreeLLMAPI
 
-No painel do servidor FreeLLMAPI, abra **Keys → Agents** e copie a URL de agente. Cole no assistente ou passe com `--url`. Uma URL com token revogável tem o formato `https://llm.example.com/v1/t/EXAMPLE_TOKEN`. O AgentModelKit também aceita a URL copiada com `/chat/completions`. O token na URL autentica o acesso. O modo padrão configura `auto`.
+Execute `freellmapi` e escolha os clientes. **Local** é a primeira opção. Informe o endereço do servidor, por exemplo `http://127.0.0.1:3001/v1` no Docker ou a URL exibida no aplicativo Desktop. Use a chave unificada do painel. Para automação, informe `--url` ou `FREELLMAPI_URL` e passe a chave com `FREELLMAPI_API_KEY` ou `--key-file`.
 
-A URL de agente é uma credencial. Prefira colar no assistente, que oculta a digitação. Para automação, use `FREELLMAPI_URL` em um ambiente privado. O OpenCode referencia um arquivo privado fora do projeto. O VS Code e o Copilot CLI armazenam a URL nos arquivos de perfil. Mantenha esses arquivos e seus backups privados.
+**Remoto** usa a URL HTTPS de uma instância sua, definida em `FREELLMAPI_REMOTE_URL` ou fornecida com `--url`. A opção usa `FREELLMAPI_REMOTE_API_KEY` ou pede a chave dessa instância. Para selecionar o modo em scripts, use `--connection remote`. O domínio público `api.freellmapi.co` serve o catálogo. Consulte o [guia oficial de implantação](https://github.com/tashfeenahmed/freellmapi/blob/main/docs/en/install/01-install.md) para expor sua instância.
 
-Para usar o endereço comum do servidor, como `http://localhost:3001/v1`, configure a chave unificada com `FREELLMAPI_API_KEY` ou `--key-file`. O assistente também pode detectar a porta local. Os modos avançados continuam disponíveis.
+O painel **Keys → Agents** também gera uma URL com token revogável, no formato `https://llm.example.com/v1/t/EXAMPLE_TOKEN`. Essa URL autentica por conta própria. O assistente oculta o que for colado. O OpenCode guarda uma referência a um arquivo privado. O VS Code e o Copilot CLI guardam a URL nos arquivos de perfil.
 
 - `auto` registra o roteador único.
 - `strategies` registra as estratégias virtuais incluídas em `data/`.

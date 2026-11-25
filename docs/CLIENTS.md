@@ -31,6 +31,8 @@ Os grupos usam o provider **Custom Endpoint**. Abra **Chat: Manage Language Mode
 
 O arquivo adjacente `chatLanguageModels.json.agentmodelkit.json` registra quais modelos e endpoints foram gerados pelo AgentModelKit. Guarde-o junto com o arquivo de configuração. Ao restaurar manualmente um backup do VS Code, restaure também a versão correspondente do registro quando existir.
 
+No fluxo guiado, a chave digitada autentica os modelos selecionados por cabeçalhos no perfil privado. As chaves também podem vir das variáveis do provider ou de `--key-file`. Trate o arquivo e os backups como credenciais. Com o fluxo `add --providers ... --targets vscode`, você também pode guardar a chave diretamente no armazenamento de segredos do editor.
+
 ## Backups e simulação
 
 Use `--dry-run` para pré-visualizar. Em cada alteração de um arquivo existente, o AgentModelKit preserva seu conteúdo anterior. O primeiro backup usa `<arquivo>.bak`. Os seguintes recebem um identificador no nome. Feche o cliente antes de restaurar um backup e use os caminhos exibidos na execução que deseja desfazer. Arquivos de configuração existentes devem conter JSON válido. Um arquivo inválido bloqueia a alteração dos clientes envolvidos.
