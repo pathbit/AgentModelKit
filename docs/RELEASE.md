@@ -20,7 +20,7 @@ O segundo comando usa o tarball público anexado ao GitHub Release. Para acessar
 1. Mantenha as alterações de código na `main` e confirme a matriz de CI para o commit candidato.
 2. Rode `npm run check`, `npm test` e `npm run test:package`. Teste a versão local com as versões dos clientes que pretende suportar.
 3. Solicite aprovação explícita do mantenedor para criar e enviar a tag. A tag deve corresponder a `v` mais a versão de `package.json`. A primeira será `v0.0.1`.
-4. Configure o ambiente GitHub Actions `npmjs` para exigir aprovação do mantenedor. Para criar o pacote npm na primeira publicação, use um token granular e temporário com acesso de publicação ao escopo `@pathbit`, salvo em `NPMJS_BOOTSTRAP_TOKEN` nesse ambiente. Depois da primeira versão, configure o Trusted Publisher no npm para o repositório `pathbit/AgentModelKit`, workflow `release.yml` e ambiente `npmjs`. Remova o segredo de bootstrap após verificar OIDC. [Configuração oficial de Trusted Publishing](https://docs.npmjs.com/trusted-publishers/).
+4. Configure o ambiente GitHub Actions `npmjs` para exigir aprovação do mantenedor. Para criar o pacote npm na primeira publicação, use um token granular e temporário com acesso de publicação ao escopo `@pathbit`, salvo em `NPMJS_BOOTSTRAP_TOKEN` nesse ambiente. Na `v0.0.1`, o workflow também aceita `NPMJS_TOKEN` do repositório quando ele tem permissão para criar o pacote. Depois da primeira versão, configure o Trusted Publisher no npm para o repositório `pathbit/AgentModelKit`, workflow `release.yml` e ambiente `npmjs`. Remova o segredo de bootstrap após verificar OIDC. [Configuração oficial de Trusted Publishing](https://docs.npmjs.com/trusted-publishers/).
 
 ## Validação da tag e destinos
 

@@ -71,7 +71,7 @@ jobs:
       - name: Publish or verify same npmjs package
         working-directory: ${{ runner.temp }}/release
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_BOOTSTRAP_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_BOOTSTRAP_TOKEN || (github.ref_name == 'v0.0.1' && secrets.NPMJS_TOKEN) || '' }}
         run: |
           expected="$(cat integrity.txt)"
           if actual="$(npm view "@pathbit/agentmodelkit@${GITHUB_REF_NAME#v}" dist.integrity)"; then
