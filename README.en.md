@@ -120,4 +120,21 @@ npm run catalog:update -- --dry-run
 
 Reviewed changes go to `main`. The maintainer approves the release tag after testing. The [release process](docs/RELEASE.en.md) validates the tag, tests the package and uses the same tarball for npmjs, GitHub Packages and GitHub Releases.
 
-[MIT](LICENSE) © PathBit
+---
+
+## Contributing and Branch Protection
+
+- Submit changes to the `main` branch through pull requests and check that CI passes before requesting review.
+- See the [contribution guide](CONTRIBUTING.en.md). For bugs or requests to support new providers, open an [issue](https://github.com/pathbit/AgentModelKit/issues).
+
+---
+
+## 📄 License
+
+The project uses the MIT License. Read the full text in [LICENSE](LICENSE).
+
+You may use, modify, and distribute the software, including commercially, provided that copies include the copyright and license notices. The software comes without warranty.
+
+---
+
+Developed with ❤️ by [Pathbit](https://pathbit.co/)

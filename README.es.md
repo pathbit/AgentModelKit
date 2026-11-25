@@ -120,4 +120,21 @@ npm run catalog:update -- --dry-run
 
 Los cambios revisados se incorporan a `main`. El mantenedor aprueba la etiqueta de lanzamiento después de las pruebas. El [proceso de publicación](docs/RELEASE.es.md) valida la etiqueta, prueba el paquete y usa el mismo archivo en npmjs, GitHub Packages y GitHub Releases.
 
-[MIT](LICENSE) © PathBit
+---
+
+## Contribuciones y protección de ramas
+
+- Envía los cambios a la rama `main` mediante pull requests y verifica que la CI pase antes de solicitar una revisión.
+- Consulta la [guía de contribución](CONTRIBUTING.es.md). Para errores o solicitudes de nuevos proveedores, abre una [incidencia](https://github.com/pathbit/AgentModelKit/issues).
+
+---
+
+## 📄 Licencia
+
+El proyecto utiliza la licencia MIT. Lee el texto completo en [LICENSE](LICENSE).
+
+Puedes usar, modificar y distribuir el software, incluso con fines comerciales, siempre que las copias incluyan los avisos de derechos de autor y de licencia. El software se proporciona sin garantía.
+
+---
+
+Developed with ❤️ by [Pathbit](https://pathbit.co/)
