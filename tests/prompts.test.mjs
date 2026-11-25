@@ -126,3 +126,30 @@ test("secret prompt disables terminal echo before showing the prompt", async () 
   assert.doesNotMatch(getOutput(), /hidden-fixture/);
   assert.equal(input.isRaw, false);
 });
+
+test("numeric client selection waits for a valid explicit selection", async () => {
+  const { input, output, getOutput } = createMockStreams();
+  const prompt = "Enter comma-separated numbers:";
+  const answers = ["\n", "2bad,3\n", "2,3,2\n"];
+  let answered = 0;
+  output.on("data", (chunk) => {
+    if (chunk.toString().includes(prompt)) {
+      const answer = answers[answered++];
+      if (answer !== undefined) setImmediate(() => input.write(answer));
+    }
+  });
+  const result = await promptMultiSelect({
+    title: "Choose clients",
+    options: [
+      { label: "OpenCode", value: "opencode" },
+      { label: "VS Code", value: "vscode" },
+      { label: "Copilot CLI", value: "copilot-cli" },
+    ],
+    input,
+    output,
+    isRawSupported: false,
+  });
+  assert.deepEqual(result, ["vscode", "copilot-cli"]);
+  assert.equal(answered, 3);
+  assert.match(getOutput(), /Select at least 1 item/);
+});

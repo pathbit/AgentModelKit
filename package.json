@@ -8,17 +8,15 @@
     "node": ">=18"
   },
   "bin": {
-    "agentmodelkit": "./bin/agentmodelkit.mjs",
-    "amk": "./bin/agentmodelkit.mjs"
+    "agentmodelkit": "./src/agentmodelkit.mjs",
+    "amk": "./src/agentmodelkit.mjs"
   },
   "files": [
-    "bin/",
     "src/",
     "data/*.json",
     "data/README*.md",
     "docs/",
     "examples/",
-    "tests/README*.md",
     "README.md",
     "README.en.md",
     "README.es.md",
@@ -30,13 +28,13 @@
     "access": "public"
   },
   "scripts": {
-    "cli": "node bin/agentmodelkit.mjs",
-    "setup": "node bin/agentmodelkit.mjs init",
-    "setup:copilot": "node bin/agentmodelkit.mjs copilot",
-    "setup:vscode": "node bin/agentmodelkit.mjs vscode",
-    "doctor": "node bin/agentmodelkit.mjs doctor",
+    "cli": "node src/agentmodelkit.mjs",
+    "setup": "node src/agentmodelkit.mjs init",
+    "setup:copilot": "node src/agentmodelkit.mjs copilot",
+    "setup:vscode": "node src/agentmodelkit.mjs vscode",
+    "doctor": "node src/agentmodelkit.mjs doctor",
     "check": "node scripts/check.mjs",
-    "test": "node --test",
+    "test": "node scripts/test.mjs",
     "catalog:update": "node scripts/update-catalogs.mjs",
     "test:package": "node scripts/check-package.mjs"
   },

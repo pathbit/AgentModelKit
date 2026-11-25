@@ -2,7 +2,7 @@
 
 [Português (Brasil)](CHANGELOG.md) · [English](CHANGELOG.en.md)
 
-## 0.0.1 en preparación
+## 0.0.1
 
 - CLI sin dependencias de ejecución para configurar VS Code y GitHub Copilot CLI mediante `npx`.
 - OpenCode Go/PAYG, FreeLLMAPI y proveedores definidos por manifiestos locales.

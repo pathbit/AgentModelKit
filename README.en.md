@@ -14,22 +14,26 @@ To **use** a configured model, you also need the chosen client. If you choose Fr
 
 ## Quick start
 
-1. With Node.js installed, open a terminal in the local AgentModelKit checkout.
-2. Run `opencode` or `freellmapi` to choose the provider. Use **↑↓**, **Space** and **Enter** to choose where to configure it.
-3. Choose an OpenCode plan, or choose **Local** for FreeLLMAPI and enter its server URL. Paste the token when prompted.
+Open a terminal in your project directory with Node.js and npm. Use the public GitHub preview while the first version awaits publication:
 
 ```bash
-node bin/agentmodelkit.mjs opencode
-node bin/agentmodelkit.mjs freellmapi
+# Open the OpenCode client menu.
+npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/main" opencode
+
+# Configure OpenCode endpoints in VS Code and Copilot CLI together.
+npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/main" opencode vscode copilot
+
+# Configure local FreeLLMAPI in VS Code and the project's OpenCode client.
+npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/main" freellmapi vscode opencode --url http://127.0.0.1:3001/v1
 ```
 
-To open a specific client directly, append `vscode`, `copilot` or `opencode`. For example, `opencode vscode` configures OpenCode endpoints in VS Code. Without a subcommand, the wizard starts with the provider list.
+Use **↑↓** to navigate, **Space** to mark each client and **Enter** to confirm the selection. Press **A** to select all or clear the selection. The wizard asks for a plan or connection and for the token when needed.
 
-Use `--project-dir` to configure OpenCode in another project. Commands using the npm package name become available after publication.
+After the first publication, use `npx --yes @pathbit/agentmodelkit` as the command prefix. Add `--project-dir <path>` to configure OpenCode in another project.
 
 | To… | Quick option |
 | --- | --- |
-| Choose the project's agents | Run the wizard or pass `--targets opencode,vscode,copilot-cli`. |
+| Choose the project's clients | Mark several in the wizard, pass `vscode copilot` after the provider, or use `--targets all`. |
 | Add a model or provider | Use `add --providers <id> --models <ids>` or `add --provider-file ./my-provider.json`. |
 | Load recommended models | Add `--powerful`. |
 | Refresh the catalog | Use `catalog update`. |
@@ -40,18 +44,17 @@ Use `--project-dir` to configure OpenCode in another project. Commands using the
 
 `npx` downloads the package to the npm cache and runs the CLI. The command configures client files and leaves installation of editors, extensions, providers, runtimes and models to you. A `--dry-run` leaves configuration, credentials and backups untouched.
 
-**While the package is in local development**, run the examples from this repository by replacing `npx --yes @pathbit/agentmodelkit` with `node bin/agentmodelkit.mjs`. The package name will be available on npm after the first release.
+The examples below use the npmjs package name after the first publication. To run them now, replace `@pathbit/agentmodelkit` with the GitHub URL from the quick start.
 
 ```bash
-# Configure OpenCode endpoints in VS Code or Copilot CLI.
-npx --yes @pathbit/agentmodelkit opencode vscode
-npx --yes @pathbit/agentmodelkit opencode copilot
+# Configure OpenCode in VS Code and Copilot CLI.
+npx --yes @pathbit/agentmodelkit opencode vscode copilot
 
 # Configure local FreeLLMAPI in VS Code (the wizard asks for the unified key).
 npx --yes @pathbit/agentmodelkit freellmapi vscode --connection local --url http://127.0.0.1:3001/v1
 
-# Preview the local FreeLLMAPI setup in the project's OpenCode client.
-npx --yes @pathbit/agentmodelkit freellmapi opencode --url http://127.0.0.1:3001/v1 --dry-run
+# Preview local FreeLLMAPI setup in all three clients.
+npx --yes @pathbit/agentmodelkit freellmapi --targets all --url http://127.0.0.1:3001/v1 --dry-run
 
 # Preview adding the curated models from Go and Console.
 npx --yes @pathbit/agentmodelkit add --providers opencode --tiers all --powerful --dry-run

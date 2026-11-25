@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 import {
   getCopilotDir,
@@ -185,14 +186,14 @@ test("parseCliArgs and runCli configure targets non-interactively and support --
   assert.equal(fs.existsSync(path.join(copilotHome, "providers.json")), true);
   assert.equal(readSavedKey("opencode", env), "oc_real_123");
 
-  const cliOutput = execFileSync(process.execPath, ["bin/agentmodelkit.mjs", "list"], {
+  const cliOutput = execFileSync(process.execPath, ["src/agentmodelkit.mjs", "list"], {
     encoding: "utf8",
     env,
   });
   assert.match(cliOutput, /opencode/);
   assert.match(cliOutput, /freellmapi/);
 
-  const doctorOutput = execFileSync(process.execPath, ["bin/agentmodelkit.mjs", "doctor"], {
+  const doctorOutput = execFileSync(process.execPath, ["src/agentmodelkit.mjs", "doctor"], {
     encoding: "utf8",
     env,
   });
@@ -207,7 +208,9 @@ test("provider commands accept a client alias and reject competing selections", 
   });
   assert.equal(parseCliArgs(["freellmapi", "copilot", "--connection", "local"]).targets, "copilot");
   assert.equal(parseCliArgs(["freellmapi", "--targets", "all"]).targets, "all");
-  assert.throws(() => parseCliArgs(["opencode", "vscode", "--targets", "copilot"]), /one client/);
+  assert.equal(parseCliArgs(["opencode", "vscode", "copilot"]).targets, "vscode,copilot");
+  assert.equal(parseCliArgs(["freellmapi", "opencode,vscode", "copilot"]).targets, "opencode,vscode,copilot");
+  assert.throws(() => parseCliArgs(["opencode", "vscode", "--targets", "copilot"]), /either positional clients or --targets/);
   assert.throws(() => parseCliArgs(["freellmapi", "--providers", "opencode"]), /already selects/);
 });
 
@@ -244,4 +247,60 @@ test("named OpenCode setup authenticates VS Code and Copilot without replacing u
 
   await runCli(["add", "--providers", "opencode", "--targets", "vscode", "--tiers", "all", "--yes"], env);
   assert.deepEqual(readJson(vsFile), blocks);
+});
+
+test("one provider command applies two explicitly selected clients and keeps the third untouched", async (t) => {
+  const { root, env, vscodeUser, copilotHome } = makeTempEnv();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const results = await runCli([
+    "opencode", "vscode", "copilot", "--tiers", "payg", "--models", "gpt-6.2-sol", "--yes",
+  ], { ...env, OPENCODE_API_KEY: "fixture-multi-client" });
+  assert.deepEqual(results.map(({ targetId }) => targetId), ["vscode", "copilot-cli"]);
+  assert.ok(fs.existsSync(path.join(vscodeUser, "chatLanguageModels.json")));
+  assert.ok(fs.existsSync(path.join(copilotHome, "providers.json")));
+  assert.deepEqual(fs.readdirSync(root).sort(), [".copilot", "vscode-user"]);
+});
+
+test("the provider wizard marks two clients independently with Space", { timeout: 10000 }, async (t) => {
+  const { root, env, vscodeUser, copilotHome } = makeTempEnv();
+  const cli = pathToFileURL(path.resolve("src/cli.mjs")).href;
+  const entry = `
+    import { runCli } from ${JSON.stringify(cli)};
+    Object.assign(process.stdin, {
+      isTTY: true, isRaw: false, setRawMode(mode) { this.isRaw = mode; },
+    });
+    process.stdout.isTTY = true;
+    await runCli(process.argv.slice(1));
+  `;
+  const child = spawn(process.execPath, [
+    "--input-type=module", "--eval", entry, "--",
+    "freellmapi", "--url", "http://127.0.0.1:3001/v1",
+  ], { cwd: root, env: { ...env, FREELLMAPI_API_KEY: "fixture-interactive" } });
+  t.after(() => {
+    if (child.exitCode === null && child.signalCode === null) child.kill();
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+  let transcript = "";
+  let errorOutput = "";
+  let responded = false;
+  child.stdout.on("data", (chunk) => {
+    transcript += chunk;
+    if (!responded && transcript.includes("Select one or more clients")) {
+      responded = true;
+      child.stdin.end("\x1b[B \x1b[B \r");
+    }
+  });
+  child.stderr.on("data", (chunk) => { errorOutput += chunk; });
+  const status = await new Promise((resolve, reject) => {
+    child.once("close", resolve);
+    child.once("error", reject);
+  });
+  assert.equal(status, 0, errorOutput);
+  assert.match(transcript, /0\/3 selected/);
+  assert.match(transcript, /2\/3 selected/);
+  assert.match(transcript, /\[vscode\] updated/);
+  assert.match(transcript, /\[copilot-cli\] updated/);
+  assert.ok(fs.existsSync(path.join(vscodeUser, "chatLanguageModels.json")));
+  assert.ok(fs.existsSync(path.join(copilotHome, "providers.json")));
+  assert.equal(fs.existsSync(path.join(root, ".opencode")), false);
 });
