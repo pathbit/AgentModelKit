@@ -1,28 +1,25 @@
 # AgentModelKit
 
 [Português (Brasil)](README.md) · [Español](README.es.md) · [Documentation](docs/README.en.md) · [Examples](examples/README.en.md)
+· [Package on npmjs][npm-package] · [GitHub releases][github-releases]
 
 AgentModelKit configures AI providers and models in **OpenCode**, **VS Code** and **GitHub Copilot CLI**. The CLI runs on Windows, macOS and Linux, accepts parameters for automation, and includes an interactive terminal picker. PathBit maintains it alongside [AgentDevKit](https://github.com/pathbit/AgentDevKit/blob/main/README.en.md).
 
 CLI help and messages are in English.
 
-## Required prerequisite
+## Prerequisites
 
-**Install only [Node.js](https://nodejs.org/en/download)** to run AgentModelKit. The minimum version is 18. Use a current LTS release whenever possible. Node.js includes `npm` and `npx`. Check them with `node -v` and `npx --version`.
+**Required.** Install [Node.js](https://nodejs.org/en/download) to run AgentModelKit. The minimum version is 18. Use a current LTS release whenever possible. Node.js includes `npm` and `npx`. Check them with `node -v` and `npx --version`.
 
 To **use** a configured model, you also need the chosen client. If you choose FreeLLMAPI, it must already be running. Your provider may require an account or a key. AgentModelKit can generate the configuration before the client is available.
 
+Git is required when running from the source on GitHub. [Download Git][git-download]
+
 ## Quick start
 
-Open a terminal in your project directory with Node.js and npm. To configure VS Code and Copilot CLI together, run the public GitHub Release tarball.
+Open a terminal in your project folder. npmjs is the default way to run the kit. Use `@latest` for the newest stable release. Specify the version number to run the same version every time.
 
-```bash
-npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz opencode vscode copilot
-```
-
-When the package is accessible in your configured npm registry, use `@latest` to follow the latest stable release or specify a version number to pin it.
-
-```bash
+```console
 npx --yes @pathbit/agentmodelkit@latest opencode
 npx --yes @pathbit/agentmodelkit@0.0.1 opencode vscode copilot
 ```
@@ -40,11 +37,29 @@ Add `--project-dir <path>` to configure OpenCode in another project.
 | Check and remove missing models | Run `prune --providers <id>` and add `--apply` to apply. |
 | Review detected files and clients | Run `doctor`. |
 
+## Other ways to run
+
+### From a GitHub release
+
+Run the `.tgz` for a published version. It requires Node.js and its bundled `npx`.
+
+```console
+npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz opencode
+```
+
+### From the source on GitHub
+
+With [Git installed][git-download], run the development version from the `main` branch.
+
+```console
+npx --yes "git+https://github.com/pathbit/AgentModelKit.git#main" opencode
+```
+
 ## Direct use and automation
 
 `npx` downloads the package to the npm cache and runs the CLI. The command configures client files and leaves installation of editors, extensions, providers, runtimes and models to you. A `--dry-run` leaves configuration, credentials and backups untouched.
 
-The examples below use the npmjs package name. To run the same commands from the GitHub Release, replace `@pathbit/agentmodelkit` with the tarball URL from the quick start.
+To run the examples from GitHub, replace `@pathbit/agentmodelkit` with the tarball or Git URL shown in [Other ways to run](#other-ways-to-run).
 
 ```bash
 # Configure OpenCode in VS Code and Copilot CLI.
@@ -156,6 +171,10 @@ The guide also covers updates and diagnostics. [AgentDevKit quick start](https:/
 The project uses the MIT License. Read the full text in [LICENSE](LICENSE).
 
 You may use, modify, and distribute the software, including commercially, provided that copies include the copyright and license notices. The software comes without warranty.
+
+[npm-package]: https://www.npmjs.com/package/@pathbit/agentmodelkit
+[github-releases]: https://github.com/pathbit/AgentModelKit/releases
+[git-download]: https://git-scm.com/install/
 
 ---
 

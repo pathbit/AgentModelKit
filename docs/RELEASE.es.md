@@ -6,7 +6,7 @@ El paquete de este proyecto es `@pathbit/agentmodelkit`. Tiene su propio ciclo d
 
 ## Ejecutar el paquete publicado
 
-Use `@latest` para ejecutar la versión estable más reciente. Indique un número como `@0.0.1` para repetir un comando con la misma versión.
+Use el [paquete público en npmjs](https://www.npmjs.com/package/@pathbit/agentmodelkit) como opción principal. Use `@latest` para recibir la versión estable más reciente o indique el número para ejecutar siempre la misma versión.
 
 ```bash
 npx --yes @pathbit/agentmodelkit@latest opencode
@@ -15,6 +15,8 @@ npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/path
 ```
 
 El comando con la URL de GitHub usa el tarball público adjunto al lanzamiento. Para usar `@latest` o una versión exacta desde GitHub Packages, defina `@pathbit:registry=https://npm.pkg.github.com` en el entorno npm donde ejecutará el comando y configure la autenticación. [Autenticación en GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-to-github-packages).
+
+Para ejecutar el código de `main` con Git, consulte [Otras formas de ejecutar](../README.es.md#otras-formas-de-ejecutar).
 
 ## Antes de la primera publicación
 

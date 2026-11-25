@@ -1,28 +1,25 @@
 # AgentModelKit
 
 [English](README.en.md) · [Español](README.es.md) · [Documentação](docs/README.md) · [Exemplos](examples/README.md)
+· [Pacote no npmjs][npm-package] · [Versões no GitHub][github-releases]
 
 O AgentModelKit configura providers e modelos de IA no **OpenCode**, no **VS Code** e no **GitHub Copilot CLI**. O CLI roda no Windows, macOS e Linux, aceita parâmetros para automação e oferece um seletor no terminal. O projeto é mantido pela PathBit junto com o [AgentDevKit](https://github.com/pathbit/AgentDevKit).
 
 A ajuda e as mensagens da CLI são exibidas em inglês.
 
-## Pré-requisito obrigatório
+## Pré-requisitos
 
-**Instale somente o [Node.js](https://nodejs.org/pt/download)** para executar o AgentModelKit. A versão mínima é a 18. Use uma versão LTS atual sempre que possível. A distribuição do Node.js já inclui `npm` e `npx`. Confira com `node -v` e `npx --version`.
+**Obrigatório.** Instale o [Node.js](https://nodejs.org/pt/download) para executar o AgentModelKit. A versão mínima é a 18. Use uma versão LTS atual sempre que possível. A distribuição do Node.js já inclui `npm` e `npx`. Confira com `node -v` e `npx --version`.
 
 Para **usar** os modelos, você também precisa ter o cliente escolhido disponível. O FreeLLMAPI precisa estar rodando se for seu provider. Uma conta ou chave pode ser exigida pelo provider. A CLI gera a configuração mesmo que o cliente ainda esteja ausente.
 
+Git é necessário para executar direto do código no GitHub. [Baixar Git][git-download]
+
 ## Início rápido
 
-Abra o terminal na pasta do projeto com Node.js e npm. Para configurar VS Code e Copilot CLI juntos, execute o tarball público do GitHub Release.
+Abra um terminal na pasta do projeto. O npmjs é o caminho principal. Use `@latest` para receber a versão estável mais recente. Informe o número para executar sempre a mesma versão.
 
-```bash
-npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz opencode vscode copilot
-```
-
-Quando o pacote estiver acessível no registro npm configurado, use `@latest` para acompanhar a versão estável mais recente ou informe o número da versão para fixá-la.
-
-```bash
+```console
 npx --yes @pathbit/agentmodelkit@latest opencode
 npx --yes @pathbit/agentmodelkit@0.0.1 opencode vscode copilot
 ```
@@ -40,11 +37,29 @@ Para configurar o OpenCode em outra pasta, acrescente `--project-dir <pasta>`.
 | Conferir e remover modelos ausentes | Execute `prune --providers <id>` e acrescente `--apply` para aplicar. |
 | Ver os arquivos e clientes detectados | Execute `doctor`. |
 
+## Outras formas de executar
+
+### Pelo GitHub Release
+
+Use o arquivo `.tgz` de uma versão publicada. Node.js e o `npx` que vem com ele bastam.
+
+```console
+npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz opencode
+```
+
+### Direto do código no GitHub
+
+Com [Git instalado][git-download], execute a versão em desenvolvimento da branch `main`.
+
+```console
+npx --yes "git+https://github.com/pathbit/AgentModelKit.git#main" opencode
+```
+
 ## Uso direto e automação
 
 O `npx` baixa o pacote no cache do npm e executa a CLI. O comando configura os arquivos dos clientes e não instala editores, extensões, providers, runtimes ou modelos. Uma operação `--dry-run` não grava configuração, credenciais nem backups.
 
-Os exemplos abaixo usam o nome do pacote no npmjs. Para executar os mesmos comandos pelo GitHub Release, substitua `@pathbit/agentmodelkit` pela URL do tarball no início rápido.
+Para usar os exemplos pelo GitHub, substitua `@pathbit/agentmodelkit` pelo tarball ou pela URL Git mostrados em [Outras formas de executar](#outras-formas-de-executar).
 
 ```bash
 # Configura o OpenCode no VS Code e no Copilot CLI.
@@ -156,6 +171,10 @@ O guia também cobre atualização e diagnóstico. [Início rápido do AgentDevK
 O projeto usa a Licença MIT. Leia o texto completo em [LICENSE](LICENSE).
 
 A licença permite usar, modificar e distribuir o software, inclusive para fins comerciais, desde que os avisos de direitos autorais e da licença acompanhem as cópias. O software é fornecido sem garantia.
+
+[npm-package]: https://www.npmjs.com/package/@pathbit/agentmodelkit
+[github-releases]: https://github.com/pathbit/AgentModelKit/releases
+[git-download]: https://git-scm.com/install/
 
 ---
 
