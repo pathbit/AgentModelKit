@@ -39,6 +39,9 @@ try {
     AGENTMODELKIT_CATALOG_DIR: path.join(root, "catalogs"),
     npm_config_cache: path.join(root, "npm-cache"),
   };
+  for (const variable of Object.keys(env)) {
+    if (variable.toLowerCase() === "npm_config_package") delete env[variable];
+  }
   const npmCommand = (command, ...args) => run(["exec", "--yes", "--offline", "--package", artifact, "--", command, ...args], { cwd, env });
   assert.match(npmCommand("agentmodelkit", "catalog", "list"), /FreeLLMAPI/);
   assert.match(npmCommand("amk", "--help"), /^AgentModelKit.*\n\nUsage: agentmodelkit/m);
