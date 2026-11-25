@@ -12,11 +12,11 @@ Provide the key in `OPENCODE_API_KEY` or with `--key-file`. The availability lis
 
 ## FreeLLMAPI
 
-In the FreeLLMAPI server dashboard, open **Keys → Agents** and copy the agent URL. Paste it into the wizard or pass it with `--url`. A revocable token URL has the form `https://llm.example.com/v1/t/EXAMPLE_TOKEN`. AgentModelKit also accepts the copied URL ending in `/chat/completions`. The token in the URL authenticates access. The default mode configures `auto`.
+Run `freellmapi` and select the clients. **Local** is the first option. Enter the server address, such as `http://127.0.0.1:3001/v1` for Docker or the URL displayed by the Desktop app. Use the unified key from the dashboard. In automation, set `--url` or `FREELLMAPI_URL` and supply the key with `FREELLMAPI_API_KEY` or `--key-file`.
 
-Treat the agent URL as a credential. Prefer pasting it into the wizard, which hides the input. For automation, set `FREELLMAPI_URL` in a private environment. OpenCode references a private file outside the project. VS Code and Copilot CLI store the URL in their profile files. Keep those files and their backups private.
+**Remote** uses your own deployment's HTTPS URL, set in `FREELLMAPI_REMOTE_URL` or passed with `--url`. The wizard uses `FREELLMAPI_REMOTE_API_KEY` or asks for that deployment's key. Use `--connection remote` in scripts. The public `api.freellmapi.co` domain serves the catalog. Follow the [official deployment guide](https://github.com/tashfeenahmed/freellmapi/blob/main/docs/en/install/01-install.md) to expose your own instance.
 
-For a standard server address such as `http://localhost:3001/v1`, set the unified key using `FREELLMAPI_API_KEY` or `--key-file`. The wizard can also detect the local port. Advanced modes remain available.
+The **Keys → Agents** dashboard can also create a revocable token URL such as `https://llm.example.com/v1/t/EXAMPLE_TOKEN`. The URL itself authenticates access. The wizard hides pasted input. OpenCode references a private file, while VS Code and Copilot CLI store the URL in their profile files.
 
 - `auto` registers the default router.
 - `strategies` registers the virtual strategies bundled in `data/`.

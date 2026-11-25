@@ -55,6 +55,15 @@ export function isFreeLLMTokenUrl(baseUrl) {
   return /\/v1\/t\/[A-Za-z0-9_-]+$/.test(new URL(baseUrl).pathname);
 }
 
+export function remoteFreeLLMCredentials(baseUrl) {
+  const digest = createHash("sha256").update(baseUrl).digest("hex");
+  return {
+    ...freellmapiProvider,
+    keyFile: `freellmapi-remote-${digest}.key`,
+    envVar: "FREELLMAPI_REMOTE_API_KEY",
+  };
+}
+
 export function freeLLMProjectUrlFile(baseUrl, env) {
   const digest = createHash("sha256").update(baseUrl).digest("hex");
   const file = path.resolve(getKeyFilePath(`freellmapi-url-${digest}.key`, env));

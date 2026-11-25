@@ -67,6 +67,18 @@ try {
   assert.match(router.settings.baseURL, /^\{file:.*\}$/);
   assert.equal(fs.readFileSync(router.settings.baseURL.slice(6, -1), "utf8").trim(), agentUrl);
   assert.doesNotMatch(openCodeText, /EXAMPLE_TOKEN/);
+  const fixtureKey = path.join(root, "package-test.key");
+  fs.writeFileSync(fixtureKey, "package-fixture-key\n", { mode: 0o600 });
+  const openCodeProviderOutput = npmCommand(
+    "agentmodelkit", "opencode", "vscode", "--tiers", "payg", "--key-file", fixtureKey, "--yes",
+  );
+  assert.match(openCodeProviderOutput, /\[vscode\] updated/);
+  const freeLLMProviderOutput = npmCommand(
+    "agentmodelkit", "freellmapi", "copilot", "--connection", "local", "--url", "http://127.0.0.1:3001/v1",
+    "--key-file", fixtureKey, "--yes",
+  );
+  assert.match(freeLLMProviderOutput, /\[copilot-cli\] updated/);
+  assert.doesNotMatch(openCodeProviderOutput + freeLLMProviderOutput, /package-fixture-key/);
   assert.deepEqual(fs.readdirSync(cwd), [".opencode"]);
   if (process.env.AGENTMODELKIT_ARTIFACT_DIR) {
     const dir = path.resolve(process.env.AGENTMODELKIT_ARTIFACT_DIR);

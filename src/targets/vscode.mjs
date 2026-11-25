@@ -7,13 +7,14 @@ import { applyTarget, assertConfig, shouldRemove } from "./config.mjs";
 const LEGACY_OPENCODE = "+++++++ CONFIGURACAO OPENCODE +++++++";
 const LEGACY_FREE = "+++++++ CONFIGURACAO FREELLMAPI +++++++";
 const RESERVED_HEADERS = new Set(["authorization", "api-key", "content-type"]);
+const MANAGED_AUTH_HEADERS = new Set(["authorization", "x-api-key"]);
 const apiPath = { "chat-completions": "chat/completions", responses: "responses", messages: "messages" };
 
 export function modelEndpoint(group, model) {
   return `${model.baseUrl || group.baseUrl}/${apiPath[model.apiType || group.apiType || "chat-completions"]}`;
 }
 
-function toVSCodeModel(model, group) {
+function toVSCodeModel(model, group, apiKey) {
   const entry = {
     id: model.id,
     name: model.name,
@@ -31,16 +32,25 @@ function toVSCodeModel(model, group) {
     entry.requestHeaders = Object.fromEntries(Object.entries(group.vscodeHeaders)
       .filter(([key]) => !RESERVED_HEADERS.has(key.toLowerCase())));
   }
+  if (apiKey) {
+    entry.requestHeaders = {
+      ...entry.requestHeaders,
+      ...(entry.apiType === "messages" ? { "x-api-key": apiKey } : { Authorization: `Bearer ${apiKey}` }),
+    };
+  }
   return entry;
 }
 
-export function buildVSCodeBlocks(resolvedProviders) {
-  return resolvedProviders.flatMap((resolved) => resolved.groups.map((group) => ({
-    name: group.label,
-    vendor: "customendpoint",
-    ...(group.vscodeSecretId ? { apiKey: `\${input:${group.vscodeSecretId}}` } : {}),
-    models: group.models.map((model) => toVSCodeModel(model, group)),
-  })));
+export function buildVSCodeBlocks(resolvedProviders, apiKeys = new Map()) {
+  return resolvedProviders.flatMap(({ providerId, groups }) => {
+    const apiKey = apiKeys.get(providerId);
+    return groups.map((group) => ({
+      name: group.label,
+      vendor: "customendpoint",
+      ...(!apiKey && group.vscodeSecretId ? { apiKey: `\${input:${group.vscodeSecretId}}` } : {}),
+      models: group.models.map((model) => toVSCodeModel(model, group, apiKey)),
+    }));
+  });
 }
 
 function legacyOwner(block, separators) {
@@ -80,7 +90,7 @@ export const vscodeTarget = {
       typeof item.providerId === "string" && typeof item.groupId === "string" &&
       Array.isArray(item.models) && item.models.every((model) => typeof model?.id === "string" && typeof model.url === "string")), stateFile);
 
-    const incoming = buildVSCodeBlocks(resolvedProviders);
+    const incoming = buildVSCodeBlocks(resolvedProviders, opts.vscodeApiKeys);
     const pending = new Map(incoming.map((block) => [block.name, block]));
     const newOwners = new Map(resolvedProviders.flatMap((resolved) => resolved.groups.map((group) =>
       [group.label, { providerId: resolved.providerId, groupId: group.id }])));
@@ -116,7 +126,13 @@ export const vscodeTarget = {
         if (replacement) {
           if (!managed) throw new Error(`Manual model with the same ID in VS Code: ${block.name}/${model.id}`);
           const { supportsReasoningEffort, thinking, requestHeaders, statefulResponses, ...otherFields } = model;
-          models.push({ ...otherFields, ...replacement });
+          const headers = { ...replacement.requestHeaders };
+          if (model.url === replacement.url && !opts.vscodeApiKeys?.has(owner.providerId)) {
+            for (const [name, value] of Object.entries(requestHeaders ?? {})) {
+              if (MANAGED_AUTH_HEADERS.has(name.toLowerCase())) headers[name] = value;
+            }
+          }
+          models.push({ ...otherFields, ...replacement, ...(Object.keys(headers).length ? { requestHeaders: headers } : {}) });
           owned.push({ id: replacement.id, url: replacement.url });
           incomingModels.delete(model.id);
         } else if (managed && shouldRemove(opts, owner, model.id, model.url)) {
@@ -133,7 +149,11 @@ export const vscodeTarget = {
       if (legacy && !oldOwners.has(block.name) && (next || removed.some((item) => item.startsWith(`${block.name}/`)))) migrated = true;
       // Preserve credentials a user already configured in the editor by default.
       const { apiKey: existingKey, ...fields } = block;
-      const apiKey = next && !/^\$\{input:[^}]+\}$/.test(existingKey ?? "") ? next.apiKey : existingKey;
+      const allModelsHaveHeaders = models.length > 0 && models.every(({ requestHeaders }) =>
+        Object.keys(requestHeaders ?? {}).some((name) => MANAGED_AUTH_HEADERS.has(name.toLowerCase())));
+      let apiKey = existingKey;
+      if (next && allModelsHaveHeaders) apiKey = undefined;
+      else if (next && !/^\$\{input:[^}]+\}$/.test(existingKey ?? "")) apiKey = next.apiKey;
       if (models.length || !block.models?.length) merged.push({ ...fields, ...(apiKey ? { apiKey } : {}), models });
       if (owned.length) state.push({ name: block.name, providerId: owner.providerId, groupId: owner.groupId, models: owned });
       pending.delete(block.name);

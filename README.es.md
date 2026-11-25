@@ -15,16 +15,17 @@ Para **usar** un modelo configurado, también necesita el cliente que elija. Si 
 ## Inicio rápido
 
 1. Con Node.js instalado, abra una terminal en la carpeta del proyecto.
-2. Ejecute el comando siguiente. Use ↑↓ para desplazarse, **Espacio** para marcar agentes, proveedores y modelos y **Enter** para confirmar.
-3. Abra el cliente elegido para usar el modelo. OpenCode es el destino predeterminado y lee la configuración del proyecto en `.opencode/opencode.json`. VS Code y Copilot CLI usan sus archivos de perfil.
+2. Ejecute `opencode` o `freellmapi` para elegir el proveedor. Use **↑↓**, **Espacio** y **Enter** para elegir dónde configurarlo.
+3. Elija un plan de OpenCode, o elija **Local** para FreeLLMAPI e indique la URL del servidor. Pegue el token cuando el asistente lo solicite.
 
 ```bash
-npx --yes @pathbit/agentmodelkit
+npx --yes @pathbit/agentmodelkit opencode
+npx --yes @pathbit/agentmodelkit freellmapi
 ```
 
-Para configurar FreeLLMAPI, copie la **URL de agente** en **Keys → Agents** en el panel del servidor. Pegue la URL en el asistente. El cliente seleccionado recibe el modelo `auto` y la URL autentica la conexión.
+Para abrir un cliente directamente, añada `vscode`, `copilot` u `opencode`. Por ejemplo, `opencode vscode` configura los endpoints de OpenCode en VS Code. Sin subcomando, el asistente empieza con la lista de proveedores.
 
-Hasta la primera publicación, ejecute `node bin/agentmodelkit.mjs` desde el repositorio local.
+Hasta la primera publicación, sustituya `npx --yes @pathbit/agentmodelkit` por `node bin/agentmodelkit.mjs` desde el checkout local. Use `--project-dir` para configurar OpenCode en otro proyecto.
 
 | Para… | Opción rápida |
 | --- | --- |
@@ -42,17 +43,15 @@ Hasta la primera publicación, ejecute `node bin/agentmodelkit.mjs` desde el rep
 **Mientras el paquete esté en desarrollo local**, ejecute los ejemplos desde este repositorio sustituyendo `npx --yes @pathbit/agentmodelkit` por `node bin/agentmodelkit.mjs`. El nombre del paquete estará disponible en npm después de la primera publicación.
 
 ```bash
-# Seleccione clientes, proveedores y modelos de forma interactiva.
-npx --yes @pathbit/agentmodelkit
+# Configure los endpoints de OpenCode en VS Code o Copilot CLI.
+npx --yes @pathbit/agentmodelkit opencode vscode
+npx --yes @pathbit/agentmodelkit opencode copilot
 
-# Configure OpenCode con una URL de agente de FreeLLMAPI (token de ejemplo).
-npx --yes @pathbit/agentmodelkit --url 'https://llm.example.com/v1/t/EXAMPLE_TOKEN'
+# Configure FreeLLMAPI local en VS Code (el asistente solicita la clave unificada).
+npx --yes @pathbit/agentmodelkit freellmapi vscode --connection local --url http://127.0.0.1:3001/v1
 
-# Simule la misma configuración en los tres clientes.
-npx --yes @pathbit/agentmodelkit --url 'https://llm.example.com/v1/t/EXAMPLE_TOKEN' --targets all --dry-run
-
-# Añada un modelo de OpenCode Console a Copilot CLI.
-npx --yes @pathbit/agentmodelkit add --providers opencode --tiers payg --models gpt-6.2-sol --targets copilot-cli --key-file ./opencode.key --yes
+# Simule la configuración de FreeLLMAPI local en OpenCode para el proyecto.
+npx --yes @pathbit/agentmodelkit freellmapi opencode --url http://127.0.0.1:3001/v1 --dry-run
 
 # Simule la incorporación de los modelos seleccionados de Go y Console.
 npx --yes @pathbit/agentmodelkit add --providers opencode --tiers all --powerful --dry-run
@@ -83,7 +82,7 @@ Cada cambio de un archivo existente guarda sus bytes anteriores en un archivo `.
 | Proveedor | Opciones |
 | --- | --- |
 | OpenCode | `--tiers go` para la suscripción y `--tiers payg` para Console. `all` incluye ambos. OpenCode Free está reservado para el cliente OpenCode. Las entradas gratuitas aparecen en `catalog list` como referencia. |
-| FreeLLMAPI | Indique la URL de agente con `--url`. El valor predeterminado es `auto`. Para la selección avanzada, use `--freellmapi-mode strategies\\|ready`. |
+| FreeLLMAPI | Para la conexión local, indique la URL y la clave unificada. Una URL de agente incluye la credencial. El enrutador predeterminado es `auto`. Consulte [la conexión remota y los modos avanzados](docs/PROVIDERS.es.md#freellmapi). |
 | Proveedor manual | Indique un [manifiesto JSON](examples/provider.local.example.json) con `--provider-file`. Repita la opción para incluir varios proveedores. |
 
 `--powerful` carga la selección editorial de [data/curation.json](data/curation.json). Para FreeLLMAPI incluye estrategias del enrutador. Para un proveedor manual, declare los modelos recomendados en `powerfulIds`. La selección está versionada y puede revisarse cada mes. AgentModelKit usa directamente los datos publicados al seleccionar los modelos.
@@ -108,7 +107,7 @@ El paquete incluye archivos de catálogo en `data/`. `catalog update` utiliza un
 
 - **OpenCode 2** lee los modelos de `.opencode/opencode.json`. La clave permanece como referencia a una variable de entorno del proveedor o al archivo indicado con `--key-file`. Use `--no-save-key` para conservar solo el archivo que indicó.
 - **Copilot CLI** usa `apiKey` en el esquema de proveedores con nombre de `providers.json`. Use `--key-file`, `OPENCODE_API_KEY`, `FREELLMAPI_API_KEY` o la entrada oculta de la terminal. `--no-save-key` omite la copia separada en `.key`. Los archivos administrados y las copias usan permisos restrictivos en sistemas POSIX.
-- **VS Code** utiliza una referencia de secreto. Introduzca la clave en el gestor de modelos. La clave permanece en el almacén de secretos de VS Code. El cliente usa `chatLanguageModels.json` del perfil elegido.
+- En **VS Code**, los comandos guiados configuran la autenticación mediante cabeceras en el perfil de usuario. Mantenga privados el perfil y sus copias. Para usar el almacén de secretos del editor, consulte [Clientes](docs/CLIENTS.es.md#vs-code).
 - `doctor` indica las versiones, rutas y presencia de archivos de claves. Consulte [Clientes](docs/CLIENTS.es.md) para conocer las rutas personalizadas, las copias y la restauración.
 
 ## Desarrollo y publicación
