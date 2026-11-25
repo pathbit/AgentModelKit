@@ -34,7 +34,7 @@
     "setup:vscode": "node src/agentmodelkit.mjs vscode",
     "doctor": "node src/agentmodelkit.mjs doctor",
     "check": "node scripts/check.mjs",
-    "test": "node --test",
+    "test": "node --test tests",
     "catalog:update": "node scripts/update-catalogs.mjs",
     "test:package": "node scripts/check-package.mjs"
   },

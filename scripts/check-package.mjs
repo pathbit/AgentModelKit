@@ -3,7 +3,6 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "amk-pack-"));
 const npm = process.env.npm_execpath;
@@ -45,7 +44,7 @@ try {
   const npmCommand = (command, ...args) => run(["exec", "--yes", "--offline", "--package", artifact, "--", command, ...args], { cwd, env });
   assert.match(npmCommand("agentmodelkit", "catalog", "list"), /FreeLLMAPI/);
   assert.match(npmCommand("amk", "--help"), /^AgentModelKit.*\n\nUsage: agentmodelkit/m);
-  const inferred = run(["exec", "--yes", "--offline", "--", pathToFileURL(artifact).href, "--help"], { cwd, env });
+  const inferred = run(["exec", "--yes", "--offline", "--", `file:../${pack.filename}`, "--help"], { cwd, env });
   assert.match(inferred, /Usage: agentmodelkit/);
   assert.match(npmCommand("agentmodelkit", "add", "--provider-file", manifest, "--targets", "all", "--dry-run"), /dry run/);
   assert.equal(fs.existsSync(env.COPILOT_HOME), false);
