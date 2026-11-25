@@ -1,5 +1,7 @@
 # AgentModelKit
 
+[English](README.en.md) · [Documentação](docs/README.md) · [Exemplos](examples/README.md)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Node.js >= 18](https://img.shields.io/badge/Node.js-%3E%3D18-blue.svg)](https://nodejs.org/)
 
@@ -121,11 +123,13 @@ node bin/agentmodelkit.mjs doctor
 
 ## Documentação
 
+- [Índice geral da documentação](docs/README.md)
 - [Arquitetura e como estender](docs/ARCHITECTURE.md)
 - [Providers suportados (OpenCode & FreeLLMAPI)](docs/PROVIDERS.md)
 - [Clientes suportados (VS Code & Copilot CLI)](docs/CLIENTS.md)
+- [Exemplos de saída (VS Code & Copilot CLI)](examples/README.md)
 - [Roadmap público (Claude Code Desktop, Cursor, Codex, Login OAuth)](docs/ROADMAP.md)
-- [Guia de contribuição](CONTRIBUTING.md)
+- [Guia de contribuição](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
 ---
 

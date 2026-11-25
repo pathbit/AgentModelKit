@@ -1,0 +1,7 @@
+# Ignora preferências privadas e caches locais dentro de .vscode/
+**/.DS_Store
+**/._*
+**/Thumbs.db
+**/*.local.json
+**/*.local.jsonc
+*.bak
