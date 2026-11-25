@@ -29,7 +29,14 @@ npx --yes "https://codeload.github.com/pathbit/AgentModelKit/tar.gz/refs/heads/m
 
 Use **↑↓** para desplazarse, **Espacio** para marcar cada cliente y **Enter** para confirmar la selección. Pulse **A** para seleccionar todos o borrar la selección. El asistente solicita el plan o la conexión y el token cuando corresponde.
 
-Tras la primera publicación, use `npx --yes @pathbit/agentmodelkit` como prefijo. Añada `--project-dir <ruta>` para configurar OpenCode en otro proyecto.
+Tras la primera publicación en npmjs, use `@latest` para ejecutar la versión estable más reciente o indique el número para fijar una versión.
+
+```bash
+npx --yes @pathbit/agentmodelkit@latest opencode
+npx --yes @pathbit/agentmodelkit@0.0.1 opencode vscode copilot
+```
+
+Añada `--project-dir <ruta>` para configurar OpenCode en otro proyecto.
 
 | Para… | Opción rápida |
 | --- | --- |
