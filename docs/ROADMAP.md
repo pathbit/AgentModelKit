@@ -21,10 +21,10 @@ status: planejado
 
 ## Próxima entrega
 
-- [-] [0.0.2 em preparação](releases/v0-0-2/RELEASE.md). Reúne preservação de cabeçalhos no VS Code, consulta da versão pela CLI e verificação do download público no npmjs.
+- [-] [0.0.2 validada para publicação](releases/v0-0-2/RELEASE.md). Reúne preservação de cabeçalhos no VS Code, consulta da versão pela CLI e verificação do download público no npmjs.
 - [x] O mantenedor aprovou os [requisitos](PRD.md), a [experiência](UX.md) e o [design](ARCHITECTURE.md).
 - [-] [Spec da 0.0.2](specs/release-0-0-2/SPEC.md). Os aceites da publicação ficam em andamento até a confirmação pública.
-- [ ] Executar a publicação autorizada, confirmar o Trusted Publisher e conferir o tarball nos três destinos. [Publicação](RELEASE.md)
+- [ ] Confirmar o Trusted Publisher do npmjs, retomar o fluxo da mesma tag e conferir o tarball nos três destinos. [Publicação](RELEASE.md)
 
 ## Evolução
 
