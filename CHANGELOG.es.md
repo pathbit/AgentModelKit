@@ -2,6 +2,12 @@
 
 [Português (Brasil)](CHANGELOG.md) · [English](CHANGELOG.en.md)
 
+## 0.0.3
+
+- Los comandos del paquete en portugués, inglés y español incluyen `@latest` y la versión fija `@0.0.3`.
+- GitHub Release usa el formato de nombre `agentmodelkit-<versión>.tgz`.
+- CI comprueba que los ejemplos de instalación coinciden con la versión del paquete.
+
 ## 0.0.2
 
 - `--version` y `-v` muestran la versión declarada en el paquete.

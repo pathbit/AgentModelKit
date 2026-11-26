@@ -10,8 +10,8 @@ Use el [paquete público en npmjs](https://www.npmjs.com/package/@pathbit/agentm
 
 ```bash
 npx --yes @pathbit/agentmodelkit@latest opencode
-npx --yes @pathbit/agentmodelkit@0.0.2 opencode vscode copilot
-npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.2/agentmodelkit-0.0.2.tgz freellmapi
+npx --yes @pathbit/agentmodelkit@0.0.3 opencode vscode copilot
+npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.3/agentmodelkit-0.0.3.tgz freellmapi
 ```
 
 En npm 11 o anterior, omita `--allow-remote=root` del comando del archivo.
@@ -29,7 +29,7 @@ Para ejecutar el código de `main` con Git, consulte [Otras formas de ejecutar](
 
 ## Validación de la etiqueta y destinos
 
-Publique las versiones estables en orden ascendente. npm actualiza `latest` de forma predeterminada en cada publicación estable. Después de publicar una versión estable nueva, compruebe que `npm view @pathbit/agentmodelkit@latest version` devuelve el número publicado. Use `npm view @pathbit/agentmodelkit@0.0.2 dist.integrity`, con el número del lanzamiento, para comparar esa versión con la integridad del tarball validado. [npm dist-tag](https://docs.npmjs.com/cli/v11/commands/npm-dist-tag/).
+Publique las versiones estables en orden ascendente. npm actualiza `latest` de forma predeterminada en cada publicación estable. Después de publicar una versión estable nueva, compruebe que `npm view @pathbit/agentmodelkit@latest version` devuelve el número publicado. Use `npm view @pathbit/agentmodelkit@0.0.3 dist.integrity`, con el número del lanzamiento, para comparar esa versión con la integridad del tarball validado. [npm dist-tag](https://docs.npmjs.com/cli/v11/commands/npm-dist-tag/).
 
 Tras una ejecución exitosa de CI para un push a `main` que aumenta la versión, el flujo [Automatic release tag](https://github.com/pathbit/AgentModelKit/blob/main/.github/workflows/auto-release.yml) crea la etiqueta y activa [Release](https://github.com/pathbit/AgentModelKit/blob/main/.github/workflows/release.yml). El flujo comprueba el commit de la etiqueta y usa el tarball que CI probó y almacenó. GitHub Packages y GitHub Release reciben el mismo tarball mediante `GITHUB_TOKEN`.
 
