@@ -2,10 +2,12 @@
 
 [Português (Brasil)](CHANGELOG.md) · [Español](CHANGELOG.es.md)
 
-## Unreleased
+## 0.0.2 in preparation
 
-- `--version` and `-v` print the package version.
-- Reapplying VS Code setup preserves custom headers for the same endpoint and replaces the authentication header when a new key is provided.
+- `--version` and `-v` print the version declared in the package.
+- Reapplying VS Code setup preserves custom headers and secret references for the same endpoint.
+- The release checks that npmjs serves the public tarball and that it matches the CI artifact.
+- Product requirements, the terminal experience, and the roadmap record delivery scope and checks.
 
 ## 0.0.1
 

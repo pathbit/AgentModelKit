@@ -101,6 +101,15 @@ for (const block of vsSample) {
   assert.ok(validVendors.has(block.vendor), `Invalid vendor in the VS Code example: ${block.vendor}`);
 }
 
+function collectDefaultDocs(directory) {
+  return fs.readdirSync(path.join(root, directory), { withFileTypes: true }).flatMap((entry) => {
+    const relative = path.join(directory, entry.name);
+    if (entry.isDirectory()) return collectDefaultDocs(relative);
+    if (entry.isFile() && entry.name.endsWith(".md") && !/\.(en|es)\.md$/.test(entry.name)) return [relative];
+    return [];
+  });
+}
+
 const DEFAULT_DOCS = [
   "README.md",
   "CONTRIBUTING.md",
@@ -109,9 +118,7 @@ const DEFAULT_DOCS = [
   "data/README.md",
   "tests/README.md",
   "examples/README.md",
-  ...fs.readdirSync(path.join(root, "docs"))
-    .filter((f) => f.endsWith(".md") && !/\.(en|es)\.md$/.test(f))
-    .map((f) => path.join("docs", f)),
+  ...collectDefaultDocs("docs"),
 ];
 
 const MD_FILES = [

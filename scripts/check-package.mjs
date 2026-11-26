@@ -18,10 +18,19 @@ try {
     "data/curation.json", "src/agentmodelkit.mjs", "examples/provider.local.example.json", "README.md",
   ]) assert.ok(files.has(required), `Missing ${required} in the tarball`);
   for (const file of files) {
-    if (!file.endsWith(".md") || /\.(en|es)\.md$/.test(file)) continue;
-    for (const language of ["en", "es"]) {
-      const translation = file.replace(/\.md$/, `.${language}.md`);
-      assert.ok(files.has(translation), `Missing ${translation} in the tarball`);
+    if (!file.endsWith(".md")) continue;
+    if (!/\.(en|es)\.md$/.test(file)) {
+      for (const language of ["en", "es"]) {
+        const translation = file.replace(/\.md$/, `.${language}.md`);
+        assert.ok(files.has(translation), `Missing ${translation} in the tarball`);
+      }
+    }
+    const markdown = fs.readFileSync(file, "utf8").replace(/```[\s\S]*?```/g, "");
+    for (const [, link] of markdown.matchAll(/\[[^\]]+\]\(([^)\s]+)\)/g)) {
+      if (/^(https?:|mailto:|#)/.test(link)) continue;
+      const target = path.posix.join(path.posix.dirname(file), link.split("#")[0]).replace(/\/$/, "");
+      assert.ok(files.has(target) || [...files].some((entry) => entry.startsWith(`${target}/`)),
+        `Broken packaged link in ${file}: ${link}`);
     }
   }
   assert.ok(![...files].some((name) => /(?:\.bak|\.key|\.tmp|\.tgz)$|(?:^|\/)\.env|^(?:bin|tests)\//.test(name)));

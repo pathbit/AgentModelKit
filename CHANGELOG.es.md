@@ -2,10 +2,12 @@
 
 [Português (Brasil)](CHANGELOG.md) · [English](CHANGELOG.en.md)
 
-## En desarrollo
+## 0.0.2 en preparación
 
-- `--version` y `-v` muestran la versión del paquete.
-- Al volver a aplicar la configuración de VS Code, se conservan las cabeceras personalizadas para el mismo endpoint y se actualiza la autenticación cuando se proporciona una clave nueva.
+- `--version` y `-v` muestran la versión declarada en el paquete.
+- Volver a aplicar la configuración de VS Code conserva las cabeceras personalizadas y las referencias a secretos del mismo endpoint.
+- El lanzamiento comprueba que npmjs sirve el tarball público y que coincide con el artefacto de CI.
+- Los requisitos, la experiencia en terminal y la hoja de ruta registran el alcance y las comprobaciones de la entrega.
 
 ## 0.0.1
 

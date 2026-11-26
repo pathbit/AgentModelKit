@@ -143,14 +143,14 @@ Los cambios revisados se incorporan a `main`. El mantenedor aprueba la etiqueta 
 
 ## AgentDevKit
 
-El repositorio incluye el [kit compartido](.pbai4devs/README.md), las
-[referencias de Codex](.codex/) y [AGENTS.md](AGENTS.md).
+El repositorio incluye el [kit compartido](https://github.com/pathbit/AgentModelKit/blob/main/.pbai4devs/README.md), las
+[referencias de Codex](https://github.com/pathbit/AgentModelKit/tree/main/.codex) y [AGENTS.md](https://github.com/pathbit/AgentModelKit/blob/main/AGENTS.md).
 
 Para ejecutar la CLI del kit, instala [Node.js 24+ con npm y npx](https://nodejs.org/es/download).
 Ejecuta este comando desde la raíz para generar la selección y los índices locales.
 
 ```console
-npx @pathbit/agentdevkit@0.0.39 init
+npx @pathbit/agentdevkit@0.0.40 init
 ```
 
 En la primera ejecución, la CLI añade un bloque de referencia gestionado a `AGENTS.md`.

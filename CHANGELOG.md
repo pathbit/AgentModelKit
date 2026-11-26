@@ -2,10 +2,12 @@
 
 [English](CHANGELOG.en.md) · [Español](CHANGELOG.es.md)
 
-## Em desenvolvimento
+## 0.0.2 em preparação
 
-- `--version` e `-v` exibem a versão do pacote.
-- Reaplicar a configuração do VS Code preserva cabeçalhos personalizados no mesmo endpoint e substitui a autenticação quando uma nova chave é fornecida.
+- `--version` e `-v` exibem a versão declarada no pacote.
+- Reaplicar a configuração do VS Code preserva os cabeçalhos personalizados e as referências a segredos no mesmo endpoint.
+- A release verifica se o tarball público do npmjs está disponível e se corresponde ao artefato da CI.
+- Requisitos, experiência no terminal e roadmap passam a registrar o escopo e as verificações da entrega.
 
 ## 0.0.1
 

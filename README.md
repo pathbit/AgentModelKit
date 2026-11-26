@@ -143,14 +143,14 @@ A `main` recebe as mudanças revisadas. A tag de release exige a aprovação do 
 
 ## AgentDevKit
 
-A [pasta compartilhada](.pbai4devs/README.md) reúne os recursos do kit. Os
-[apontamentos do Codex](.codex/) e o arquivo [AGENTS.md](AGENTS.md) acompanham o clone.
+A [pasta compartilhada](https://github.com/pathbit/AgentModelKit/blob/main/.pbai4devs/README.md) reúne os recursos do kit. Os
+[apontamentos do Codex](https://github.com/pathbit/AgentModelKit/tree/main/.codex) e o arquivo [AGENTS.md](https://github.com/pathbit/AgentModelKit/blob/main/AGENTS.md) acompanham o clone.
 
 Para executar a CLI do kit, instale [Node.js 24+ com npm e npx](https://nodejs.org/pt/download).
 Na raiz do projeto, execute para gerar a seleção e os índices locais.
 
 ```console
-npx @pathbit/agentdevkit@0.0.39 init
+npx @pathbit/agentdevkit@0.0.40 init
 ```
 
 Na primeira execução, a CLI acrescenta um bloco de referência gerenciado ao `AGENTS.md`.

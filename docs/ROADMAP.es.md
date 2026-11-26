@@ -1,14 +1,29 @@
+---
+description: Hoja de ruta de AgentModelKit.
+status: planejado
+---
+
 # Hoja de ruta
 
 [Português (Brasil)](ROADMAP.md) · [English](ROADMAP.en.md)
 
-## Primera versión
+## Publicado
+
+- [x] [0.0.1](releases/v0-0-1/RELEASE.es.md) en npmjs, GitHub Packages y GitHub Releases.
+
+### Funciones entregadas
 
 - Configuración de OpenCode, VS Code y Copilot CLI mediante selector interactivo o parámetros.
 - Incorporación incremental, sustitución explícita, eliminación por disponibilidad y copias de seguridad.
 - Catálogos incluidos en el paquete, actualización manual y un flujo mensual de revisión.
 - OpenCode, FreeLLMAPI y endpoints definidos mediante manifiestos.
 - Prueba del paquete y publicación por etiqueta con aprobación del mantenedor.
+
+## Próxima entrega
+
+- [-] [0.0.2 en preparación](releases/v0-0-2/RELEASE.es.md). Incluye conservar cabeceras de VS Code, consultar la versión de la CLI y comprobar la descarga pública en npmjs.
+- [ ] Aprobar los [requisitos](PRD.es.md), la [experiencia](UX.es.md) y el [diseño](ARCHITECTURE.es.md) antes de formalizar la primera especificación en AgentDevKit.
+- [ ] Confirmar la CI de la versión candidata y autorizar la publicación. La primera versión validó el token de arranque. Confirme la configuración de Trusted Publisher para la siguiente. [Publicación](RELEASE.es.md)
 
 ## Trabajo futuro
 

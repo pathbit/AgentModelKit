@@ -143,14 +143,14 @@ Reviewed changes go to `main`. The maintainer approves the release tag after tes
 
 ## AgentDevKit
 
-The [shared kit](.pbai4devs/README.md), [Codex references](.codex/) and
-[AGENTS.md](AGENTS.md) are included in the repository.
+The [shared kit](https://github.com/pathbit/AgentModelKit/blob/main/.pbai4devs/README.md), [Codex references](https://github.com/pathbit/AgentModelKit/tree/main/.codex) and
+[AGENTS.md](https://github.com/pathbit/AgentModelKit/blob/main/AGENTS.md) are included in the repository.
 
 The kit CLI requires [Node.js 24+ with npm and npx](https://nodejs.org/en/download).
 Run this from the project root to generate the local selection and indexes.
 
 ```console
-npx @pathbit/agentdevkit@0.0.39 init
+npx @pathbit/agentdevkit@0.0.40 init
 ```
 
 On the first run, the CLI adds a managed reference block to `AGENTS.md`.
