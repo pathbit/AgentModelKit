@@ -18,12 +18,12 @@ The command with the GitHub URL uses the public tarball attached to the GitHub R
 
 To run the code from `main` with Git, see [Other ways to run](../README.en.md#other-ways-to-run).
 
-## Before the first publication
+## Before publishing
 
 1. Keep code changes on `main` and confirm CI for the candidate commit.
 2. Run `npm run check`, `npm test` and `npm run test:package`. Test the local build with the client versions you intend to support.
-3. Request explicit maintainer approval to create and push the tag. The tag starts with `v` followed by the version in `package.json`. The first tag will be `v0.0.1`.
-4. Configure the GitHub Actions `npmjs` environment to require maintainer approval. To create the npm package on first publication, use a temporary granular token with publishing access to the `@pathbit` scope. Save it as `NPMJS_BOOTSTRAP_TOKEN` in that environment. For `v0.0.1`, the workflow also accepts the repository's `NPMJS_TOKEN` if it has permission to create the package. After the first release, configure npm Trusted Publishing for `pathbit/AgentModelKit`, workflow `release.yml` and environment `npmjs`. Remove the bootstrap secret after verifying OIDC. [Official Trusted Publishing setup](https://docs.npmjs.com/trusted-publishers/).
+3. Request explicit maintainer approval to create and push the tag. The tag starts with `v` followed by the version in `package.json`. Publish the version that matches the approved commit.
+4. Configure the GitHub Actions `npmjs` environment to require maintainer approval. To create the npm package for the first release, `v0.0.1`, use a temporary granular token with publishing access to the `@pathbit` scope. Save it as `NPMJS_BOOTSTRAP_TOKEN` in that environment. For `v0.0.1`, the workflow also accepts the repository's `NPMJS_TOKEN` if it has permission to create the package. For future releases, confirm or configure npm Trusted Publishing for `pathbit/AgentModelKit`, workflow `release.yml` and environment `npmjs`. Remove the bootstrap secret after verifying OIDC. [Official Trusted Publishing setup](https://docs.npmjs.com/trusted-publishers/).
 
 ## Tag validation and destinations
 
@@ -32,5 +32,6 @@ Publish stable versions in ascending order. npm updates `latest` by default on e
 The [Release workflow](https://github.com/pathbit/AgentModelKit/blob/main/.github/workflows/release.yml) reruns the test matrix for the tag, verifies that it belongs to the default branch history and uploads a single validated tarball as an artifact. npmjs publication uses the protected environment. GitHub publication uses `GITHUB_TOKEN` with `packages: write` and `contents: write`. The release attaches the published tarball.
 
 If the version already exists, the workflow compares its integrity with the tarball. Resolve mismatches before continuing. Published versions are immutable. If a job fails after writing to one destination, retry the job for the same tag after fixing the cause.
+The final job checks npmjs without credentials and waits for the public tarball. The workflow checks stable version selection and compares both registry integrity metadata and downloaded bytes with the CI artifact. If a newer stable version exists, retrying an earlier release verifies its artifact and preserves the current `latest`.
 
 [Documentation index](README.en.md)

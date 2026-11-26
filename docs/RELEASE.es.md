@@ -18,12 +18,12 @@ El comando con la URL de GitHub usa el tarball público adjunto al lanzamiento. 
 
 Para ejecutar el código de `main` con Git, consulte [Otras formas de ejecutar](../README.es.md#otras-formas-de-ejecutar).
 
-## Antes de la primera publicación
+## Antes de publicar
 
 1. Mantenga los cambios de código en `main` y confirme la matriz de CI para el commit candidato.
 2. Ejecute `npm run check`, `npm test` y `npm run test:package`. Pruebe la versión local con las versiones de clientes que quiera admitir.
-3. Solicite la aprobación explícita del mantenedor para crear y enviar la etiqueta. La etiqueta comienza por `v`, seguida de la versión en `package.json`. La primera será `v0.0.1`.
-4. Configure el entorno `npmjs` de GitHub Actions para que requiera aprobación del mantenedor. Para crear el paquete en npm por primera vez, use un token granular y temporal con acceso de publicación para el ámbito `@pathbit`. Guárdelo como `NPMJS_BOOTSTRAP_TOKEN` en ese entorno. En `v0.0.1`, el flujo también acepta `NPMJS_TOKEN` del repositorio si tiene permiso para crear el paquete. Después de la primera versión, configure Trusted Publishing en npm con el repositorio `pathbit/AgentModelKit`, el flujo `release.yml` y el entorno `npmjs`. Elimine el secreto inicial después de verificar OIDC. [Configuración oficial de Trusted Publishing](https://docs.npmjs.com/trusted-publishers/).
+3. Solicite la aprobación explícita del mantenedor para crear y enviar la etiqueta. La etiqueta comienza por `v`, seguida de la versión en `package.json`. Publique la versión que corresponda al commit aprobado.
+4. Configure el entorno `npmjs` de GitHub Actions para que requiera aprobación del mantenedor. Para crear el paquete en npm en el primer lanzamiento, `v0.0.1`, use un token granular y temporal con acceso de publicación para el ámbito `@pathbit`. Guárdelo como `NPMJS_BOOTSTRAP_TOKEN` en ese entorno. En `v0.0.1`, el flujo también acepta `NPMJS_TOKEN` del repositorio si tiene permiso para crear el paquete. Para las próximas versiones, confirme o configure Trusted Publishing en npm con el repositorio `pathbit/AgentModelKit`, el flujo `release.yml` y el entorno `npmjs`. Elimine el secreto inicial después de verificar OIDC. [Configuración oficial de Trusted Publishing](https://docs.npmjs.com/trusted-publishers/).
 
 ## Validación de la etiqueta y destinos
 
@@ -32,5 +32,6 @@ Publique las versiones estables en orden ascendente. npm actualiza `latest` de f
 El [flujo Release](https://github.com/pathbit/AgentModelKit/blob/main/.github/workflows/release.yml) vuelve a ejecutar la matriz de pruebas para la etiqueta, comprueba que pertenece al historial de la rama predeterminada y carga un único archivo de paquete validado. La publicación en npmjs usa el entorno protegido. La publicación en GitHub usa `GITHUB_TOKEN` con `packages: write` y `contents: write`. El lanzamiento adjunta el archivo publicado.
 
 Si la versión ya existe, el flujo compara su integridad con la del archivo del paquete. Resuelva cualquier discrepancia antes de seguir. Las versiones publicadas son inmutables. Si un trabajo falla después de publicar en un destino, vuelva a ejecutarlo para la misma etiqueta después de corregir la causa.
+El último trabajo consulta npmjs sin credenciales y espera el tarball público. El flujo comprueba el selector estable y compara tanto la integridad del registro como los bytes descargados con el artefacto de CI. Si existe una versión estable más reciente, volver a ejecutar un lanzamiento anterior valida su archivo y conserva el `latest` actual.
 
 [Índice de documentación](README.es.md)

@@ -2,6 +2,8 @@
 
 [Português (Brasil)](README.md) · [Español](README.es.md)
 
+- [Product requirements](PRD.en.md)
+- [Terminal experience](UX.en.md)
 - [Setup and commands](../README.en.md)
 - [Clients and backups](CLIENTS.en.md)
 - [Providers and access](PROVIDERS.en.md)

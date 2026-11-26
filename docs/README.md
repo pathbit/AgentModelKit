@@ -2,6 +2,8 @@
 
 [English](README.en.md) · [Español](README.es.md)
 
+- [Requisitos do produto](PRD.md)
+- [Experiência no terminal](UX.md)
 - [Instalação e comandos](../README.md)
 - [Clientes e backups](CLIENTS.md)
 - [Providers e acesso](PROVIDERS.md)
