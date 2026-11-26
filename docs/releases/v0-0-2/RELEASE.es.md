@@ -23,6 +23,6 @@ status: planejado
 
 El mantenedor aprobó la base de producto, experiencia y diseño y autorizó la publicación el 25 de noviembre de 2026.
 
-La etiqueta `v0.0.2` superó las nueve comprobaciones de la matriz de sistemas y versiones de Node.js. CI generó el tarball y el mantenedor aprobó el despliegue protegido. npmjs devolvió `ENEEDAUTH`. Después del intento, la etiqueta `latest` de npmjs seguía apuntando a `0.0.1` y el registro aún no mostraba la `0.0.2`. El criterio AC-004 queda pendiente de confirmar Trusted Publishing y verificar los artefactos en los tres destinos. [Ejecución del lanzamiento](https://github.com/pathbit/AgentModelKit/actions/runs/45742845489).
+La etiqueta `v0.0.2` superó las nueve comprobaciones de la matriz de sistemas y versiones de Node.js. CI generó el tarball y el mantenedor aprobó el despliegue protegido. npmjs devolvió `ENEEDAUTH`. Después del intento, la etiqueta `latest` de npmjs seguía apuntando a `0.0.1` y el registro aún no mostraba la `0.0.2`. El mantenedor autorizó reanudar mediante GitHub Actions con `NPMJS_TOKEN`. El criterio AC-004 queda pendiente de verificar el artefacto en los tres destinos. [Ejecución del lanzamiento](https://github.com/pathbit/AgentModelKit/actions/runs/45742845489).
 
 [Especificación aprobada](../../specs/release-0-0-2/SPEC.es.md) · [Procedimiento de publicación](../../RELEASE.es.md)

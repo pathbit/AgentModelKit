@@ -1,9 +1,23 @@
 name: Release
+run-name: Release ${{ inputs.tag || github.ref_name }}
 
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing stable release tag
+        type: string
+        required: true
+      expected_commit:
+        description: Expected commit for the tag
+        type: string
+        required: true
+      source_run_id:
+        description: CI run with the approved package artifact
+        type: string
+        required: true
 
 permissions:
   contents: read
@@ -13,14 +27,20 @@ concurrency:
   queue: max
 
 jobs:
-  test:
-    if: github.ref_type == 'tag'
-    uses: ./.github/workflows/ci.yml
-
-  package:
-    needs: test
+  resolve:
+    name: Find the approved commit artifact
+    if: github.event_name == 'push' || (github.ref_type == 'branch' && github.ref_name == github.event.repository.default_branch)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      tag: ${{ steps.source.outputs.tag }}
+      version: ${{ steps.source.outputs.version }}
+      commit: ${{ steps.source.outputs.commit }}
+      run-id: ${{ steps.source.outputs.run-id }}
+      artifact-id: ${{ steps.source.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -29,35 +49,22 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
-      - name: Validate tag and branch
+      - name: Verify tag, commit and source CI
+        id: source
         env:
-          RELEASE_BRANCH: ${{ github.event.repository.default_branch }}
-        run: |
-          node --input-type=module -e '
-            import fs from "node:fs";
-            const { version } = JSON.parse(fs.readFileSync("package.json"));
-            if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version) || process.env.GITHUB_REF_NAME !== "v" + version) {
-              throw new Error("The tag must match a stable package version");
-            }
-          '
-          git merge-base --is-ancestor HEAD "refs/remotes/origin/$RELEASE_BRANCH"
-      - name: Pack and execute release candidate
-        env:
-          AGENTMODELKIT_ARTIFACT_DIR: ${{ runner.temp }}/release
-        run: npm run test:package
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: agentmodelkit-release
-          path: ${{ runner.temp }}/release
-          if-no-files-found: error
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+          EXPECTED_COMMIT: ${{ inputs.expected_commit || github.sha }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: node scripts/release-source.mjs resolve
 
   npmjs:
-    needs: package
+    needs: resolve
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: npmjs
     permissions:
-      id-token: write
+      actions: read
       contents: read
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -71,19 +78,72 @@ jobs:
           package-manager-cache: false
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: agentmodelkit-release
+          artifact-ids: ${{ needs.resolve.outputs.artifact-id }}
+          run-id: ${{ needs.resolve.outputs.run-id }}
+          github-token: ${{ github.token }}
           path: ${{ runner.temp }}/release
           digest-mismatch: error
+      - name: Verify the tag before publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
+          EXPECTED_COMMIT: ${{ needs.resolve.outputs.commit }}
+        run: node scripts/release-source.mjs check-tag
       - name: Publish or verify same npmjs package
         env:
-          NODE_AUTH_TOKEN: ${{ github.ref_name == 'v0.0.1' && (secrets.NPMJS_BOOTSTRAP_TOKEN || secrets.NPMJS_TOKEN) || '' }}
-        run: node scripts/publish-package.mjs npmjs "${GITHUB_REF_NAME#v}" "$RUNNER_TEMP/release"
+          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
+          RELEASE_VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          if test -z "$NODE_AUTH_TOKEN"; then
+            echo "::error::The NPMJS_TOKEN secret is required."
+            exit 1
+          fi
+          node scripts/publish-package.mjs npmjs "$RELEASE_VERSION" "$RUNNER_TEMP/release"
+
+  verify-npmjs:
+    needs: [resolve, npmjs]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ needs.resolve.outputs.artifact-id }}
+          run-id: ${{ needs.resolve.outputs.run-id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release
+          digest-mismatch: error
+      - name: Verify public registry metadata and tarball
+        env:
+          RELEASE_VERSION: ${{ needs.resolve.outputs.version }}
+        run: node scripts/verify-npm-release.mjs "$RELEASE_VERSION" "$RUNNER_TEMP/release/integrity.txt"
+      - name: Execute the published package
+        working-directory: ${{ runner.temp }}
+        env:
+          npm_config_cache: ${{ runner.temp }}/npm-consumer-cache
+          npm_config_registry: https://registry.npmjs.org
+          RELEASE_VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          test "$(npm exec --yes --ignore-scripts -- "@pathbit/agentmodelkit@$RELEASE_VERSION" --version)" = "$RELEASE_VERSION"
+          latest="$(npm view @pathbit/agentmodelkit@latest version --prefer-online)"
+          if test "$latest" = "$RELEASE_VERSION"; then
+            test "$(npm exec --yes --ignore-scripts -- @pathbit/agentmodelkit@latest --version)" = "$RELEASE_VERSION"
+          fi
 
   github:
-    needs: [package, verify-npmjs]
+    needs: [resolve, verify-npmjs]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
+      actions: read
       contents: write
       packages: write
     steps:
@@ -95,56 +155,36 @@ jobs:
           node-version: 24
           registry-url: https://npm.pkg.github.com
           scope: '@pathbit'
+          package-manager-cache: false
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: agentmodelkit-release
+          artifact-ids: ${{ needs.resolve.outputs.artifact-id }}
+          run-id: ${{ needs.resolve.outputs.run-id }}
+          github-token: ${{ github.token }}
           path: ${{ runner.temp }}/release
           digest-mismatch: error
+      - name: Verify the tag before publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
+          EXPECTED_COMMIT: ${{ needs.resolve.outputs.commit }}
+        run: node scripts/release-source.mjs check-tag
       - name: Publish or verify same GitHub package
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
-        run: node scripts/publish-package.mjs github "${GITHUB_REF_NAME#v}" "$RUNNER_TEMP/release"
+          RELEASE_VERSION: ${{ needs.resolve.outputs.version }}
+        run: node scripts/publish-package.mjs github "$RELEASE_VERSION" "$RUNNER_TEMP/release"
       - name: Create or verify GitHub Release
         working-directory: ${{ runner.temp }}/release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
         run: |
-          if gh release view "$GITHUB_REF_NAME" >/dev/null; then
+          if gh release view "$RELEASE_TAG" >/dev/null; then
             verify_dir="$(mktemp -d)"
-            gh release download "$GITHUB_REF_NAME" --pattern '*.tgz' --dir "$verify_dir"
+            gh release download "$RELEASE_TAG" --pattern '*.tgz' --dir "$verify_dir"
             cmp ./*.tgz "$verify_dir"/*.tgz
           else
-            gh release create "$GITHUB_REF_NAME" ./*.tgz --verify-tag --generate-notes
-          fi
-
-  verify-npmjs:
-    needs: [package, npmjs]
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version: 24
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: agentmodelkit-release
-          path: ${{ runner.temp }}/release
-          digest-mismatch: error
-      - name: Verify public registry metadata and tarball
-        run: node scripts/verify-npm-release.mjs "${GITHUB_REF_NAME#v}" "$RUNNER_TEMP/release/integrity.txt"
-      - name: Execute the published package
-        working-directory: ${{ runner.temp }}
-        env:
-          npm_config_cache: ${{ runner.temp }}/npm-consumer-cache
-          npm_config_registry: https://registry.npmjs.org
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          test "$(npm exec --yes --ignore-scripts -- "@pathbit/agentmodelkit@$version" --version)" = "$version"
-          latest="$(npm view @pathbit/agentmodelkit@latest version --prefer-online)"
-          if test "$latest" = "$version"; then
-            test "$(npm exec --yes --ignore-scripts -- @pathbit/agentmodelkit@latest --version)" = "$version"
+            gh release create "$RELEASE_TAG" ./*.tgz --verify-tag --generate-notes
           fi
