@@ -21,4 +21,4 @@ status: planejado
 | AC-003 | CI simulates npmjs propagation delay and rejects integrity mismatches, foreign origins, and altered downloads. |
 | AC-004 | The approved publication confirms the exact version, `@latest`, and the public tarball. Record the run and hash after publication. |
 
-The formal spec awaits approval of the product, experience, and design baseline. Tagging and publishing require their own approval. [Publishing procedure](../../RELEASE.en.md)
+The maintainer approved the product, experience, and design baseline and authorized publication on November 25, 2026. Public results will be recorded after the run. [Approved spec](../../specs/release-0-0-2/SPEC.en.md) · [Publishing procedure](../../RELEASE.en.md)

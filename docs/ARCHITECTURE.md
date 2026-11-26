@@ -1,6 +1,6 @@
 ---
 description: Design técnico da CLI AgentModelKit.
-status: rascunho
+status: aprovado
 ---
 
 # Arquitetura
@@ -22,6 +22,6 @@ A presença na origem é diferente da seleção configurável. Os comandos de re
 
 O fluxo de publicação usa um tarball produzido e testado pela CI. Cada destino recebe esse arquivo. Depois da publicação, a verificação do npmjs consulta o pacote público, confirma o seletor de versão e compara os bytes baixados com a integridade do tarball.
 
-Aprovação formal do mantenedor pendente.
+Base aprovada pelo mantenedor em 25 de novembro de 2026 para a entrega da `0.0.2`.
 
 [Índice da documentação](README.md)

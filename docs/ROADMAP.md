@@ -22,8 +22,9 @@ status: planejado
 ## Próxima entrega
 
 - [-] [0.0.2 em preparação](releases/v0-0-2/RELEASE.md). Reúne preservação de cabeçalhos no VS Code, consulta da versão pela CLI e verificação do download público no npmjs.
-- [ ] Aprovar [requisitos](PRD.md), [experiência](UX.md) e [design](ARCHITECTURE.md) para formalizar a primeira spec pelo AgentDevKit.
-- [ ] Confirmar a CI da versão candidata e autorizar a publicação. A primeira release provou o caminho com token de bootstrap. Para a próxima, confirme a configuração do Trusted Publisher. [Publicação](RELEASE.md)
+- [x] O mantenedor aprovou os [requisitos](PRD.md), a [experiência](UX.md) e o [design](ARCHITECTURE.md).
+- [-] [Spec da 0.0.2](specs/release-0-0-2/SPEC.md). Os aceites da publicação ficam em andamento até a confirmação pública.
+- [ ] Executar a publicação autorizada, confirmar o Trusted Publisher e conferir o tarball nos três destinos. [Publicação](RELEASE.md)
 
 ## Evolução
 

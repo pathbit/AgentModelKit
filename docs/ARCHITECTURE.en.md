@@ -1,6 +1,6 @@
 ---
 description: Technical design of the AgentModelKit CLI.
-status: rascunho
+status: aprovado
 ---
 
 # Architecture
@@ -22,6 +22,6 @@ Removal checks a complete, validated upstream list independently of the set of c
 
 The release workflow uses one tarball produced and tested by CI. Each destination receives that file. After publication, the npmjs check reads the public package, checks version selection, and compares the downloaded bytes with the tarball integrity.
 
-Formal maintainer approval is pending.
+The maintainer approved this baseline on November 25, 2026 for the `0.0.2` delivery.
 
 [Documentation index](README.en.md)
