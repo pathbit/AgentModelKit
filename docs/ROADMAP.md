@@ -11,6 +11,7 @@ status: planejado
 
 - [x] [0.0.1](releases/v0-0-1/RELEASE.md) no npmjs, GitHub Packages e GitHub Release.
 - [x] [0.0.2](releases/v0-0-2/RELEASE.md) no npmjs, GitHub Packages e GitHub Release. Preserva cabeçalhos no VS Code e informa a versão pela CLI.
+- [x] [0.0.3](releases/v0-0-3/RELEASE.md) no npmjs, GitHub Packages e GitHub Release. Os guias do pacote agora acompanham a versão da CLI.
 
 ### Recursos entregues
 

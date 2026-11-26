@@ -11,6 +11,7 @@ status: planejado
 
 - [x] [0.0.1](releases/v0-0-1/RELEASE.es.md) en npmjs, GitHub Packages y GitHub Releases.
 - [x] [0.0.2](releases/v0-0-2/RELEASE.es.md) en npmjs, GitHub Packages y GitHub Releases. Conserva las cabeceras de VS Code e informa la versión de la CLI.
+- [x] [0.0.3](releases/v0-0-3/RELEASE.es.md) en npmjs, GitHub Packages y GitHub Releases. Las guías del paquete coinciden con la versión de la CLI.
 
 ### Funciones entregadas
 
