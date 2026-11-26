@@ -21,7 +21,7 @@ Abra una terminal en la carpeta del proyecto. npmjs es la opción principal. Use
 
 ```console
 npx --yes @pathbit/agentmodelkit@latest opencode
-npx --yes @pathbit/agentmodelkit@0.0.1 opencode vscode copilot
+npx --yes @pathbit/agentmodelkit@0.0.2 opencode vscode copilot
 ```
 
 Use **↑↓** para desplazarse, **Espacio** para marcar cada cliente y **Enter** para confirmar la selección. Pulse **A** para seleccionar todos o borrar la selección. El asistente solicita el plan o la conexión y el token cuando corresponde.
@@ -48,7 +48,7 @@ En npm 11 o anterior, omite `--allow-remote=root` o `--allow-git=root`.
 Ejecute el archivo `.tgz` de una versión publicada. Basta con Node.js y el `npx` que incluye.
 
 ```console
-npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz opencode
+npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.2/pathbit-agentmodelkit-0.0.2.tgz opencode
 ```
 
 ### Desde el código en GitHub

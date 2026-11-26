@@ -1,8 +1,8 @@
 ---
-status: planejado
+status: publicado
 ---
 
-# AgentModelKit 0.0.2 validado para publicação
+# AgentModelKit 0.0.2
 
 [English](RELEASE.en.md) · [Español](RELEASE.es.md) · [Roadmap](../../ROADMAP.md)
 
@@ -19,10 +19,12 @@ status: planejado
 | AC-001 | Rotação de chave e preservação de cabeçalhos e referências no mesmo endereço. Cabeçalhos anteriores não seguem para outro endpoint. |
 | AC-002 | O tarball executa por npm em pasta vazia, e ambos os aliases informam `0.0.2`. |
 | AC-003 | A CI simula um atraso de propagação do npmjs e rejeita divergência de integridade, origem inválida e download alterado. |
-| AC-004 | A publicação aprovada confirma a versão fixa, `@latest` e o tarball público. Registre a execução e o hash após publicar. |
+| AC-004 | `@0.0.2` e `@latest` executaram a versão `0.0.2`. Os três destinos serviram o tarball aprovado no CI. |
 
 O mantenedor aprovou a base de produto, experiência e design e autorizou a publicação em 25 de novembro de 2026.
 
-A tag `v0.0.2` passou nos nove testes da matriz de sistemas e versões do Node.js. O CI gerou o tarball e o mantenedor aprovou a etapa protegida. O npmjs devolveu `ENEEDAUTH`. Após a tentativa, o marcador `latest` do npmjs ainda apontava para `0.0.1`, e a `0.0.2` ainda não constava no registro. O mantenedor autorizou a retomada via GitHub Actions com `NPMJS_TOKEN`. O aceite AC-004 depende da verificação do artefato nos três destinos. [Execução da release](https://github.com/pathbit/AgentModelKit/actions/runs/45742845489).
+A tag `v0.0.2` passou nos nove testes da matriz de sistemas e versões do Node.js. O CI gerou o tarball e o mantenedor aprovou a etapa protegida. O npmjs devolveu `ENEEDAUTH`. Após a tentativa, o marcador `latest` do npmjs ainda apontava para `0.0.1`, e a `0.0.2` ainda não constava no registro. O mantenedor autorizou a retomada via GitHub Actions com `NPMJS_TOKEN`. [Primeira tentativa](https://github.com/pathbit/AgentModelKit/actions/runs/45742845489).
 
 [Spec aprovada](../../specs/release-0-0-2/SPEC.md) · [Procedimento de publicação](../../RELEASE.md)
+
+O workflow na `main` recuperou a tag original `v0.0.2` com `NPMJS_TOKEN` no ambiente aprovado. O npmjs resolveu `@0.0.2` e `@latest` para `0.0.2`. Os três destinos serviram os mesmos bytes do tarball aprovado no CI. SHA-256 `bb559bb943bc9f6949d2d3bae49be5befa2d72d5dae351218e1434a9f10f6c42`. [Execução da publicação](https://github.com/pathbit/AgentModelKit/actions/runs/45823791970) · [CI da tag](https://github.com/pathbit/AgentModelKit/actions/runs/45742845489) · [npmjs](https://www.npmjs.com/package/@pathbit/agentmodelkit/v/0.0.2) · [GitHub Packages](https://github.com/pathbit/AgentModelKit/pkgs/npm/agentmodelkit) · [GitHub Release](https://github.com/pathbit/AgentModelKit/releases/tag/v0.0.2)

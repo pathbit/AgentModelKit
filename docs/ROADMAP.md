@@ -10,6 +10,7 @@ status: planejado
 ## Publicado
 
 - [x] [0.0.1](releases/v0-0-1/RELEASE.md) no npmjs, GitHub Packages e GitHub Release.
+- [x] [0.0.2](releases/v0-0-2/RELEASE.md) no npmjs, GitHub Packages e GitHub Release. Preserva cabeçalhos no VS Code e informa a versão pela CLI.
 
 ### Recursos entregues
 
@@ -19,12 +20,10 @@ status: planejado
 - Providers OpenCode, FreeLLMAPI e endpoints definidos por manifesto.
 - Teste de pacote e fluxo de publicação por tag com aprovação do mantenedor.
 
-## Próxima entrega
+## Entrega 0.0.2
 
-- [-] [0.0.2 validada para publicação](releases/v0-0-2/RELEASE.md). Reúne preservação de cabeçalhos no VS Code, consulta da versão pela CLI e verificação do download público no npmjs.
 - [x] O mantenedor aprovou os [requisitos](PRD.md), a [experiência](UX.md) e o [design](ARCHITECTURE.md).
-- [-] [Spec da 0.0.2](specs/release-0-0-2/SPEC.md). Os aceites da publicação ficam em andamento até a confirmação pública.
-- [ ] Retomar a mesma tag pelo GitHub Actions com `NPMJS_TOKEN` e conferir o tarball nos três destinos. [Publicação](RELEASE.md)
+- [x] [Spec da 0.0.2](specs/release-0-0-2/SPEC.md). O CI e a distribuição pública confirmaram os quatro critérios de aceite.
 
 ## Evolução
 

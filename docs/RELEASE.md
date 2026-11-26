@@ -10,8 +10,8 @@ O [pacote público no npmjs](https://www.npmjs.com/package/@pathbit/agentmodelki
 
 ```bash
 npx --yes @pathbit/agentmodelkit@latest opencode
-npx --yes @pathbit/agentmodelkit@0.0.1 opencode vscode copilot
-npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz freellmapi
+npx --yes @pathbit/agentmodelkit@0.0.2 opencode vscode copilot
+npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.2/pathbit-agentmodelkit-0.0.2.tgz freellmapi
 ```
 
 No npm 11 ou anterior, retire `--allow-remote=root` do comando do tarball.
@@ -29,7 +29,7 @@ Para executar o código da `main` com Git, siga [Outras formas de executar](../R
 
 ## Validação da tag e destinos
 
-Publique as versões estáveis em ordem crescente. O npm atualiza `latest` por padrão em cada publicação estável. Depois de publicar uma nova versão estável, confirme que `npm view @pathbit/agentmodelkit@latest version` retorna o número publicado. Use `npm view @pathbit/agentmodelkit@0.0.1 dist.integrity`, com o número da release, para comparar a versão exata com a integridade do tarball validado. [npm dist-tag](https://docs.npmjs.com/cli/v11/commands/npm-dist-tag/).
+Publique as versões estáveis em ordem crescente. O npm atualiza `latest` por padrão em cada publicação estável. Depois de publicar uma nova versão estável, confirme que `npm view @pathbit/agentmodelkit@latest version` retorna o número publicado. Use `npm view @pathbit/agentmodelkit@0.0.2 dist.integrity`, com o número da release, para comparar a versão exata com a integridade do tarball validado. [npm dist-tag](https://docs.npmjs.com/cli/v11/commands/npm-dist-tag/).
 
 Após um push aprovado na `main` que aumenta a versão, o workflow [Automatic release tag](https://github.com/pathbit/AgentModelKit/blob/main/.github/workflows/auto-release.yml) cria a tag e dispara [Release](https://github.com/pathbit/AgentModelKit/blob/main/.github/workflows/release.yml). O workflow confere o commit da tag e usa o tarball que o CI desse commit testou e armazenou. O GitHub Packages e o GitHub Release recebem o mesmo tarball com o `GITHUB_TOKEN`.
 
