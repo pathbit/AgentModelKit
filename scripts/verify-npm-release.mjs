@@ -36,7 +36,7 @@ export async function verifyNpmRelease(version, integrity, {
 } = {}) {
   if (!stableVersion.test(version)) throw new Error("Expected a stable package version.");
   if (!/^sha512-[A-Za-z0-9+/]{86}==$/.test(integrity)) throw new Error("Expected a SHA-512 package integrity value.");
-  const metadataUrl = new URL("/" + packageName.replace("/", "%2f"), registry);
+  const metadataUrl = new URL("/" + packageName.replaceAll("/", "%2f"), registry);
   for (let attempt = 1; attempt <= attempts; attempt++) {
     const metadata = await availableBody(metadataUrl, request);
     if (metadata) {
