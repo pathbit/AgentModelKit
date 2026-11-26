@@ -2,6 +2,11 @@
 
 [Português (Brasil)](CHANGELOG.md) · [Español](CHANGELOG.es.md)
 
+## Unreleased
+
+- `--version` and `-v` print the package version.
+- Reapplying VS Code setup preserves custom headers for the same endpoint and replaces the authentication header when a new key is provided.
+
 ## 0.0.1
 
 - Runtime dependency-free CLI that configures VS Code and GitHub Copilot CLI through `npx`.

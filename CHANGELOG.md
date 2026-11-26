@@ -2,6 +2,11 @@
 
 [English](CHANGELOG.en.md) · [Español](CHANGELOG.es.md)
 
+## Em desenvolvimento
+
+- `--version` e `-v` exibem a versão do pacote.
+- Reaplicar a configuração do VS Code preserva cabeçalhos personalizados no mesmo endpoint e substitui a autenticação quando uma nova chave é fornecida.
+
 ## 0.0.1
 
 - CLI sem dependências de runtime para configurar VS Code e GitHub Copilot CLI com `npx`.

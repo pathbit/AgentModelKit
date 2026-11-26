@@ -126,13 +126,19 @@ export const vscodeTarget = {
         if (replacement) {
           if (!managed) throw new Error(`Manual model with the same ID in VS Code: ${block.name}/${model.id}`);
           const { supportsReasoningEffort, thinking, requestHeaders, statefulResponses, ...otherFields } = model;
-          const headers = { ...replacement.requestHeaders };
-          if (model.url === replacement.url && !opts.vscodeApiKeys?.has(owner.providerId)) {
-            for (const [name, value] of Object.entries(requestHeaders ?? {})) {
-              if (MANAGED_AUTH_HEADERS.has(name.toLowerCase())) headers[name] = value;
+          const headers = new Map();
+          if (model.url === replacement.url && requestHeaders &&
+              typeof requestHeaders === "object" && !Array.isArray(requestHeaders)) {
+            const rotateKey = opts.vscodeApiKeys?.has(owner.providerId);
+            for (const [name, value] of Object.entries(requestHeaders)) {
+              const normalized = name.toLowerCase();
+              if (!rotateKey || !MANAGED_AUTH_HEADERS.has(normalized)) headers.set(normalized, [name, value]);
             }
           }
-          models.push({ ...otherFields, ...replacement, ...(Object.keys(headers).length ? { requestHeaders: headers } : {}) });
+          for (const [name, value] of Object.entries(replacement.requestHeaders ?? {})) {
+            headers.set(name.toLowerCase(), [name, value]);
+          }
+          models.push({ ...otherFields, ...replacement, ...(headers.size ? { requestHeaders: Object.fromEntries(headers.values()) } : {}) });
           owned.push({ id: replacement.id, url: replacement.url });
           incomingModels.delete(model.id);
         } else if (managed && shouldRemove(opts, owner, model.id, model.url)) {
@@ -149,10 +155,13 @@ export const vscodeTarget = {
       if (legacy && !oldOwners.has(block.name) && (next || removed.some((item) => item.startsWith(`${block.name}/`)))) migrated = true;
       // Preserve credentials a user already configured in the editor by default.
       const { apiKey: existingKey, ...fields } = block;
-      const allModelsHaveHeaders = models.length > 0 && models.every(({ requestHeaders }) =>
-        Object.keys(requestHeaders ?? {}).some((name) => MANAGED_AUTH_HEADERS.has(name.toLowerCase())));
+      const canOmitSecretReference = models.length > 0 && models.every(({ requestHeaders }) => {
+        const headers = Object.entries(requestHeaders ?? {});
+        return headers.some(([name]) => MANAGED_AUTH_HEADERS.has(name.toLowerCase())) &&
+          !headers.some(([, value]) => typeof value === "string" && value.includes("${apiKey}"));
+      });
       let apiKey = existingKey;
-      if (next && allModelsHaveHeaders) apiKey = undefined;
+      if (next && canOmitSecretReference) apiKey = undefined;
       else if (next && !/^\$\{input:[^}]+\}$/.test(existingKey ?? "")) apiKey = next.apiKey;
       if (models.length || !block.models?.length) merged.push({ ...fields, ...(apiKey ? { apiKey } : {}), models });
       if (owned.length) state.push({ name: block.name, providerId: owner.providerId, groupId: owner.groupId, models: owned });
