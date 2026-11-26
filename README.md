@@ -48,7 +48,7 @@ informada. No npm 11 ou anterior, use o mesmo comando sem a opção
 Use o arquivo `.tgz` de uma versão publicada. Node.js e o `npx` que vem com ele bastam.
 
 ```console
-npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.2/pathbit-agentmodelkit-0.0.2.tgz opencode
+npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.2/agentmodelkit-0.0.2.tgz opencode
 ```
 
 ### Direto do código no GitHub

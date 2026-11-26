@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { releaseArchiveName } from "./publish-package.mjs";
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "amk-pack-"));
 const npm = process.env.npm_execpath;
@@ -101,7 +102,7 @@ try {
   if (process.env.AGENTMODELKIT_ARTIFACT_DIR) {
     const dir = path.resolve(process.env.AGENTMODELKIT_ARTIFACT_DIR);
     fs.mkdirSync(dir, { recursive: true });
-    fs.copyFileSync(artifact, path.join(dir, pack.filename));
+    fs.copyFileSync(artifact, path.join(dir, releaseArchiveName(pack.version)));
     fs.writeFileSync(path.join(dir, "integrity.txt"), pack.integrity + "\n");
   }
   console.log(`OK: offline npm exec of ${pack.filename} with an isolated cache, bundled data and no project installation.`);

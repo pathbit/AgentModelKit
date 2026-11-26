@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { publishPackage } from "../scripts/publish-package.mjs";
+import { publishPackage, releaseArchiveName, resolveReleaseArchive } from "../scripts/publish-package.mjs";
 import { verifyNpmRelease } from "../scripts/verify-npm-release.mjs";
 
 const artifact = "reviewed package";
@@ -119,5 +119,23 @@ test("publishing checks the verified version and latest before issuing any write
     assert.equal(writes.length, scenario.writes);
     if (writes.length) assert.ok(writes[0].includes("--tag=latest"));
     assert.equal(scenario.responses.length, 0);
+  }
+});
+
+test("release archive names match the package and retain older CI artifacts", () => {
+  const directory = mkdtempSync(join(tmpdir(), "agentmodelkit-archive-name-"));
+  try {
+    const name = releaseArchiveName(version);
+    assert.equal(name, "agentmodelkit-0.0.2.tgz");
+    assert.throws(() => resolveReleaseArchive(directory, version), /archive is missing/);
+    const legacy = join(directory, `pathbit-${name}`);
+    writeFileSync(legacy, artifact);
+    assert.equal(resolveReleaseArchive(directory, version), legacy);
+    const canonical = join(directory, name);
+    writeFileSync(canonical, artifact);
+    assert.equal(resolveReleaseArchive(directory, version), canonical);
+    assert.throws(() => releaseArchiveName("0.0.2-next"), /stable package version/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
   }
 });

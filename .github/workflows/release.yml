@@ -180,11 +180,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.resolve.outputs.version }}
         run: |
+          archive="agentmodelkit-$RELEASE_VERSION.tgz"
+          legacy="pathbit-$archive"
+          if ! test -f "$archive"; then
+            mv "$legacy" "$archive"
+          fi
           if gh release view "$RELEASE_TAG" >/dev/null; then
             verify_dir="$(mktemp -d)"
-            gh release download "$RELEASE_TAG" --pattern '*.tgz' --dir "$verify_dir"
-            cmp ./*.tgz "$verify_dir"/*.tgz
+            gh release download "$RELEASE_TAG" --pattern "$archive" --pattern "$legacy" --dir "$verify_dir"
+            for name in "$archive" "$legacy"; do
+              if test -f "$verify_dir/$name"; then
+                cmp "$archive" "$verify_dir/$name"
+              fi
+            done
           else
-            gh release create "$RELEASE_TAG" ./*.tgz --verify-tag --generate-notes
+            gh release create "$RELEASE_TAG" "$archive" --verify-tag --generate-notes
           fi

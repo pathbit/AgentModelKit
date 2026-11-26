@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { isCurrentOrNewer, stableVersion } from "./verify-npm-release.mjs";
@@ -10,6 +10,18 @@ const registries = {
   npmjs: "https://registry.npmjs.org",
   github: "https://npm.pkg.github.com",
 };
+
+export function releaseArchiveName(version) {
+  if (!stableVersion.test(version)) throw new Error("Expected a stable package version.");
+  return `agentmodelkit-${version}.tgz`;
+}
+
+export function resolveReleaseArchive(directory, version) {
+  const canonical = releaseArchiveName(version);
+  const archive = [canonical, `pathbit-${canonical}`].map(name => join(directory, name)).find(existsSync);
+  if (!archive) throw new Error("The approved release archive is missing.");
+  return archive;
+}
 
 function registryString(output) {
   const parsed = JSON.parse(output);
@@ -74,8 +86,7 @@ export function publishPackage({ destination, version, archive, integrity, execu
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [destination, version, directory] = process.argv.slice(2);
   try {
-    if (!stableVersion.test(version)) throw new Error("Expected a stable package version.");
-    const archive = join(directory, `pathbit-agentmodelkit-${version}.tgz`);
+    const archive = resolveReleaseArchive(directory, version);
     const integrity = readFileSync(join(directory, "integrity.txt"), "utf8").trim();
     const status = publishPackage({ destination, version, archive, integrity });
     console.log(`${packageName}@${version} on ${destination}: ${status}.`);

@@ -11,7 +11,7 @@ Use el [paquete público en npmjs](https://www.npmjs.com/package/@pathbit/agentm
 ```bash
 npx --yes @pathbit/agentmodelkit@latest opencode
 npx --yes @pathbit/agentmodelkit@0.0.2 opencode vscode copilot
-npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.2/pathbit-agentmodelkit-0.0.2.tgz freellmapi
+npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.2/agentmodelkit-0.0.2.tgz freellmapi
 ```
 
 En npm 11 o anterior, omita `--allow-remote=root` del comando del archivo.
