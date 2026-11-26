@@ -48,7 +48,7 @@ On npm 11 or earlier, omit `--allow-remote=root` or `--allow-git=root`.
 Run the `.tgz` for a published version. It requires Node.js and its bundled `npx`.
 
 ```console
-npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.2/pathbit-agentmodelkit-0.0.2.tgz opencode
+npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.2/agentmodelkit-0.0.2.tgz opencode
 ```
 
 ### From the source on GitHub

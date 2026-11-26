@@ -11,7 +11,7 @@ O [pacote público no npmjs](https://www.npmjs.com/package/@pathbit/agentmodelki
 ```bash
 npx --yes @pathbit/agentmodelkit@latest opencode
 npx --yes @pathbit/agentmodelkit@0.0.2 opencode vscode copilot
-npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.2/pathbit-agentmodelkit-0.0.2.tgz freellmapi
+npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.2/agentmodelkit-0.0.2.tgz freellmapi
 ```
 
 No npm 11 ou anterior, retire `--allow-remote=root` do comando do tarball.
