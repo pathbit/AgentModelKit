@@ -1,6 +1,6 @@
 ---
 description: Diseño técnico de la CLI AgentModelKit.
-status: rascunho
+status: aprovado
 ---
 
 # Arquitectura
@@ -22,6 +22,6 @@ Para eliminar modelos se usa una lista completa y validada del origen, independi
 
 El flujo de publicación usa un tarball producido y probado por CI. Cada destino recibe ese archivo. Después de publicar, la comprobación de npmjs consulta el paquete público, verifica el selector y compara los bytes descargados con la integridad del tarball.
 
-Aprobación formal del mantenedor pendiente.
+El mantenedor aprobó esta base el 25 de noviembre de 2026 para la entrega de la versión `0.0.2`.
 
 [Índice de documentación](README.es.md)

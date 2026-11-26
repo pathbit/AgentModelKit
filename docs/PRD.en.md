@@ -1,6 +1,6 @@
 ---
 description: AgentModelKit product requirements.
-status: rascunho
+status: aprovado
 ---
 
 # Product requirements
@@ -25,4 +25,4 @@ The [quick start](../README.en.md) documents the user flow. The [terminal experi
 
 Coding clients and inference servers have their own installations and credentials. The CLI generates their files with the supplied inputs. Additional clients, integrations, and credential changes enter the roadmap when their requirements can be verified.
 
-Baseline drawn from the code, documentation, and published `0.0.1`. Formal maintainer approval is pending.
+Baseline drawn from the code, documentation, and published `0.0.1`. The maintainer approved this baseline on November 25, 2026 for the `0.0.2` delivery.

@@ -1,6 +1,6 @@
 ---
 description: Requisitos do AgentModelKit.
-status: rascunho
+status: aprovado
 ---
 
 # Requisitos do produto
@@ -25,4 +25,4 @@ O [início rápido](../README.md) documenta o fluxo do usuário. [Experiência n
 
 Os clientes e os servidores de inferência têm instalações e credenciais próprias. A CLI gera os arquivos com os dados fornecidos. Novos clientes, novas integrações e mudanças nas regras de credenciais entram no roadmap quando houver requisitos verificáveis.
 
-Baseline levantada do código, da documentação e da `0.0.1` publicada. Aprovação formal do mantenedor pendente.
+Baseline levantada do código, da documentação e da `0.0.1` publicada. Base aprovada pelo mantenedor em 25 de novembro de 2026 para a entrega da `0.0.2`.

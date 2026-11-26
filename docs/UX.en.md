@@ -1,6 +1,6 @@
 ---
 description: CLI setup experience.
-status: rascunho
+status: aprovado
 ---
 
 # Terminal experience
@@ -14,4 +14,4 @@ status: rascunho
 
 Check the menu using the [examples](../README.en.md#quick-start) and [tests](https://github.com/pathbit/AgentModelKit/blob/main/tests/README.en.md). CI exercises automated selection and writes. Real terminal checks are recorded by client and version.
 
-Formal maintainer approval is pending.
+The maintainer approved this baseline on November 25, 2026 for the `0.0.2` delivery.

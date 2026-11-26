@@ -21,4 +21,4 @@ status: planejado
 | AC-003 | A CI simula um atraso de propagação do npmjs e rejeita divergência de integridade, origem inválida e download alterado. |
 | AC-004 | A publicação aprovada confirma a versão fixa, `@latest` e o tarball público. Registre a execução e o hash após publicar. |
 
-A especificação formal depende da aprovação da base de produto, experiência e design. A criação da tag e a publicação têm autorização própria. [Procedimento de publicação](../../RELEASE.md)
+O mantenedor aprovou a base de produto, experiência e design e autorizou a publicação em 25 de novembro de 2026. Os resultados públicos serão registrados depois da execução. [Spec aprovada](../../specs/release-0-0-2/SPEC.md) · [Procedimento de publicação](../../RELEASE.md)

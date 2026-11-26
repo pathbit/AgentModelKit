@@ -1,6 +1,6 @@
 ---
 description: Experiencia de configuración de la CLI.
-status: rascunho
+status: aprovado
 ---
 
 # Experiencia en terminal
@@ -14,4 +14,4 @@ status: rascunho
 
 Compruebe el menú con los [ejemplos](../README.es.md#inicio-rápido) y las [pruebas](https://github.com/pathbit/AgentModelKit/blob/main/tests/README.es.md). CI comprueba la selección y la escritura. Las comprobaciones en una terminal real se registran por cliente y versión.
 
-Aprobación formal del mantenedor pendiente.
+El mantenedor aprobó esta base el 25 de noviembre de 2026 para la entrega de la versión `0.0.2`.

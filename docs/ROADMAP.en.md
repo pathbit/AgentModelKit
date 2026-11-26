@@ -22,8 +22,9 @@ status: planejado
 ## Next delivery
 
 - [-] [0.0.2 in preparation](releases/v0-0-2/RELEASE.en.md). Includes preserving VS Code headers, reporting the CLI version, and checking public npmjs download availability.
-- [ ] Approve the [requirements](PRD.en.md), [terminal experience](UX.en.md), and [design](ARCHITECTURE.en.md) before formalizing the first AgentDevKit spec.
-- [ ] Confirm candidate CI and authorize publication. The first release proved the bootstrap-token path. Confirm the Trusted Publisher configuration for the next release. [Publishing](RELEASE.en.md)
+- [x] The maintainer approved the [requirements](PRD.en.md), [terminal experience](UX.en.md), and [design](ARCHITECTURE.en.md).
+- [-] [0.0.2 spec](specs/release-0-0-2/SPEC.en.md). Publication criteria remain in progress until public verification.
+- [ ] Run the authorized release, confirm Trusted Publisher, and verify the tarball at all three destinations. [Publishing](RELEASE.en.md)
 
 ## Future work
 
