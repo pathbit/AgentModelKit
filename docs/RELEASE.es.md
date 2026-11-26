@@ -11,8 +11,10 @@ Use el [paquete público en npmjs](https://www.npmjs.com/package/@pathbit/agentm
 ```bash
 npx --yes @pathbit/agentmodelkit@latest opencode
 npx --yes @pathbit/agentmodelkit@0.0.1 opencode vscode copilot
-npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz freellmapi
+npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz freellmapi
 ```
+
+En npm 11 o anterior, omita `--allow-remote=root` del comando del archivo.
 
 El comando con la URL de GitHub usa el tarball público adjunto al lanzamiento. Para usar `@latest` o una versión exacta desde GitHub Packages, defina `@pathbit:registry=https://npm.pkg.github.com` en el entorno npm donde ejecutará el comando y configure la autenticación. [Autenticación en GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-to-github-packages).
 
@@ -23,7 +25,7 @@ Para ejecutar el código de `main` con Git, consulte [Otras formas de ejecutar](
 1. Mantenga los cambios de código en `main` y confirme la matriz de CI para el commit candidato.
 2. Ejecute `npm run check`, `npm test` y `npm run test:package`. Pruebe la versión local con las versiones de clientes que quiera admitir.
 3. Solicite la aprobación explícita del mantenedor para crear y enviar la etiqueta. La etiqueta comienza por `v`, seguida de la versión en `package.json`. Publique la versión que corresponda al commit aprobado.
-4. Configure el entorno `npmjs` de GitHub Actions para que requiera aprobación del mantenedor. Para crear el paquete en npm en el primer lanzamiento, `v0.0.1`, use un token granular y temporal con acceso de publicación para el ámbito `@pathbit`. Guárdelo como `NPMJS_BOOTSTRAP_TOKEN` en ese entorno. En `v0.0.1`, el flujo también acepta `NPMJS_TOKEN` del repositorio si tiene permiso para crear el paquete. Para las próximas versiones, confirme o configure Trusted Publishing en npm con el repositorio `pathbit/AgentModelKit`, el flujo `release.yml` y el entorno `npmjs`. Elimine el secreto inicial después de verificar OIDC. [Configuración oficial de Trusted Publishing](https://docs.npmjs.com/trusted-publishers/).
+4. Configure el entorno `npmjs` de GitHub Actions para que requiera aprobación del mantenedor. Para crear el paquete en npm en el primer lanzamiento, `v0.0.1`, use un token granular y temporal con acceso de publicación para el ámbito `@pathbit`. Guárdelo como `NPMJS_BOOTSTRAP_TOKEN` en ese entorno. En `v0.0.1`, el flujo también acepta `NPMJS_TOKEN` del repositorio si tiene permiso para crear el paquete. Para las próximas versiones, confirme o configure Trusted Publishing en npm con el repositorio `pathbit/AgentModelKit`, el flujo `release.yml` y el entorno `npmjs`. Elimine el secreto inicial después de verificar OIDC. Habilite **Allow npm publish** en la configuración de confianza. [Configuración oficial de Trusted Publishing](https://docs.npmjs.com/trusted-publishers/).
 
 ## Validación de la etiqueta y destinos
 
@@ -32,6 +34,6 @@ Publique las versiones estables en orden ascendente. npm actualiza `latest` de f
 El [flujo Release](https://github.com/pathbit/AgentModelKit/blob/main/.github/workflows/release.yml) vuelve a ejecutar la matriz de pruebas para la etiqueta, comprueba que pertenece al historial de la rama predeterminada y carga un único archivo de paquete validado. La publicación en npmjs usa el entorno protegido. La publicación en GitHub usa `GITHUB_TOKEN` con `packages: write` y `contents: write`. El lanzamiento adjunta el archivo publicado.
 
 Si la versión ya existe, el flujo compara su integridad con la del archivo del paquete. Resuelva cualquier discrepancia antes de seguir. Las versiones publicadas son inmutables. Si un trabajo falla después de publicar en un destino, vuelva a ejecutarlo para la misma etiqueta después de corregir la causa.
-El último trabajo consulta npmjs sin credenciales y espera el tarball público. El flujo comprueba el selector estable y compara tanto la integridad del registro como los bytes descargados con el artefacto de CI. Si existe una versión estable más reciente, volver a ejecutar un lanzamiento anterior valida su archivo y conserva el `latest` actual.
+Antes de publicar en GitHub, el flujo consulta npmjs sin credenciales y espera el tarball público. Comprueba el selector estable y compara tanto la integridad del registro como los bytes descargados con el artefacto de CI. Si existe una versión estable más reciente, volver a ejecutar un lanzamiento anterior valida su archivo y conserva el `latest` actual.
 
 [Índice de documentación](README.es.md)

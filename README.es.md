@@ -39,12 +39,16 @@ Añada `--project-dir <ruta>` para configurar OpenCode en otro proyecto.
 
 ## Otras formas de ejecutar
 
+En npm 12 o posterior, estos comandos permiten solo la fuente indicada.
+En npm 11 o anterior, omite `--allow-remote=root` o `--allow-git=root`.
+[Opciones oficiales de npm][npm-source-options].
+
 ### Desde un lanzamiento de GitHub
 
 Ejecute el archivo `.tgz` de una versión publicada. Basta con Node.js y el `npx` que incluye.
 
 ```console
-npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz opencode
+npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz opencode
 ```
 
 ### Desde el código en GitHub
@@ -52,7 +56,7 @@ npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/path
 Con [Git instalado][git-download], ejecute la versión en desarrollo de la rama `main`.
 
 ```console
-npx --yes "git+https://github.com/pathbit/AgentModelKit.git#main" opencode
+npx --yes --allow-git=root "git+https://github.com/pathbit/AgentModelKit.git#main" opencode
 ```
 
 ## Uso directo y automatización
@@ -172,6 +176,7 @@ El proyecto utiliza la licencia MIT. Lee el texto completo en [LICENSE](LICENSE)
 
 Puedes usar, modificar y distribuir el software, incluso con fines comerciales, siempre que las copias incluyan los avisos de derechos de autor y de licencia. El software se proporciona sin garantía.
 
+[npm-source-options]: https://docs.npmjs.com/cli/v12/commands/npm-install/#allow-remote
 [npm-package]: https://www.npmjs.com/package/@pathbit/agentmodelkit
 [github-releases]: https://github.com/pathbit/AgentModelKit/releases
 [git-download]: https://git-scm.com/install/

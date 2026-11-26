@@ -11,8 +11,10 @@ O [pacote público no npmjs](https://www.npmjs.com/package/@pathbit/agentmodelki
 ```bash
 npx --yes @pathbit/agentmodelkit@latest opencode
 npx --yes @pathbit/agentmodelkit@0.0.1 opencode vscode copilot
-npx --yes https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz freellmapi
+npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.1/pathbit-agentmodelkit-0.0.1.tgz freellmapi
 ```
+
+No npm 11 ou anterior, retire `--allow-remote=root` do comando do tarball.
 
 O comando com a URL do GitHub usa o tarball público anexado ao GitHub Release. Para usar `@latest` ou uma versão exata pelo GitHub Packages, defina `@pathbit:registry=https://npm.pkg.github.com` no ambiente npm em que vai executar o comando e configure a autenticação. [Como autenticar no GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-to-github-packages).
 
@@ -23,7 +25,7 @@ Para executar o código da `main` com Git, siga [Outras formas de executar](../R
 1. Mantenha as alterações de código na `main` e confirme a matriz de CI para o commit candidato.
 2. Rode `npm run check`, `npm test` e `npm run test:package`. Teste a versão local com as versões dos clientes que pretende suportar.
 3. Solicite aprovação explícita do mantenedor para criar e enviar a tag. A tag deve corresponder a `v` mais a versão de `package.json`. Publique apenas a versão que corresponde ao commit aprovado.
-4. Configure o ambiente GitHub Actions `npmjs` para exigir aprovação do mantenedor. Na primeira publicação da `v0.0.1`, para criar o pacote npm, use um token granular e temporário com acesso de publicação ao escopo `@pathbit`, salvo em `NPMJS_BOOTSTRAP_TOKEN` nesse ambiente. Na `v0.0.1`, o workflow também aceita `NPMJS_TOKEN` do repositório quando ele tem permissão para criar o pacote. Para as próximas versões, confirme ou configure o Trusted Publisher no npm para o repositório `pathbit/AgentModelKit`, workflow `release.yml` e ambiente `npmjs`. Remova o segredo de bootstrap após verificar OIDC. [Configuração oficial de Trusted Publishing](https://docs.npmjs.com/trusted-publishers/).
+4. Configure o ambiente GitHub Actions `npmjs` para exigir aprovação do mantenedor. Na primeira publicação da `v0.0.1`, para criar o pacote npm, use um token granular e temporário com acesso de publicação ao escopo `@pathbit`, salvo em `NPMJS_BOOTSTRAP_TOKEN` nesse ambiente. Na `v0.0.1`, o workflow também aceita `NPMJS_TOKEN` do repositório quando ele tem permissão para criar o pacote. Para as próximas versões, confirme ou configure o Trusted Publisher no npm para o repositório `pathbit/AgentModelKit`, workflow `release.yml` e ambiente `npmjs`. Remova o segredo de bootstrap após verificar OIDC. Habilite **Allow npm publish** na relação de confiança. [Configuração oficial de Trusted Publishing](https://docs.npmjs.com/trusted-publishers/).
 
 ## Validação da tag e destinos
 
@@ -32,6 +34,6 @@ Publique as versões estáveis em ordem crescente. O npm atualiza `latest` por p
 O workflow [Release](https://github.com/pathbit/AgentModelKit/blob/main/.github/workflows/release.yml) reexecuta a matriz de testes da tag, confirma que ela pertence ao histórico da branch padrão e carrega um único tarball validado como artefato. A publicação no npmjs usa o ambiente protegido. A publicação no GitHub usa `GITHUB_TOKEN` com `packages: write` e `contents: write`. O release anexa o tarball publicado.
 
 Se uma publicação já tiver ocorrido, o workflow compara a integridade da versão existente com a do tarball. Se o arquivo for diferente, trate o conflito antes de seguir. Versões publicadas são imutáveis. Quando um job falhar depois de publicar em um destino, repita o job da mesma tag assim que corrigir a causa.
-A última etapa consulta o npmjs sem credenciais e aguarda o tarball público. A release confirma o seletor estável e compara a integridade declarada e os bytes baixados com o artefato da CI. Se houver uma versão estável mais nova, uma repetição de uma release antiga só valida seu artefato e preserva a versão indicada por `latest`.
+Antes de publicar no GitHub, o workflow consulta o npmjs sem credenciais e aguarda o tarball público. A release confirma o seletor estável e compara a integridade declarada e os bytes baixados com o artefato da CI. Se houver uma versão estável mais nova, uma repetição de uma release antiga só valida seu artefato e preserva a versão indicada por `latest`.
 
 [Índice da documentação](README.md)

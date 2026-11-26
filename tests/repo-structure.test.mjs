@@ -42,8 +42,8 @@ test("repository follows PathBit standard layout", () => {
   assert.equal(fs.existsSync(path.join(root, "bin")), false);
   const manifest = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
   assert.deepEqual(manifest.bin, {
-    agentmodelkit: "./src/agentmodelkit.mjs",
-    amk: "./src/agentmodelkit.mjs",
+    agentmodelkit: "src/agentmodelkit.mjs",
+    amk: "src/agentmodelkit.mjs",
   });
 });
 

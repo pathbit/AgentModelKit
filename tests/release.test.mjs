@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { publishPackage } from "../scripts/publish-package.mjs";
 import { verifyNpmRelease } from "../scripts/verify-npm-release.mjs";
 
 const artifact = "reviewed package";
@@ -59,5 +63,55 @@ test("release verification rejects byte and metadata mismatches and foreign tarb
       request: async () => responses.shift(), attempts: 1,
     }), error);
     assert.equal(responses.length, 0);
+  }
+});
+
+test("release verification rejects latest below a newer stable version", async () => {
+  const body = await metadata(version).json();
+  body.versions["0.0.10"] = {};
+  body.versions["0.0.11-beta.1"] = {};
+  await assert.rejects(verifyNpmRelease(version, integrity, {
+    request: async () => new Response(JSON.stringify(body)), attempts: 1,
+  }), /current latest tag/);
+});
+
+test("publishing checks the verified version and latest before issuing any write", async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "amk-release-test-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const archive = join(directory, "package.tgz");
+  writeFileSync(archive, artifact);
+  const ok = (stdout) => ({ status: 0, stdout });
+  const failed = (code) => ({ status: 1, stdout: "", stderr: `npm error code ${code}\n` });
+  const missing = failed("E404");
+  const olderVersions = ok(JSON.stringify(["0.0.1"]));
+  const cases = [
+    { responses: [ok(JSON.stringify(integrity))], result: "verified", writes: 0 },
+    { responses: [failed("E429")], error: /E429/, writes: 0 },
+    { responses: [missing, failed("E429")], error: /E429/, writes: 0 },
+    { responses: [missing, olderVersions, failed("E401")], error: /E401/, writes: 0 },
+    { responses: [missing, olderVersions, ok("latest: 0.0.10\n")], error: /prevents publishing/, writes: 0 },
+    { responses: [missing, ok('["0.0.1","0.0.10"]')], error: /newer stable/, writes: 0 },
+    { responses: [missing, olderVersions, ok(`latest: ${version}\n`)], result: "awaiting availability", writes: 0 },
+    { responses: [missing, olderVersions, ok("latest: 0.0.1\n"), ok("")], result: "published", writes: 1 },
+    { responses: [missing, missing, failed("E401"), ok("")], result: "published", writes: 1 },
+    { responses: [missing, olderVersions, ok("latest: 0.0.1\n"), failed("E403")], error: /E403/, writes: 1 },
+  ];
+  for (const scenario of cases) {
+    const writes = [];
+    const publish = () => publishPackage({
+      destination: "npmjs", version, archive, integrity,
+      execute(executable, args, options) {
+        assert.equal(executable, "npm");
+        assert.equal(options.cwd, directory);
+        assert.ok(args.includes("--registry=https://registry.npmjs.org"));
+        if (args[0] === "publish") writes.push(args);
+        return scenario.responses.shift();
+      },
+    });
+    if (scenario.error) assert.throws(publish, scenario.error);
+    else assert.equal(publish(), scenario.result);
+    assert.equal(writes.length, scenario.writes);
+    if (writes.length) assert.ok(writes[0].includes("--tag=latest"));
+    assert.equal(scenario.responses.length, 0);
   }
 });

@@ -5,10 +5,11 @@ import { pathToFileURL } from "node:url";
 
 const registry = "https://registry.npmjs.org";
 const packageName = "@pathbit/agentmodelkit";
-const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+export const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 
-function isCurrentOrNewer(latest, version) {
-  if (typeof latest !== "string" || !stableVersion.test(latest)) return false;
+export function isCurrentOrNewer(latest, version) {
+  if (typeof latest !== "string" || typeof version !== "string"
+    || !stableVersion.test(latest) || !stableVersion.test(version)) return false;
   const current = latest.split(".").map(BigInt);
   const requested = version.split(".").map(BigInt);
   const firstDifference = current.findIndex((value, index) => value !== requested[index]);
@@ -42,11 +43,15 @@ export async function verifyNpmRelease(version, integrity, {
     if (metadata) {
       const packument = JSON.parse(metadata.toString("utf8"));
       const latest = packument["dist-tags"]?.latest;
-      const published = packument.versions?.[version];
+      const versions = packument.versions ?? {};
+      const published = versions[version];
       if (published && published.dist?.integrity !== integrity) {
         throw new Error(`The npmjs integrity for ${packageName}@${version} differs from the CI artifact.`);
       }
-      if (published && isCurrentOrNewer(latest, version) && packument.versions[latest]) {
+      const hasNewerStableVersion = Object.keys(versions).some(
+        (candidate) => candidate !== latest && isCurrentOrNewer(candidate, latest),
+      );
+      if (published && isCurrentOrNewer(latest, version) && versions[latest] && !hasNewerStableVersion) {
         const tarball = new URL(published.dist.tarball);
         if (tarball.origin !== registry || tarball.username || tarball.password) {
           throw new Error("Expected the published tarball on the public npmjs registry.");

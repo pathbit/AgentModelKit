@@ -8,8 +8,8 @@
     "node": ">=18"
   },
   "bin": {
-    "agentmodelkit": "./src/agentmodelkit.mjs",
-    "amk": "./src/agentmodelkit.mjs"
+    "agentmodelkit": "src/agentmodelkit.mjs",
+    "amk": "src/agentmodelkit.mjs"
   },
   "files": [
     "src/",
@@ -25,7 +25,8 @@
     "LICENSE"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "tag": "latest"
   },
   "scripts": {
     "cli": "node src/agentmodelkit.mjs",
@@ -56,6 +57,7 @@
     "type": "git",
     "url": "git+https://github.com/pathbit/AgentModelKit.git"
   },
+  "homepage": "https://github.com/pathbit/AgentModelKit#readme",
   "bugs": {
     "url": "https://github.com/pathbit/AgentModelKit/issues"
   }
