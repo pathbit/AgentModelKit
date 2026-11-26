@@ -86,6 +86,10 @@ test("publishing checks the verified version and latest before issuing any write
   const olderVersions = ok(JSON.stringify(["0.0.1"]));
   const cases = [
     { responses: [ok(JSON.stringify(integrity))], result: "verified", writes: 0 },
+    { responses: [ok(JSON.stringify([integrity]))], result: "verified", writes: 0 },
+    { responses: [ok(JSON.stringify([integrity, integrity]))], error: /single value/, writes: 0 },
+    { destination: "github", responses: [missing, olderVersions, ok('["0.0.10"]')], error: /prevents publishing/, writes: 0 },
+    { destination: "github", responses: [missing, olderVersions, ok('["0.0.1"]'), ok("")], result: "published", writes: 1 },
     { responses: [failed("E429")], error: /E429/, writes: 0 },
     { responses: [missing, failed("E429")], error: /E429/, writes: 0 },
     { responses: [missing, olderVersions, failed("E401")], error: /E401/, writes: 0 },
@@ -98,12 +102,14 @@ test("publishing checks the verified version and latest before issuing any write
   ];
   for (const scenario of cases) {
     const writes = [];
+    const destination = scenario.destination ?? "npmjs";
     const publish = () => publishPackage({
-      destination: "npmjs", version, archive, integrity,
+      destination, version, archive, integrity,
       execute(executable, args, options) {
         assert.equal(executable, "npm");
         assert.equal(options.cwd, directory);
-        assert.ok(args.includes("--registry=https://registry.npmjs.org"));
+        const registry = destination === "npmjs" ? "https://registry.npmjs.org" : "https://npm.pkg.github.com";
+        assert.ok(args.includes(`--registry=${registry}`));
         if (args[0] === "publish") writes.push(args);
         return scenario.responses.shift();
       },

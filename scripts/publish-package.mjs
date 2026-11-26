@@ -11,6 +11,13 @@ const registries = {
   github: "https://npm.pkg.github.com",
 };
 
+function registryString(output) {
+  const parsed = JSON.parse(output);
+  if (typeof parsed === "string") return parsed;
+  if (Array.isArray(parsed) && parsed.length === 1 && typeof parsed[0] === "string") return parsed[0];
+  throw new Error("The registry did not return a single value.");
+}
+
 export function publishPackage({ destination, version, archive, integrity, execute = spawnSync }) {
   if (!Object.hasOwn(registries, destination) || !stableVersion.test(version)) {
     throw new Error("Expected a known registry and a stable package version.");
@@ -31,7 +38,7 @@ export function publishPackage({ destination, version, archive, integrity, execu
 
   const existing = npm(["view", `${packageName}@${version}`, "dist.integrity", "--json"], true);
   if (existing !== null) {
-    if (JSON.parse(existing) !== integrity) throw new Error("The registry already contains different bytes for this version.");
+    if (registryString(existing) !== integrity) throw new Error("The registry already contains different bytes for this version.");
     return "verified";
   }
 
@@ -49,7 +56,7 @@ export function publishPackage({ destination, version, archive, integrity, execu
   const reported = npm(tagLookup, true, available === null);
   let latest = null;
   if (reported !== null) {
-    latest = destination === "npmjs" ? /^latest: ([^\s]+)$/m.exec(reported)?.[1] : JSON.parse(reported);
+    latest = destination === "npmjs" ? /^latest: ([^\s]+)$/m.exec(reported)?.[1] : registryString(reported);
   }
   if (latest !== null && !stableVersion.test(latest)) throw new Error("The registry did not return a stable latest tag.");
   if (latest === version || versions.includes(version)) {
