@@ -2,7 +2,7 @@
 
 [Português (Brasil)](CHANGELOG.md) · [English](CHANGELOG.en.md)
 
-## 0.0.2 en preparación
+## 0.0.2
 
 - `--version` y `-v` muestran la versión declarada en el paquete.
 - Volver a aplicar la configuración de VS Code conserva las cabeceras personalizadas y las referencias a secretos del mismo endpoint.

@@ -10,6 +10,7 @@ status: planejado
 ## Publicado
 
 - [x] [0.0.1](releases/v0-0-1/RELEASE.es.md) en npmjs, GitHub Packages y GitHub Releases.
+- [x] [0.0.2](releases/v0-0-2/RELEASE.es.md) en npmjs, GitHub Packages y GitHub Releases. Conserva las cabeceras de VS Code e informa la versión de la CLI.
 
 ### Funciones entregadas
 
@@ -19,12 +20,10 @@ status: planejado
 - OpenCode, FreeLLMAPI y endpoints definidos mediante manifiestos.
 - Prueba del paquete y publicación por etiqueta con aprobación del mantenedor.
 
-## Próxima entrega
+## Entrega 0.0.2
 
-- [-] [0.0.2 verificada para publicación](releases/v0-0-2/RELEASE.es.md). Incluye conservar cabeceras de VS Code, consultar la versión de la CLI y comprobar la descarga pública en npmjs.
 - [x] El mantenedor aprobó los [requisitos](PRD.es.md), la [experiencia](UX.es.md) y el [diseño](ARCHITECTURE.es.md).
-- [-] [Especificación de la 0.0.2](specs/release-0-0-2/SPEC.es.md). Los criterios de publicación siguen en curso hasta la comprobación pública.
-- [ ] Reanudar la misma etiqueta mediante GitHub Actions con `NPMJS_TOKEN` y verificar el tarball en los tres destinos. [Publicación](RELEASE.es.md)
+- [x] [Especificación de la 0.0.2](specs/release-0-0-2/SPEC.es.md). CI y la distribución pública verificaron los cuatro criterios de aceptación.
 
 ## Trabajo futuro
 

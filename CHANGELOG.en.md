@@ -2,7 +2,7 @@
 
 [Português (Brasil)](CHANGELOG.md) · [Español](CHANGELOG.es.md)
 
-## 0.0.2 in preparation
+## 0.0.2
 
 - `--version` and `-v` print the version declared in the package.
 - Reapplying VS Code setup preserves custom headers and secret references for the same endpoint.
