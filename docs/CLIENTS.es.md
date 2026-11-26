@@ -27,11 +27,13 @@ Use `--default-model` para establecer un modelo predeterminado en `settings.json
 | macOS | `~/Library/Application Support/Code/User` |
 | Linux | `$XDG_CONFIG_HOME/Code/User` o `~/.config/Code/User` |
 
-Los grupos usan el proveedor **Custom Endpoint**. Abra **Chat: Manage Language Models** para seleccionar el modelo y configurar la clave. Vuelva a cargar la ventana si el selector no se actualiza. Use la acción **Update API Key** del grupo para guardar la clave en el almacén de secretos de VS Code. AgentModelKit conserva la referencia existente al añadir modelos. VS Code 1.148 requiere una referencia de secreto para autenticar el endpoint. [Referencia oficial de Custom Endpoint](https://code.visualstudio.com/docs/agent-customization/language-models#_add-a-custom-endpoint-model).
+Los grupos usan el proveedor **Custom Endpoint**. Abra **Chat: Manage Language Models** para seleccionar el modelo y configurar la clave. Vuelva a cargar la ventana si el selector no se actualiza. Use la acción **Update API Key** del grupo para guardar la clave en el almacén de secretos de VS Code. AgentModelKit conserva la referencia existente al añadir modelos. VS Code 1.148 no usa un valor literal de `apiKey` en el archivo para autenticar el endpoint. [Referencia oficial de Custom Endpoint](https://code.visualstudio.com/docs/agent-customization/language-models#_add-a-custom-endpoint-model).
 
 El archivo adyacente `chatLanguageModels.json.agentmodelkit.json` registra los modelos y endpoints generados por AgentModelKit. Consérvelo junto a la configuración. Al restaurar manualmente una copia de VS Code, restaure también el registro correspondiente cuando esté disponible.
 
 En el flujo guiado, el token autentica los modelos seleccionados mediante cabeceras en el perfil privado. También puede usar las variables del proveedor o `--key-file`. Trate el perfil y sus copias como credenciales. Con `add --providers ... --targets vscode` también puede guardar la clave directamente en el almacén de secretos del editor.
+
+Al volver a aplicar la configuración del mismo endpoint, AgentModelKit conserva las cabeceras personalizadas. Si cambia el endpoint, configure esas cabeceras para la nueva dirección.
 
 ## Copias de seguridad y simulación
 

@@ -46,6 +46,8 @@ try {
   assert.match(npmCommand("amk", "--help"), /^AgentModelKit.*\n\nUsage: agentmodelkit/m);
   const inferred = run(["exec", "--yes", "--offline", "--", `file:../${pack.filename}`, "--help"], { cwd, env });
   assert.match(inferred, /Usage: agentmodelkit/);
+  assert.equal(npmCommand("agentmodelkit", "--version").trim(), pack.version);
+  assert.equal(npmCommand("amk", "-v").trim(), pack.version);
   assert.match(npmCommand("agentmodelkit", "add", "--provider-file", manifest, "--targets", "all", "--dry-run"), /dry run/);
   assert.equal(fs.existsSync(env.COPILOT_HOME), false);
   assert.equal(fs.existsSync(env.VSCODE_USER_DIR), false);

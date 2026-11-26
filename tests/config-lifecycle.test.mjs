@@ -66,6 +66,29 @@ test("incremental add, replacement, default model, backups and no-op retry", asy
   assert.deepEqual(read(settings), {});
 });
 
+test("VS Code retains custom headers for the same endpoint and rotates authentication", async (t) => {
+  const { env, vs } = profiles(t);
+  const configure = (port, key) => runCli([
+    "freellmapi", "vscode", "--url", `http://127.0.0.1:${port}/v1`, "--key", key, "--yes",
+  ], env);
+  await configure(3001, "old-key");
+  const groups = read(vs);
+  groups[0].apiKey = "${input:chat.lm.secret.from-ui}";
+  groups[0].models[0].requestHeaders = { authorization: "Bearer old-key", "X-Team-Router": "fixture-${apiKey}" };
+  write(vs, groups);
+
+  await configure(3001, "new-key");
+  assert.deepEqual(read(vs)[0].models[0].requestHeaders, {
+    "X-Team-Router": "fixture-${apiKey}", Authorization: "Bearer new-key",
+  });
+
+  assert.equal(read(vs)[0].apiKey, "${input:chat.lm.secret.from-ui}");
+
+  await configure(3002, "next-endpoint-key");
+  assert.deepEqual(read(vs)[0].models[0].requestHeaders, { Authorization: "Bearer next-endpoint-key" });
+  assert.equal(read(vs)[0].apiKey, undefined);
+});
+
 test("preflight failures preserve both clients and any existing key", async (t) => {
   const { env, vs, cp } = profiles(t);
   await runCli(setupArgs("--models", "glm-5.3"), env);

@@ -53,6 +53,7 @@ Credentials and application:
   --dry-run                 Shows the proposed changes
   --apply                   Applies prune
   -y, --yes                  Uses non-interactive mode
+  -v, --version              Prints the package version
   -h, --help                 Shows this help
 
 Catalogs:
@@ -62,7 +63,7 @@ Catalogs:
 const providerCommands = new Set(["opencode", "freellmapi"]);
 const commands = new Set([...providerCommands, "init", "add", "copilot", "vscode", "prune", "catalog", "list", "doctor", "key", "help"]);
 const flags = {
-  "-h": "help", "--help": "help", "-y": "yes", "--yes": "yes", "--live": "live",
+  "-v": "version", "--version": "version", "-h": "help", "--help": "help", "-y": "yes", "--yes": "yes", "--live": "live",
   "--inline-key": "inlineKey", "--no-save-key": "noSaveKey", "--no-default-model": "noDefaultModel",
   "--dry-run": "dryRun", "--powerful": "powerful", "--replace": "replace", "--apply": "apply",
 };
@@ -334,6 +335,10 @@ function planRetiredCopilotDefaults(plans, env) {
 export async function runCli(argv = process.argv.slice(2), env = process.env) {
   const opts = parseCliArgs(argv);
   if (opts.help || opts.command === "help") return console.log(USAGE);
+  if (opts.version) {
+    const manifest = fs.readFileSync(new URL("../package.json", import.meta.url), "utf8");
+    return console.log(JSON.parse(manifest).version);
+  }
   if (opts.command === "catalog") return cmdCatalog(opts, env);
   if (opts.command === "key") {
     if (opts.positional.length !== 1) throw new Error("Specify the provider name.");
