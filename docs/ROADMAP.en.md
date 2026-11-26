@@ -21,10 +21,10 @@ status: planejado
 
 ## Next delivery
 
-- [-] [0.0.2 in preparation](releases/v0-0-2/RELEASE.en.md). Includes preserving VS Code headers, reporting the CLI version, and checking public npmjs download availability.
+- [-] [0.0.2 verified for publication](releases/v0-0-2/RELEASE.en.md). Includes preserving VS Code headers, reporting the CLI version, and checking public npmjs download availability.
 - [x] The maintainer approved the [requirements](PRD.en.md), [terminal experience](UX.en.md), and [design](ARCHITECTURE.en.md).
 - [-] [0.0.2 spec](specs/release-0-0-2/SPEC.en.md). Publication criteria remain in progress until public verification.
-- [ ] Run the authorized release, confirm Trusted Publisher, and verify the tarball at all three destinations. [Publishing](RELEASE.en.md)
+- [ ] Confirm the npmjs Trusted Publisher, resume the workflow for the same tag, and verify the tarball at all three destinations. [Publishing](RELEASE.en.md)
 
 ## Future work
 

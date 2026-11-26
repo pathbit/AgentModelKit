@@ -2,7 +2,7 @@
 status: planejado
 ---
 
-# AgentModelKit 0.0.2 en preparación
+# AgentModelKit 0.0.2 verificado para publicación
 
 [Português (Brasil)](RELEASE.md) · [English](RELEASE.en.md) · [Hoja de ruta](../../ROADMAP.es.md)
 
@@ -21,4 +21,8 @@ status: planejado
 | AC-003 | La CI simula la demora de propagación de npmjs y rechaza discrepancias de integridad, orígenes externos y descargas alteradas. |
 | AC-004 | La publicación aprobada verifica la versión exacta, `@latest` y el tarball público. Registre la ejecución y el hash después de publicar. |
 
-El mantenedor aprobó la base de producto, experiencia y diseño y autorizó la publicación el 25 de noviembre de 2026. Los resultados públicos se registrarán al terminar el flujo. [Especificación aprobada](../../specs/release-0-0-2/SPEC.es.md) · [Procedimiento de publicación](../../RELEASE.es.md)
+El mantenedor aprobó la base de producto, experiencia y diseño y autorizó la publicación el 25 de noviembre de 2026.
+
+La etiqueta `v0.0.2` superó las nueve comprobaciones de la matriz de sistemas y versiones de Node.js. CI generó el tarball y el mantenedor aprobó el despliegue protegido. npmjs devolvió `ENEEDAUTH`. Después del intento, la etiqueta `latest` de npmjs seguía apuntando a `0.0.1` y el registro aún no mostraba la `0.0.2`. El criterio AC-004 queda pendiente de confirmar Trusted Publishing y verificar los artefactos en los tres destinos. [Ejecución del lanzamiento](https://github.com/pathbit/AgentModelKit/actions/runs/45742845489).
+
+[Especificación aprobada](../../specs/release-0-0-2/SPEC.es.md) · [Procedimiento de publicación](../../RELEASE.es.md)

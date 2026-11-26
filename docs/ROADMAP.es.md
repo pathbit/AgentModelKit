@@ -21,10 +21,10 @@ status: planejado
 
 ## Próxima entrega
 
-- [-] [0.0.2 en preparación](releases/v0-0-2/RELEASE.es.md). Incluye conservar cabeceras de VS Code, consultar la versión de la CLI y comprobar la descarga pública en npmjs.
+- [-] [0.0.2 verificada para publicación](releases/v0-0-2/RELEASE.es.md). Incluye conservar cabeceras de VS Code, consultar la versión de la CLI y comprobar la descarga pública en npmjs.
 - [x] El mantenedor aprobó los [requisitos](PRD.es.md), la [experiencia](UX.es.md) y el [diseño](ARCHITECTURE.es.md).
 - [-] [Especificación de la 0.0.2](specs/release-0-0-2/SPEC.es.md). Los criterios de publicación siguen en curso hasta la comprobación pública.
-- [ ] Ejecutar la publicación autorizada, confirmar Trusted Publisher y verificar el tarball en los tres destinos. [Publicación](RELEASE.es.md)
+- [ ] Confirmar Trusted Publisher en npmjs, reanudar el flujo de la misma etiqueta y verificar el tarball en los tres destinos. [Publicación](RELEASE.es.md)
 
 ## Trabajo futuro
 
