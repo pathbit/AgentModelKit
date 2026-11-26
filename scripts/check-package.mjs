@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { releaseArchiveName } from "./publish-package.mjs";
+import { stableVersion } from "./verify-npm-release.mjs";
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "amk-pack-"));
 const npm = process.env.npm_execpath;
@@ -11,12 +12,38 @@ assert.ok(npm, "Run this test with npm run test:package.");
 function run(args, options = {}) {
   return execFileSync(process.execPath, [npm, ...args], { encoding: "utf8", timeout: 60000, ...options });
 }
+function checkReleaseExamples(file, markdown, { name, version }) {
+  const commands = [...markdown.matchAll(/(?:^[ \t]*|`)(npx|npm[ \t]+view)[ \t]+([^`\r\n]+)/gm)]
+    .map(([, command, args]) => ({
+      command,
+      targets: args.trim().split(/\s+/).map(arg => arg.replace(/^(['"])(.*)\1$/, "$2")),
+    }));
+  const npxTargets = commands.filter(({ command }) => command === "npx").flatMap(({ targets }) => targets);
+  const packagePrefix = `${name}@`;
+  const pinned = commands.flatMap(({ targets }) => targets)
+    .filter(target => target.startsWith(packagePrefix) && stableVersion.test(target.slice(packagePrefix.length)));
+  assert.ok(npxTargets.includes(`${name}@latest`), `Missing @latest example in ${file}`);
+  assert.ok(npxTargets.includes(`${name}@${version}`) && pinned.every(target => target === `${name}@${version}`),
+    `The pinned npm example in ${file} must match ${name}@${version}`);
+  const releasePrefix = "https://github.com/pathbit/AgentModelKit/releases/download/";
+  const downloads = npxTargets.filter(target => target.startsWith(releasePrefix));
+  const expected = `${releasePrefix}v${version}/${releaseArchiveName(version)}`;
+  assert.ok(downloads.length > 0 && downloads.every(target => target === expected),
+    `The GitHub Release example in ${file} must use ${expected}`);
+}
+
 try {
   const [pack] = JSON.parse(run(["pack", "--json", "--pack-destination", root]));
   const files = new Set(pack.files.map((file) => file.path));
+  const publicationDocs = ["README", "docs/RELEASE"].flatMap(stem =>
+    ["", ".en", ".es"].map(language => `${stem}${language}.md`));
+  for (const file of publicationDocs) {
+    assert.ok(files.has(file), `Missing ${file} in the tarball`);
+    checkReleaseExamples(file, fs.readFileSync(file, "utf8"), pack);
+  }
   for (const required of [
     "data/opencode-catalog.json", "data/freellmapi-catalog.json", "data/awesome-free-providers.json",
-    "data/curation.json", "src/agentmodelkit.mjs", "examples/provider.local.example.json", "README.md",
+    "data/curation.json", "src/agentmodelkit.mjs", "examples/provider.local.example.json",
   ]) assert.ok(files.has(required), `Missing ${required} in the tarball`);
   for (const file of files) {
     if (!file.endsWith(".md")) continue;

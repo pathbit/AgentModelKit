@@ -10,8 +10,8 @@ Use the [public package on npmjs](https://www.npmjs.com/package/@pathbit/agentmo
 
 ```bash
 npx --yes @pathbit/agentmodelkit@latest opencode
-npx --yes @pathbit/agentmodelkit@0.0.2 opencode vscode copilot
-npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.2/agentmodelkit-0.0.2.tgz freellmapi
+npx --yes @pathbit/agentmodelkit@0.0.3 opencode vscode copilot
+npx --yes --allow-remote=root https://github.com/pathbit/AgentModelKit/releases/download/v0.0.3/agentmodelkit-0.0.3.tgz freellmapi
 ```
 
 On npm 11 or earlier, omit `--allow-remote=root` from the tarball command.
@@ -29,7 +29,7 @@ To run the code from `main` with Git, see [Other ways to run](../README.en.md#ot
 
 ## Tag validation and destinations
 
-Publish stable versions in ascending order. npm updates `latest` by default on each stable publication. After publishing a new stable version, check that `npm view @pathbit/agentmodelkit@latest version` returns the published version number. Use `npm view @pathbit/agentmodelkit@0.0.2 dist.integrity`, with the release's version number, to compare that version with the validated tarball's integrity. [npm dist-tag](https://docs.npmjs.com/cli/v11/commands/npm-dist-tag/).
+Publish stable versions in ascending order. npm updates `latest` by default on each stable publication. After publishing a new stable version, check that `npm view @pathbit/agentmodelkit@latest version` returns the published version number. Use `npm view @pathbit/agentmodelkit@0.0.3 dist.integrity`, with the release's version number, to compare that version with the validated tarball's integrity. [npm dist-tag](https://docs.npmjs.com/cli/v11/commands/npm-dist-tag/).
 
 After a successful CI run for a push to `main` that increases the version, the [Automatic release tag workflow](https://github.com/pathbit/AgentModelKit/blob/main/.github/workflows/auto-release.yml) creates the tag and dispatches [Release](https://github.com/pathbit/AgentModelKit/blob/main/.github/workflows/release.yml). The workflow verifies the tag commit and uses the tarball tested and stored by that commit's CI. GitHub Packages and GitHub Releases receive the same tarball using `GITHUB_TOKEN`.
 

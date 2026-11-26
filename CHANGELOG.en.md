@@ -2,6 +2,12 @@
 
 [Português (Brasil)](CHANGELOG.md) · [Español](CHANGELOG.es.md)
 
+## 0.0.3
+
+- Package commands in Portuguese, English, and Spanish include `@latest` and the pinned version `@0.0.3`.
+- GitHub Releases use the `agentmodelkit-<version>.tgz` filename format.
+- CI checks that installation examples match the package version.
+
 ## 0.0.2
 
 - `--version` and `-v` print the version declared in the package.
