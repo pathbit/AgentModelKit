@@ -1,3 +1,4 @@
+import { sameDistributionInputs } from './distribution-inputs.mjs';
 import { execFileSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
 import { setTimeout as wait } from "node:timers/promises";
@@ -88,7 +89,7 @@ export async function resolveRelease({ tag, expectedCommit, runId, request, isMa
   return { tag, version, commit, "run-id": run.id, "artifact-id": artifact };
 }
 
-export async function autoRelease({ runId, commit, pkg, previous, request, sleep = wait }) {
+export async function autoRelease({ runId, commit, pkg, previous, request, sleep = wait, sourcesMatch = () => false }) {
   requireCondition(idPattern.test(runId) && shaPattern.test(commit), "Invalid source CI or checkout.");
   const version = packageVersion(pkg);
   const before = packageVersion(previous);
@@ -97,7 +98,7 @@ export async function autoRelease({ runId, commit, pkg, previous, request, sleep
   requireCondition(String(run?.id) === runId && approvedCI(run, commit), "Expected a successful push CI for this main commit.");
   await artifactId(request, run, `agentmodelkit-${commit}-${run.run_attempt}`);
   const main = await request("GET", `${api}/git/ref/heads/main`);
-  if (main?.object?.sha !== commit) return "Main has advanced.";
+  if (main?.object?.sha !== commit && !sourcesMatch(commit, main?.object?.sha)) return "Main has advanced.";
   const tag = `v${version}`;
   let marked = await tagCommit(request, tag);
   if (marked && marked !== commit && version === before) return "Version already marked.";
@@ -156,6 +157,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
         runId: env.SOURCE_RUN_ID, commit: env.SOURCE_COMMIT, request,
         pkg: JSON.parse(readFileSync("package.json", "utf8")),
         previous: JSON.parse(git("show", "HEAD^:package.json")),
+        sourcesMatch: (approved, current) => sameDistributionInputs(process.cwd(), approved, current),
       }));
     } else if (process.argv[2] === "check-tag") {
       requireCondition(env.RELEASE_TAG?.startsWith("v") && stableVersion.test(env.RELEASE_TAG.slice(1))
