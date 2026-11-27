@@ -12,7 +12,53 @@ permissions:
   contents: read
 
 jobs:
+  distribution:
+    name: Distribution inputs
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.scope.outputs.build }}
+      validate: ${{ steps.scope.outputs.validate }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: scope
+        name: Compare changes with the build inputs
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          build=true
+          validate=true
+          if [[ -n "$BASE_SHA" && "$BASE_SHA" != 0000000000000000000000000000000000000000 ]]; then
+            path_list="$(cat .github/distribution-paths)"
+            if [[ "$GITHUB_EVENT_NAME" == pull_request ]] && git cat-file -e "$BASE_SHA:.github/distribution-paths" 2>/dev/null; then
+              path_list="$(git show "$BASE_SHA:.github/distribution-paths")"
+            fi
+            test -n "$path_list"
+            paths=()
+            while IFS= read -r path; do
+              test -n "$path"
+              paths+=("$path")
+            done <<< "$path_list"
+            runtime_changes="$(git diff --name-only --no-renames "$BASE_SHA" HEAD -- "${paths[@]}")"
+            test_changes="$(git diff --name-only --no-renames "$BASE_SHA" HEAD -- tests/ scripts/)"
+            if [[ -z "$runtime_changes" ]]; then
+              build=false
+              if [[ -z "$test_changes" ]]; then
+                validate=false
+              fi
+            fi
+          fi
+          printf 'build=%s\nvalidate=%s\n' "$build" "$validate" >> "$GITHUB_OUTPUT"
+      - name: Skip distribution build
+        if: steps.scope.outputs.build == 'false'
+        run: echo "No distribution inputs changed."
+
   test:
+    needs: distribution
+    if: needs.distribution.outputs.validate == 'true'
     name: ${{ matrix.os }} / Node ${{ matrix.node }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
@@ -32,10 +78,11 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run test:package
+        if: needs.distribution.outputs.build == 'true'
         env:
           AGENTMODELKIT_ARTIFACT_DIR: ${{ runner.temp }}/release
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        if: matrix.os == 'ubuntu-latest' && matrix.node == 24 && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+        if: needs.distribution.outputs.build == 'true' && matrix.os == 'ubuntu-latest' && matrix.node == 24 && github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
         with:
           name: agentmodelkit-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/release
